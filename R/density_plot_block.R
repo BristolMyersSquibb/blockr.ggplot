@@ -1,21 +1,21 @@
-#' Boxplot block constructor
+#' Density plot block constructor
 #'
-#' This block draws a boxplot using [ggplot2::geom_boxplot()]. Supports customizable
-#' aesthetics including x-axis, y-axis grouping, color/fill, and styling options.
+#' This block creates density plots using [ggplot2::geom_density()]. Perfect for
+#' visualizing the distribution of continuous variables with smooth curves.
 #'
-#' @param x Column for x-axis (categorical variable)
-#' @param y Column for y-axis (numeric variable, optional for single variable boxplots)
+#' @param x Column for x-axis (numeric variable)
+#' @param fill Column for fill aesthetic (for multiple density curves, optional)
 #' @param color Column for color aesthetic (optional)
-#' @param fill Column for fill aesthetic (optional)
+#' @param alpha Transparency level (default 0.5)
 #' @param title Plot title (optional)
-#' @param show_outliers Whether to show outliers (default TRUE)
+#' @param adjust Bandwidth adjustment for density calculation (default 1)
 #' @param ... Forwarded to [new_block()]
 #'
 #' @export
-new_boxplot_block <- function(x = character(), y = character(), 
-                             color = character(), fill = character(),
-                             title = character(), show_outliers = TRUE, ...) {
-	new_ggplot_block(
+new_density_plot_block <- function(x = character(), fill = character(),
+                                  color = character(), alpha = 0.5,
+                                  title = character(), adjust = 1, ...) {
+  new_ggplot_block(
     function(id, data) {
       moduleServer(
         id,
@@ -24,48 +24,41 @@ new_boxplot_block <- function(x = character(), y = character(),
           cols <- reactive(colnames(data()))
 
           x_col <- reactiveVal(x)
-          y_col <- reactiveVal(y)
-          color_col <- reactiveVal(color)
           fill_col <- reactiveVal(fill)
+          color_col <- reactiveVal(color)
+          alpha_val <- reactiveVal(alpha)
           plot_title <- reactiveVal(title)
-          show_outliers_val <- reactiveVal(show_outliers)
+          adjust_val <- reactiveVal(adjust)
 
           observeEvent(input$xcol, x_col(input$xcol))
-          observeEvent(input$ycol, y_col(input$ycol))
-          observeEvent(input$colcol, color_col(input$colcol))
           observeEvent(input$fillcol, fill_col(input$fillcol))
+          observeEvent(input$colorcol, color_col(input$colorcol))
+          observeEvent(input$alpha, alpha_val(input$alpha))
           observeEvent(input$title, plot_title(input$title))
-          observeEvent(input$show_outliers, show_outliers_val(input$show_outliers))
+          observeEvent(input$adjust, adjust_val(input$adjust))
 
           observeEvent(
             cols(),
             {
               numeric_cols <- cols()[sapply(data(), is.numeric)]
-              factor_cols <- cols()[sapply(data(), function(x) is.factor(x) || is.character(x))]
               
               updateSelectInput(
                 session,
                 inputId = "xcol",
-                choices = c("", factor_cols),
-                selected = x_col()
-              )
-              updateSelectInput(
-                session,
-                inputId = "ycol", 
                 choices = c("", numeric_cols),
-                selected = y_col()
-              )
-              updateSelectInput(
-                session,
-                inputId = "colcol",
-                choices = c("", cols()),
-                selected = color_col()
+                selected = x_col()
               )
               updateSelectInput(
                 session,
                 inputId = "fillcol",
                 choices = c("", cols()),
                 selected = fill_col()
+              )
+              updateSelectInput(
+                session,
+                inputId = "colorcol",
+                choices = c("", cols()),
+                selected = color_col()
               )
             }
           )
@@ -75,21 +68,21 @@ new_boxplot_block <- function(x = character(), y = character(),
               # Build aesthetics
               aes_list <- list()
               if (isTruthy(x_col())) aes_list$x <- x_col()
-              if (isTruthy(y_col())) aes_list$y <- y_col()
-              if (isTruthy(color_col())) aes_list$colour <- color_col()
               if (isTruthy(fill_col())) aes_list$fill <- fill_col()
+              if (isTruthy(color_col())) aes_list$colour <- color_col()
               
-              # Build geom_boxplot arguments
-              geom_args <- list()
-              if (!show_outliers_val()) geom_args$outlier.shape <- NA
+              # Build geom arguments
+              density_args <- list()
+              density_args$alpha <- alpha_val()
+              density_args$adjust <- adjust_val()
               
               # Build the plot expression
               plot_expr <- bquote(
                 ggplot2::ggplot(data, ggplot2::aes(..(aes_mapping))) +
-                  ggplot2::geom_boxplot(..(geom_arguments)),
+                  ggplot2::geom_density(..(density_arguments)),
                 list(
                   aes_mapping = lapply(aes_list, as.name),
-                  geom_arguments = geom_args
+                  density_arguments = density_args
                 ),
                 splice = TRUE
               )
@@ -106,12 +99,12 @@ new_boxplot_block <- function(x = character(), y = character(),
               plot_expr
             }),
             state = list(
-              x = x_col, 
-              y = y_col,
-              color = color_col, 
+              x = x_col,
               fill = fill_col,
+              color = color_col,
+              alpha = alpha_val,
               title = plot_title,
-              show_outliers = show_outliers_val
+              adjust = adjust_val
             )
           )
         }
@@ -120,63 +113,66 @@ new_boxplot_block <- function(x = character(), y = character(),
     function(id) {
       div(
         class = "m-3",
-        h4("Boxplot Configuration"),
+        h4("Density Plot Configuration"),
         div(
           class = "row",
           div(
             class = "col-md-6",
             selectInput(
               inputId = NS(id, "xcol"),
-              label = "X-axis (Categorical)",
+              label = "X-axis (Numeric)",
               choices = x,
               selected = x
             ),
             selectInput(
-              inputId = NS(id, "ycol"),
-              label = "Y-axis (Numeric, optional)",
-              choices = y,
-              selected = y
+              inputId = NS(id, "fillcol"),
+              label = "Fill By (Multiple Densities)",
+              choices = fill,
+              selected = fill
+            ),
+            selectInput(
+              inputId = NS(id, "colorcol"),
+              label = "Color By",
+              choices = color,
+              selected = color
             )
           ),
           div(
             class = "col-md-6",
-            selectInput(
-              inputId = NS(id, "colcol"),
-              label = "Color By",
-              choices = color,
-              selected = color
+            sliderInput(
+              inputId = NS(id, "alpha"),
+              label = "Transparency",
+              value = alpha,
+              min = 0.1,
+              max = 1.0,
+              step = 0.1
             ),
-            selectInput(
-              inputId = NS(id, "fillcol"),
-              label = "Fill By",
-              choices = fill,
-              selected = fill
-            )
+            sliderInput(
+              inputId = NS(id, "adjust"),
+              label = "Bandwidth Adjustment",
+              value = adjust,
+              min = 0.1,
+              max = 3.0,
+              step = 0.1
+            ),
+            helpText("Higher values = smoother curves")
           )
         ),
         div(
           class = "row",
           div(
-            class = "col-md-8",
+            class = "col-md-12",
             textInput(
               inputId = NS(id, "title"),
               label = "Plot Title",
               value = title,
               placeholder = "Enter plot title..."
             )
-          ),
-          div(
-            class = "col-md-4",
-            checkboxInput(
-              inputId = NS(id, "show_outliers"),
-              label = "Show Outliers",
-              value = show_outliers
-            )
           )
         )
       )
     },
-    class = "boxplot_block",
+    class = "density_plot_block",
     ...
   )
 }

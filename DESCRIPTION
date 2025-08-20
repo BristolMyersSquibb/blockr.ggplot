@@ -1,12 +1,19 @@
 Package: blockr.ggplot
 Title: GGplots for the blockr ecosystem
 Version: 0.0.1
-Authors@R: 
+Authors@R: c(
     person(given = "Nicolas",
            family = "Bennett",
            role = c("aut", "cre"),
-           email = "nicolas@cynkra.com")
-Description: Provides blocks for plotting with blockr using 'ggplot2'.
+           email = "nicolas@cynkra.com"),
+    person(given = "Christoph",
+           family = "Sax",
+           role = "aut",
+           email = "christoph@cynkra.com"))
+Description: Provides comprehensive blocks for plotting with blockr using 'ggplot2'.
+    Includes PowerBI-style chart types (bar charts, line charts, pie charts, scatter plots)
+    as well as statistical plots (boxplots, histograms, density plots, violin plots, heatmaps)
+    with rich customization options and intuitive user interfaces.
 License: GPL (>= 3)
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
@@ -14,6 +21,5 @@ RoxygenNote: 7.3.2
 Imports:
     shiny,
     blockr.core (>= 0.0.1),
-    ggplot2
-Remotes:
-    cynkra/blockr.core
+    ggplot2,
+    dplyr

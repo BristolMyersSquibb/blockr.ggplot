@@ -1,21 +1,23 @@
-#' Boxplot block constructor
+#' Line chart block constructor
 #'
-#' This block draws a boxplot using [ggplot2::geom_boxplot()]. Supports customizable
-#' aesthetics including x-axis, y-axis grouping, color/fill, and styling options.
+#' This block creates line charts using [ggplot2::geom_line()] and optionally [ggplot2::geom_point()].
+#' Perfect for time series data and trend visualization with grouping support.
 #'
-#' @param x Column for x-axis (categorical variable)
-#' @param y Column for y-axis (numeric variable, optional for single variable boxplots)
-#' @param color Column for color aesthetic (optional)
-#' @param fill Column for fill aesthetic (optional)
+#' @param x Column for x-axis (often time/date variable)
+#' @param y Column for y-axis (numeric variable)
+#' @param color Column for color aesthetic (for multiple lines)
+#' @param linetype Column for linetype aesthetic (optional)
+#' @param size Line size (default 1)
+#' @param show_points Whether to show points on the line (default TRUE)
 #' @param title Plot title (optional)
-#' @param show_outliers Whether to show outliers (default TRUE)
 #' @param ... Forwarded to [new_block()]
 #'
 #' @export
-new_boxplot_block <- function(x = character(), y = character(), 
-                             color = character(), fill = character(),
-                             title = character(), show_outliers = TRUE, ...) {
-	new_ggplot_block(
+new_line_chart_block <- function(x = character(), y = character(),
+                                color = character(), linetype = character(),
+                                size = 1, show_points = TRUE,
+                                title = character(), ...) {
+  new_ggplot_block(
     function(id, data) {
       moduleServer(
         id,
@@ -26,46 +28,50 @@ new_boxplot_block <- function(x = character(), y = character(),
           x_col <- reactiveVal(x)
           y_col <- reactiveVal(y)
           color_col <- reactiveVal(color)
-          fill_col <- reactiveVal(fill)
+          linetype_col <- reactiveVal(linetype)
+          size_val <- reactiveVal(size)
+          show_points_val <- reactiveVal(show_points)
           plot_title <- reactiveVal(title)
-          show_outliers_val <- reactiveVal(show_outliers)
 
           observeEvent(input$xcol, x_col(input$xcol))
           observeEvent(input$ycol, y_col(input$ycol))
-          observeEvent(input$colcol, color_col(input$colcol))
-          observeEvent(input$fillcol, fill_col(input$fillcol))
+          observeEvent(input$colorcol, color_col(input$colorcol))
+          observeEvent(input$linetypecol, linetype_col(input$linetypecol))
+          observeEvent(input$size, size_val(input$size))
+          observeEvent(input$show_points, show_points_val(input$show_points))
           observeEvent(input$title, plot_title(input$title))
-          observeEvent(input$show_outliers, show_outliers_val(input$show_outliers))
 
           observeEvent(
             cols(),
             {
               numeric_cols <- cols()[sapply(data(), is.numeric)]
-              factor_cols <- cols()[sapply(data(), function(x) is.factor(x) || is.character(x))]
+              date_numeric_cols <- cols()[sapply(data(), function(x) {
+                is.numeric(x) || inherits(x, c("Date", "POSIXt"))
+              })]
               
               updateSelectInput(
                 session,
                 inputId = "xcol",
-                choices = c("", factor_cols),
+                choices = c("", date_numeric_cols),
                 selected = x_col()
               )
               updateSelectInput(
                 session,
-                inputId = "ycol", 
+                inputId = "ycol",
                 choices = c("", numeric_cols),
                 selected = y_col()
               )
               updateSelectInput(
                 session,
-                inputId = "colcol",
+                inputId = "colorcol",
                 choices = c("", cols()),
                 selected = color_col()
               )
               updateSelectInput(
                 session,
-                inputId = "fillcol",
+                inputId = "linetypecol",
                 choices = c("", cols()),
-                selected = fill_col()
+                selected = linetype_col()
               )
             }
           )
@@ -77,22 +83,31 @@ new_boxplot_block <- function(x = character(), y = character(),
               if (isTruthy(x_col())) aes_list$x <- x_col()
               if (isTruthy(y_col())) aes_list$y <- y_col()
               if (isTruthy(color_col())) aes_list$colour <- color_col()
-              if (isTruthy(fill_col())) aes_list$fill <- fill_col()
+              if (isTruthy(linetype_col())) aes_list$linetype <- linetype_col()
               
-              # Build geom_boxplot arguments
-              geom_args <- list()
-              if (!show_outliers_val()) geom_args$outlier.shape <- NA
+              # Build geom arguments
+              line_args <- list()
+              line_args$size <- size_val()
               
-              # Build the plot expression
+              # Start with base plot + line
               plot_expr <- bquote(
                 ggplot2::ggplot(data, ggplot2::aes(..(aes_mapping))) +
-                  ggplot2::geom_boxplot(..(geom_arguments)),
+                  ggplot2::geom_line(..(line_arguments)),
                 list(
                   aes_mapping = lapply(aes_list, as.name),
-                  geom_arguments = geom_args
+                  line_arguments = line_args
                 ),
                 splice = TRUE
               )
+              
+              # Add points if requested
+              if (show_points_val()) {
+                plot_expr <- bquote(
+                  ..(plot_base) + ggplot2::geom_point(),
+                  list(plot_base = plot_expr),
+                  splice = TRUE
+                )
+              }
               
               # Add title if specified
               if (isTruthy(plot_title())) {
@@ -106,12 +121,13 @@ new_boxplot_block <- function(x = character(), y = character(),
               plot_expr
             }),
             state = list(
-              x = x_col, 
+              x = x_col,
               y = y_col,
-              color = color_col, 
-              fill = fill_col,
-              title = plot_title,
-              show_outliers = show_outliers_val
+              color = color_col,
+              linetype = linetype_col,
+              size = size_val,
+              show_points = show_points_val,
+              title = plot_title
             )
           )
         }
@@ -120,20 +136,20 @@ new_boxplot_block <- function(x = character(), y = character(),
     function(id) {
       div(
         class = "m-3",
-        h4("Boxplot Configuration"),
+        h4("Line Chart Configuration"),
         div(
           class = "row",
           div(
             class = "col-md-6",
             selectInput(
               inputId = NS(id, "xcol"),
-              label = "X-axis (Categorical)",
+              label = "X-axis (Numeric/Date)",
               choices = x,
               selected = x
             ),
             selectInput(
               inputId = NS(id, "ycol"),
-              label = "Y-axis (Numeric, optional)",
+              label = "Y-axis (Numeric)",
               choices = y,
               selected = y
             )
@@ -141,23 +157,23 @@ new_boxplot_block <- function(x = character(), y = character(),
           div(
             class = "col-md-6",
             selectInput(
-              inputId = NS(id, "colcol"),
-              label = "Color By",
+              inputId = NS(id, "colorcol"),
+              label = "Color By (Multiple Lines)",
               choices = color,
               selected = color
             ),
             selectInput(
-              inputId = NS(id, "fillcol"),
-              label = "Fill By",
-              choices = fill,
-              selected = fill
+              inputId = NS(id, "linetypecol"),
+              label = "Line Type By",
+              choices = linetype,
+              selected = linetype
             )
           )
         ),
         div(
           class = "row",
           div(
-            class = "col-md-8",
+            class = "col-md-6",
             textInput(
               inputId = NS(id, "title"),
               label = "Plot Title",
@@ -166,17 +182,28 @@ new_boxplot_block <- function(x = character(), y = character(),
             )
           ),
           div(
-            class = "col-md-4",
+            class = "col-md-3",
+            numericInput(
+              inputId = NS(id, "size"),
+              label = "Line Size",
+              value = size,
+              min = 0.1,
+              max = 3,
+              step = 0.1
+            )
+          ),
+          div(
+            class = "col-md-3",
             checkboxInput(
-              inputId = NS(id, "show_outliers"),
-              label = "Show Outliers",
-              value = show_outliers
+              inputId = NS(id, "show_points"),
+              label = "Show Points",
+              value = show_points
             )
           )
         )
       )
     },
-    class = "boxplot_block",
+    class = "line_chart_block",
     ...
   )
 }
