@@ -15,7 +15,7 @@
 new_boxplot_block <- function(x = character(), y = character(), 
                              color = character(), fill = character(),
                              title = character(), show_outliers = TRUE, ...) {
-	new_ggplot_block(
+	new_plot_block(
     function(id, data) {
       moduleServer(
         id,
@@ -72,34 +72,59 @@ new_boxplot_block <- function(x = character(), y = character(),
 
           list(
             expr = reactive({
-              # Build aesthetics
-              aes_list <- list()
-              if (isTruthy(x_col())) aes_list$x <- x_col()
-              if (isTruthy(y_col())) aes_list$y <- y_col()
-              if (isTruthy(color_col())) aes_list$colour <- color_col()
-              if (isTruthy(fill_col())) aes_list$fill <- fill_col()
+              # Basic validation - need at least x
+              if (is.null(x_col()) || x_col() == "") {
+                return(quote(ggplot2::ggplot() + ggplot2::geom_blank()))
+              }
               
-              # Build geom_boxplot arguments
-              geom_args <- list()
-              if (!show_outliers_val()) geom_args$outlier.shape <- NA
+              # Build basic aesthetics
+              if (!is.null(y_col()) && y_col() != "") {
+                # Two variable boxplot
+                aes_call <- substitute(
+                  ggplot2::aes(x = X, y = Y),
+                  list(X = as.name(x_col()), Y = as.name(y_col()))
+                )
+              } else {
+                # Single variable boxplot
+                aes_call <- substitute(
+                  ggplot2::aes(x = "", y = X),
+                  list(X = as.name(x_col()))
+                )
+              }
               
-              # Build the plot expression
-              plot_expr <- bquote(
-                ggplot2::ggplot(data, ggplot2::aes(..(aes_mapping))) +
-                  ggplot2::geom_boxplot(..(geom_arguments)),
-                list(
-                  aes_mapping = lapply(aes_list, as.name),
-                  geom_arguments = geom_args
-                ),
-                splice = TRUE
-              )
+              # Add fill aesthetic if specified
+              if (!is.null(fill_col()) && fill_col() != "") {
+                if (!is.null(y_col()) && y_col() != "") {
+                  aes_call <- substitute(
+                    ggplot2::aes(x = X, y = Y, fill = FILL),
+                    list(X = as.name(x_col()), Y = as.name(y_col()), FILL = as.name(fill_col()))
+                  )
+                } else {
+                  aes_call <- substitute(
+                    ggplot2::aes(x = "", y = X, fill = FILL),
+                    list(X = as.name(x_col()), FILL = as.name(fill_col()))
+                  )
+                }
+              }
+              
+              # Build boxplot
+              if (show_outliers_val()) {
+                plot_expr <- substitute(
+                  ggplot2::ggplot(data, AES) + ggplot2::geom_boxplot(),
+                  list(AES = aes_call)
+                )
+              } else {
+                plot_expr <- substitute(
+                  ggplot2::ggplot(data, AES) + ggplot2::geom_boxplot(outlier.shape = NA),
+                  list(AES = aes_call)
+                )
+              }
               
               # Add title if specified
-              if (isTruthy(plot_title())) {
-                plot_expr <- bquote(
-                  ..(plot_base) + ggplot2::labs(title = .(title_text)),
-                  list(plot_base = plot_expr, title_text = plot_title()),
-                  splice = TRUE
+              if (!is.null(plot_title()) && plot_title() != "") {
+                plot_expr <- substitute(
+                  PLOT + ggplot2::labs(title = TITLE),
+                  list(PLOT = plot_expr, TITLE = plot_title())
                 )
               }
               
@@ -175,6 +200,9 @@ new_boxplot_block <- function(x = character(), y = character(),
           )
         )
       )
+    },
+    dat_valid = function(data) {
+      stopifnot(is.data.frame(data) || is.matrix(data))
     },
     class = "boxplot_block",
     ...

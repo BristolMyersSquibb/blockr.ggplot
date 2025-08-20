@@ -66,105 +66,55 @@ new_pie_chart_block <- function(x = character(), y = character(),
 
           list(
             expr = reactive({
-              # Prepare data for pie chart
-              if (isTruthy(y_col())) {
-                # Use provided y values
-                data_prep_expr <- bquote(
-                  data <- data[!is.na(.(as.name(x_col()))), ]
-                )
-              } else {
-                # Count occurrences
-                data_prep_expr <- bquote({
-                  data <- data[!is.na(.(as.name(x_col()))), ]
-                  data <- data %>% 
-                    dplyr::count(.(as.name(x_col())), name = "n")
-                })
+              # Build basic plot text
+              if (!isTruthy(x_col())) {
+                return(quote(ggplot2::ggplot() + ggplot2::geom_blank()))
               }
               
-              # Build aesthetics
-              aes_list <- list()
-              if (isTruthy(x_col())) aes_list$x <- ""  # Empty x for pie chart
+              # Determine y variable and data preparation
               if (isTruthy(y_col())) {
-                aes_list$y <- y_col()
+                y_var <- y_col()
+                data_prep <- glue::glue('data <- data[!is.na(data${x_col()}), ]')
               } else {
-                aes_list$y <- "n"  # Use count
+                y_var <- "n"
+                data_prep <- glue::glue('data <- data[!is.na(data${x_col()}), ]; data <- data %>% dplyr::count({x_col()}, name = "n")')
               }
               
               # Use fill_col if specified, otherwise use x_col
               fill_var <- if (isTruthy(fill_col())) fill_col() else x_col()
-              if (isTruthy(fill_var)) aes_list$fill <- fill_var
               
-              # Build the plot expression
-              plot_expr <- bquote(
-                ggplot2::ggplot(data, ggplot2::aes(..(aes_mapping))) +
-                  ggplot2::geom_col(width = 1) +
-                  ggplot2::coord_polar("y", start = 0) +
-                  ggplot2::theme_void(),
-                list(
-                  aes_mapping = lapply(aes_list, function(x) if(x == "") "" else as.name(x))
-                ),
-                splice = TRUE
-              )
+              # Build aesthetics
+              aes_text <- glue::glue('x = "", y = {y_var}, fill = {fill_var}')
+              
+              # Build basic plot
+              plot_text <- glue::glue('ggplot2::ggplot(data, ggplot2::aes({aes_text})) + ggplot2::geom_col(width = 1) + ggplot2::coord_polar("y", start = 0) + ggplot2::theme_void()')
               
               # Add donut hole if requested
               if (donut_val()) {
-                plot_expr <- bquote(
-                  ..(plot_base) + ggplot2::xlim(c(-1, 1.5)),
-                  list(plot_base = plot_expr),
-                  splice = TRUE
-                )
+                plot_text <- glue::glue('({plot_text}) + ggplot2::xlim(c(-1, 1.5))')
               }
               
               # Add labels if requested
               if (show_labels_val()) {
                 if (isTruthy(y_col())) {
                   # Custom y values
-                  plot_expr <- bquote(
-                    ..(plot_base) + 
-                      ggplot2::geom_text(
-                        ggplot2::aes(label = paste0(round(.(as.name(y_col())) / sum(.(as.name(y_col()))) * 100, 1), "%")),
-                        position = ggplot2::position_stack(vjust = 0.5)
-                      ),
-                    list(plot_base = plot_expr),
-                    splice = TRUE
-                  )
+                  label_text <- glue::glue('paste0(round({y_col()} / sum({y_col()}) * 100, 1), "%")')
                 } else {
                   # Count values
-                  plot_expr <- bquote(
-                    ..(plot_base) + 
-                      ggplot2::geom_text(
-                        ggplot2::aes(label = paste0(round(n / sum(n) * 100, 1), "%")),
-                        position = ggplot2::position_stack(vjust = 0.5)
-                      ),
-                    list(plot_base = plot_expr),
-                    splice = TRUE
-                  )
+                  label_text <- 'paste0(round(n / sum(n) * 100, 1), "%")'
                 }
+                plot_text <- glue::glue('({plot_text}) + ggplot2::geom_text(ggplot2::aes(label = {label_text}), position = ggplot2::position_stack(vjust = 0.5))')
               }
               
               # Add title if specified
               if (isTruthy(plot_title())) {
-                plot_expr <- bquote(
-                  ..(plot_base) + ggplot2::labs(title = .(title_text)),
-                  list(plot_base = plot_expr, title_text = plot_title()),
-                  splice = TRUE
-                )
+                plot_text <- glue::glue('({plot_text}) + ggplot2::labs(title = "{plot_title()}")')
               }
               
-              # Combine data prep and plot
-              if (isTruthy(y_col())) {
-                final_expr <- bquote({
-                  ..(data_prep)
-                  ..(plot_code)
-                }, list(data_prep = data_prep_expr, plot_code = plot_expr))
-              } else {
-                final_expr <- bquote({
-                  ..(data_prep)
-                  ..(plot_code)
-                }, list(data_prep = data_prep_expr, plot_code = plot_expr))
-              }
+              # Combine data preparation and plot
+              final_text <- glue::glue('{{ {data_prep}; {plot_text} }}')
               
-              final_expr
+              parse(text = final_text)[[1]]
             }),
             state = list(
               x = x_col,

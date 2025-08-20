@@ -41,13 +41,10 @@ new_toy_scatter_plot_block <- function(x = character(), y = character(), ...) {
           )
 
           list(
-            expr = reactive(
-              bquote(
-                ggplot2::ggplot(data, ggplot2::aes(x = .(x), y = .(y))) + 
-                  ggplot2::geom_point(),
-                list(x = as.name(x_col()), y = as.name(y_col()))
-              )
-            ),
+            expr = reactive({
+              text <- glue::glue("ggplot2::ggplot(data, ggplot2::aes(x = {x_col()}, y = {y_col()})) + ggplot2::geom_point()")
+              parse(text = text)[[1]]
+            }),
             state = list(x = x_col, y = y_col)
           )
         }

@@ -58,5 +58,96 @@ blockr.core::serve(
 3. Statistical: heatmap_block, density_plot_block, violin_plot_block
 
 ### Dependencies
-- Imports: shiny, blockr.core, ggplot2, dplyr
+- Imports: shiny, blockr.core, ggplot2, dplyr, glue
 - All blocks follow blockr.dplyr patterns for UI consistency
+
+## Expression Building Pattern
+
+### ALWAYS use parse(text = glue::glue()) pattern for expressions
+
+**This is the MANDATORY pattern for all blockr.ggplot expressions - NEVER use bquote()**
+
+### Why parse/glue over bquote?
+
+#### Ecosystem Consistency
+- **All blockr.dplyr blocks** use `parse(text = glue::glue())` pattern
+- **Consistent codebase** makes maintenance easier across all blockr packages
+- **Team familiarity** - developers expect this pattern throughout blockr
+
+#### Code Readability & Maintainability
+- **Natural syntax**: Write code that looks like actual R code
+- **String interpolation**: Use familiar `{variable}` syntax instead of `.(variable)`
+- **No complex list management**: No need for separate substitution lists with `as.name()`
+- **Debugging friendly**: Can easily `cat()` or `print()` the generated text for debugging
+
+#### Technical Advantages
+- **Simpler conditional logic**: Easier to build complex expressions with if/else
+- **Flexible composition**: Easy to concatenate multiple parts of expressions
+- **Standard R patterns**: Uses well-established `parse()` and string interpolation
+- **Less error-prone**: Fewer opportunities for variable substitution mistakes
+
+### Implementation Patterns
+
+**Simple expression:**
+```r
+expr = reactive({
+  text <- glue::glue("ggplot2::ggplot(data, ggplot2::aes(x = {x_col()}, y = {y_col()})) + ggplot2::geom_point()")
+  parse(text = text)[[1]]
+})
+```
+
+**Conditional aesthetics:**
+```r
+expr = reactive({
+  # Build aesthetics conditionally
+  aes_parts <- c(glue::glue("x = {x_col()}"), glue::glue("y = {y_col()}"))
+  if (isTruthy(color_col())) {
+    aes_parts <- c(aes_parts, glue::glue("colour = {color_col()}"))
+  }
+  aes_text <- paste(aes_parts, collapse = ", ")
+  
+  # Build plot
+  plot_text <- glue::glue("ggplot2::ggplot(data, ggplot2::aes({aes_text})) + ggplot2::geom_point()")
+  parse(text = plot_text)[[1]]
+})
+```
+
+**Complex composition with geom arguments:**
+```r
+expr = reactive({
+  # Build aesthetics and geom args separately
+  aes_text <- glue::glue("x = {x_col()}, y = {y_col()}")
+  geom_args <- glue::glue("alpha = {alpha_val()}, size = {size_val()}")
+  
+  # Compose final expression
+  plot_text <- glue::glue("ggplot2::ggplot(data, ggplot2::aes({aes_text})) + ggplot2::geom_point({geom_args})")
+  
+  # Add layers conditionally
+  if (add_smooth_val()) {
+    plot_text <- glue::glue("({plot_text}) + ggplot2::geom_smooth()")
+  }
+  
+  parse(text = plot_text)[[1]]
+})
+```
+
+### DEPRECATED: bquote() pattern (DO NOT USE)
+```r
+# DON'T DO THIS - This pattern is DEPRECATED
+expr = reactive({
+  bquote(
+    ggplot2::ggplot(data, ggplot2::aes(x = .(x), y = .(y), colour = .(col))) + 
+      ggplot2::geom_point(),
+    list(x = as.name(x_col()), y = as.name(y_col()), col = as.name(color_col()))
+  )
+})
+```
+
+### Migration Strategy
+All existing blocks have been converted from bquote to parse/glue pattern. When creating new blocks:
+
+1. **Start with simple case**: Basic aesthetics using `glue::glue()`
+2. **Add conditionals**: Use if/else for optional aesthetics or geom arguments  
+3. **Build incrementally**: Compose complex expressions by concatenating simpler parts
+4. **Test frequently**: Print the generated text to verify correctness
+5. **Follow examples**: Use existing converted blocks as templates

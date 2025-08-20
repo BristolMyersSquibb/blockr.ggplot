@@ -67,67 +67,45 @@ new_heatmap_block <- function(x = character(), y = character(),
 
           list(
             expr = reactive({
-              # Build aesthetics
-              aes_list <- list()
-              if (isTruthy(x_col())) aes_list$x <- x_col()
-              if (isTruthy(y_col())) aes_list$y <- y_col()
-              if (isTruthy(fill_col())) aes_list$fill <- fill_col()
+              # Build basic plot text
+              if (!isTruthy(x_col()) || !isTruthy(y_col()) || !isTruthy(fill_col())) {
+                return(quote(ggplot2::ggplot() + ggplot2::geom_blank()))
+              }
               
-              # Build the plot expression
-              plot_expr <- bquote(
-                ggplot2::ggplot(data, ggplot2::aes(..(aes_mapping))) +
-                  ggplot2::geom_tile(color = "white") +
-                  ggplot2::theme_minimal() +
-                  ggplot2::theme(
-                    axis.text.x = ggplot2::element_text(angle = 45, hjust = 1),
-                    panel.grid = ggplot2::element_blank()
-                  ),
-                list(
-                  aes_mapping = lapply(aes_list, as.name)
-                ),
-                splice = TRUE
+              # Build aesthetics
+              aes_text <- glue::glue("x = {x_col()}, y = {y_col()}, fill = {fill_col()}")
+              
+              # Build basic plot with theme
+              plot_text <- glue::glue(
+                'ggplot2::ggplot(data, ggplot2::aes({aes_text})) + ',
+                'ggplot2::geom_tile(color = "white") + ',
+                'ggplot2::theme_minimal() + ',
+                'ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 45, hjust = 1), panel.grid = ggplot2::element_blank())'
               )
               
               # Add color scale based on palette choice
-              palette_code <- switch(color_palette_val(),
-                "viridis" = bquote(ggplot2::scale_fill_viridis_c()),
-                "plasma" = bquote(ggplot2::scale_fill_viridis_c(option = "plasma")),
-                "inferno" = bquote(ggplot2::scale_fill_viridis_c(option = "inferno")),
-                "magma" = bquote(ggplot2::scale_fill_viridis_c(option = "magma")),
-                "blues" = bquote(ggplot2::scale_fill_gradient(low = "white", high = "steelblue")),
-                bquote(ggplot2::scale_fill_viridis_c())  # default
+              color_scale <- switch(color_palette_val(),
+                "viridis" = "ggplot2::scale_fill_viridis_c()",
+                "plasma" = 'ggplot2::scale_fill_viridis_c(option = "plasma")',
+                "inferno" = 'ggplot2::scale_fill_viridis_c(option = "inferno")',
+                "magma" = 'ggplot2::scale_fill_viridis_c(option = "magma")',
+                "blues" = 'ggplot2::scale_fill_gradient(low = "white", high = "steelblue")',
+                "ggplot2::scale_fill_viridis_c()"  # default
               )
               
-              plot_expr <- bquote(
-                ..(plot_base) + ..(color_scale),
-                list(plot_base = plot_expr, color_scale = palette_code),
-                splice = TRUE
-              )
+              plot_text <- glue::glue("({plot_text}) + {color_scale}")
               
               # Add text values if requested
               if (show_values_val()) {
-                plot_expr <- bquote(
-                  ..(plot_base) + 
-                    ggplot2::geom_text(
-                      ggplot2::aes(label = round(.(as.name(fill_col())), 2)),
-                      color = "black",
-                      size = 3
-                    ),
-                  list(plot_base = plot_expr),
-                  splice = TRUE
-                )
+                plot_text <- glue::glue('({plot_text}) + ggplot2::geom_text(ggplot2::aes(label = round({fill_col()}, 2)), color = "black", size = 3)')
               }
               
               # Add title if specified
               if (isTruthy(plot_title())) {
-                plot_expr <- bquote(
-                  ..(plot_base) + ggplot2::labs(title = .(title_text)),
-                  list(plot_base = plot_expr, title_text = plot_title()),
-                  splice = TRUE
-                )
+                plot_text <- glue::glue('({plot_text}) + ggplot2::labs(title = "{plot_title()}")')
               }
               
-              plot_expr
+              parse(text = plot_text)[[1]]
             }),
             state = list(
               x = x_col,

@@ -77,39 +77,39 @@ new_violin_plot_block <- function(x = character(), y = character(),
 
           list(
             expr = reactive({
+              # Build basic plot text
+              if (!isTruthy(x_col()) || !isTruthy(y_col())) {
+                return(quote(ggplot2::ggplot() + ggplot2::geom_blank()))
+              }
+              
               # Build aesthetics
-              aes_list <- list()
-              if (isTruthy(x_col())) aes_list$x <- x_col()
-              if (isTruthy(y_col())) aes_list$y <- y_col()
-              if (isTruthy(fill_col())) aes_list$fill <- fill_col()
-              if (isTruthy(color_col())) aes_list$colour <- color_col()
+              aes_parts <- c(glue::glue("x = {x_col()}"), glue::glue("y = {y_col()}"))
+              if (isTruthy(fill_col())) {
+                aes_parts <- c(aes_parts, glue::glue("fill = {fill_col()}"))
+              }
+              if (isTruthy(color_col())) {
+                aes_parts <- c(aes_parts, glue::glue("colour = {color_col()}"))
+              }
+              
+              aes_text <- paste(aes_parts, collapse = ", ")
               
               # Build geom arguments
-              violin_args <- list()
-              violin_args$trim <- trim_val()
-              violin_args$scale <- scale_val()
-              
-              # Build the plot expression
-              plot_expr <- bquote(
-                ggplot2::ggplot(data, ggplot2::aes(..(aes_mapping))) +
-                  ggplot2::geom_violin(..(violin_arguments)),
-                list(
-                  aes_mapping = lapply(aes_list, as.name),
-                  violin_arguments = violin_args
-                ),
-                splice = TRUE
+              geom_args <- c(
+                glue::glue("trim = {trim_val()}"),
+                glue::glue('scale = "{scale_val()}"')
               )
+              
+              geom_args_text <- paste(geom_args, collapse = ", ")
+              
+              # Build basic plot
+              plot_text <- glue::glue("ggplot2::ggplot(data, ggplot2::aes({aes_text})) + ggplot2::geom_violin({geom_args_text})")
               
               # Add title if specified
               if (isTruthy(plot_title())) {
-                plot_expr <- bquote(
-                  ..(plot_base) + ggplot2::labs(title = .(title_text)),
-                  list(plot_base = plot_expr, title_text = plot_title()),
-                  splice = TRUE
-                )
+                plot_text <- glue::glue('({plot_text}) + ggplot2::labs(title = "{plot_title()}")')
               }
               
-              plot_expr
+              parse(text = plot_text)[[1]]
             }),
             state = list(
               x = x_col,
