@@ -22,46 +22,46 @@ new_scatter_plot_block <- function(x = character(), y = character(), color = cha
 
           cols <- reactive(colnames(data()))
 
-          x_col <- reactiveVal(x)
-          y_col <- reactiveVal(y)
-          color_col <- reactiveVal(if (length(color) == 0) "(none)" else color)
-          shape_col <- reactiveVal(if (length(shape) == 0) "(none)" else shape)
-          alpha_val <- reactiveVal(alpha)
-          add_smooth_val <- reactiveVal(add_smooth)
+          r_x <- reactiveVal(x)
+          r_y <- reactiveVal(y)
+          r_color <- reactiveVal(if (length(color) == 0) "(none)" else color)
+          r_shape <- reactiveVal(if (length(shape) == 0) "(none)" else shape)
+          r_alpha <- reactiveVal(alpha)
+          r_add_smooth <- reactiveVal(add_smooth)
 
-          observeEvent(input$xcol, x_col(input$xcol))
-          observeEvent(input$ycol, y_col(input$ycol))
-          observeEvent(input$colorcol, color_col(input$colorcol))
-          observeEvent(input$shapecol, shape_col(input$shapecol))
-          observeEvent(input$alpha, alpha_val(input$alpha))
-          observeEvent(input$add_smooth, add_smooth_val(input$add_smooth))
+          observeEvent(input$x, r_x(input$x))
+          observeEvent(input$y, r_y(input$y))
+          observeEvent(input$color, r_color(input$color))
+          observeEvent(input$shape, r_shape(input$shape))
+          observeEvent(input$alpha, r_alpha(input$alpha))
+          observeEvent(input$add_smooth, r_add_smooth(input$add_smooth))
 
           observeEvent(
             cols(),
             {
               updateSelectInput(
                 session,
-                inputId = "xcol",
+                inputId = "x",
                 choices = cols(),
-                selected = x_col()
+                selected = r_x()
               )
               updateSelectInput(
                 session,
-                inputId = "ycol",
+                inputId = "y",
                 choices = cols(),
-                selected = y_col()
+                selected = r_y()
               )
               updateSelectInput(
                 session,
-                inputId = "colorcol",
+                inputId = "color",
                 choices = c("(none)", cols()),
-                selected = color_col()
+                selected = r_color()
               )
               updateSelectInput(
                 session,
-                inputId = "shapecol",
+                inputId = "shape",
                 choices = c("(none)", cols()),
-                selected = shape_col()
+                selected = r_shape()
               )
             }
           )
@@ -70,32 +70,32 @@ new_scatter_plot_block <- function(x = character(), y = character(), color = cha
             expr = reactive({
               # Build aesthetics dynamically
               aes_parts <- c(
-                glue::glue("x = {x_col()}"),
-                glue::glue("y = {y_col()}")
+                glue::glue("x = {r_x()}"),
+                glue::glue("y = {r_y()}")
               )
-              
+
               # Add optional aesthetics if not "(none)"
-              if (color_col() != "(none)") {
-                aes_parts <- c(aes_parts, glue::glue("colour = {color_col()}"))
+              if (r_color() != "(none)") {
+                aes_parts <- c(aes_parts, glue::glue("colour = {r_color()}"))
               }
-              
-              if (shape_col() != "(none)") {
-                aes_parts <- c(aes_parts, glue::glue("shape = {shape_col()}"))
+
+              if (r_shape() != "(none)") {
+                aes_parts <- c(aes_parts, glue::glue("shape = {r_shape()}"))
               }
-              
+
               aes_text <- paste(aes_parts, collapse = ", ")
-              
+
               # Build plot
-              text <- glue::glue("ggplot2::ggplot(data, ggplot2::aes({aes_text})) + ggplot2::geom_point(alpha = {alpha_val()})")
+              text <- glue::glue("ggplot2::ggplot(data, ggplot2::aes({aes_text})) + ggplot2::geom_point(alpha = {r_alpha()})")
 
               # Add smooth/trendline if requested
-              if (add_smooth_val()) {
+              if (r_add_smooth()) {
                 text <- glue::glue("({text}) + ggplot2::geom_smooth()")
               }
 
               parse(text = text)[[1]]
             }),
-            state = list(x = x_col, y = y_col, color = color_col, shape = shape_col, alpha = alpha_val, add_smooth = add_smooth_val)
+            state = list(x = r_x, y = r_y, color = r_color, shape = r_shape, alpha = r_alpha, add_smooth = r_add_smooth)
           )
         }
       )
@@ -103,25 +103,25 @@ new_scatter_plot_block <- function(x = character(), y = character(), color = cha
     function(id) {
       tagList(
         selectInput(
-          inputId = NS(id, "xcol"),
+          inputId = NS(id, "x"),
           label = "X-axis",
           choices = x,
           selected = x
         ),
         selectInput(
-          inputId = NS(id, "ycol"),
+          inputId = NS(id, "y"),
           label = "Y-axis",
           choices = y,
           selected = y
         ),
         selectInput(
-          inputId = NS(id, "colorcol"),
+          inputId = NS(id, "color"),
           label = "Color By",
           choices = if (length(color) == 0) "(none)" else color,
           selected = if (length(color) == 0) "(none)" else color
         ),
         selectInput(
-          inputId = NS(id, "shapecol"),
+          inputId = NS(id, "shape"),
           label = "Shape By",
           choices = if (length(shape) == 0) "(none)" else shape,
           selected = if (length(shape) == 0) "(none)" else shape
