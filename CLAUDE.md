@@ -1,5 +1,45 @@
 # Claude Development Notes for blockr.ggplot
 
+## Block Design Patterns
+
+### UI/Server Patterns for blockr.ggplot
+
+#### Reactive Values Naming
+- Use `r_*` prefix for all reactive values (e.g., `r_x`, `r_color`, not `x_col`)
+- Keep names concise and meaningful
+
+#### Input ID Naming
+- Use simple names without suffixes (e.g., `x`, `color`, not `xcol` or `colorcol`)
+- Input IDs in UI must match observer names in server
+
+#### Optional vs Required Fields
+
+**Required Fields:**
+- No "(none)" option in choices
+- Use standard validation: `if (!isTruthy(r_x())) return(quote(ggplot2::ggplot() + ggplot2::geom_blank()))`
+- Examples: x-axis in bar charts, x/y in scatter plots
+
+**Optional Aesthetic Fields (color, shape, fill):**
+- Initialize empty parameters to "(none)": `r_color <- reactiveVal(if (length(color) == 0) "(none)" else color)`
+- Use "(none)" string literal for "not selected" state
+- Check with string comparison: `if (r_color() != "(none)") { ... }`
+- UI choices: `c("(none)", cols())` in updateSelectInput
+- Initial UI can be empty, will be populated by updateSelectInput
+
+**Special Optional Fields:**
+- Y-axis in bar charts: Empty means "count", not "(none)"
+- Use empty string "" and `isTruthy()` check for these cases
+
+#### Expression Building Pattern
+Always use dynamic aesthetic building:
+```r
+aes_parts <- c(glue::glue("x = {r_x()}"))
+if (r_color() != "(none)") {
+  aes_parts <- c(aes_parts, glue::glue("colour = {r_color()}"))
+}
+aes_text <- paste(aes_parts, collapse = ", ")
+```
+
 ## IMPORTANT RULES - NEVER BREAK THESE
 
 ### DESCRIPTION File Rules
