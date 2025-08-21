@@ -81,7 +81,7 @@ Perfect for time series data and trend visualization with multiple line support.
 ```r
 library(blockr.ggplot)
 blockr.core::serve(
-  new_line_chart_block(x = "Day", y = "demand", title = "BOD Over Time"),
+  new_line_chart_block(x = "Time", y = "demand"),
   data = list(data = BOD)
 )
 ```

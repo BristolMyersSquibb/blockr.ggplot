@@ -14,8 +14,8 @@
 #' @export
 new_boxplot_block <- function(x = character(), y = character(), 
                              color = character(), fill = character(),
-                             title = character(), show_outliers = TRUE, ...) {
-	new_plot_block(
+                             show_outliers = TRUE, ...) {
+	new_ggplot_block(
     function(id, data) {
       moduleServer(
         id,
@@ -23,120 +23,90 @@ new_boxplot_block <- function(x = character(), y = character(),
 
           cols <- reactive(colnames(data()))
 
-          x_col <- reactiveVal(x)
-          y_col <- reactiveVal(y)
-          color_col <- reactiveVal(color)
-          fill_col <- reactiveVal(fill)
-          plot_title <- reactiveVal(title)
-          show_outliers_val <- reactiveVal(show_outliers)
+          r_x <- reactiveVal(if (length(x) == 0) "(none)" else x)
+          r_y <- reactiveVal(y)
+          r_color <- reactiveVal(if (length(color) == 0) "(none)" else color)
+          r_fill <- reactiveVal(if (length(fill) == 0) "(none)" else fill)
+          r_show_outliers <- reactiveVal(show_outliers)
 
-          observeEvent(input$xcol, x_col(input$xcol))
-          observeEvent(input$ycol, y_col(input$ycol))
-          observeEvent(input$colcol, color_col(input$colcol))
-          observeEvent(input$fillcol, fill_col(input$fillcol))
-          observeEvent(input$title, plot_title(input$title))
-          observeEvent(input$show_outliers, show_outliers_val(input$show_outliers))
+          observeEvent(input$x, r_x(input$x))
+          observeEvent(input$y, r_y(input$y))
+          observeEvent(input$color, r_color(input$color))
+          observeEvent(input$fill, r_fill(input$fill))
+          observeEvent(input$show_outliers, r_show_outliers(input$show_outliers))
 
           observeEvent(
             cols(),
             {
-              numeric_cols <- cols()[sapply(data(), is.numeric)]
-              factor_cols <- cols()[sapply(data(), function(x) is.factor(x) || is.character(x))]
-              
+              # Never filter columns by type - let ggplot2 handle type validation
               updateSelectInput(
                 session,
-                inputId = "xcol",
-                choices = c("", factor_cols),
-                selected = x_col()
+                inputId = "x",
+                choices = c("(none)", cols()),
+                selected = if (r_x() %in% c("(none)", cols())) r_x() else "(none)"
               )
               updateSelectInput(
                 session,
-                inputId = "ycol", 
-                choices = c("", numeric_cols),
-                selected = y_col()
+                inputId = "y", 
+                choices = cols(),
+                selected = r_y()
               )
               updateSelectInput(
                 session,
-                inputId = "colcol",
-                choices = c("", cols()),
-                selected = color_col()
+                inputId = "color",
+                choices = c("(none)", cols()),
+                selected = r_color()
               )
               updateSelectInput(
                 session,
-                inputId = "fillcol",
-                choices = c("", cols()),
-                selected = fill_col()
+                inputId = "fill",
+                choices = c("(none)", cols()),
+                selected = r_fill()
               )
             }
           )
 
           list(
             expr = reactive({
-              # Basic validation - need at least x
-              if (is.null(x_col()) || x_col() == "") {
+              # Validate required field
+              if (!isTruthy(r_y()) || length(r_y()) == 0) {
                 return(quote(ggplot2::ggplot() + ggplot2::geom_blank()))
               }
               
-              # Build basic aesthetics
-              if (!is.null(y_col()) && y_col() != "") {
-                # Two variable boxplot
-                aes_call <- substitute(
-                  ggplot2::aes(x = X, y = Y),
-                  list(X = as.name(x_col()), Y = as.name(y_col()))
-                )
+              # Build aesthetics
+              if (r_x() != "(none)") {
+                # Two variable boxplot (x = categorical, y = numeric)
+                aes_parts <- c(glue::glue("x = {r_x()}"), glue::glue("y = {r_y()}"))
               } else {
-                # Single variable boxplot
-                aes_call <- substitute(
-                  ggplot2::aes(x = "", y = X),
-                  list(X = as.name(x_col()))
-                )
+                # Single variable boxplot (no grouping)
+                aes_parts <- c('x = ""', glue::glue("y = {r_y()}"))
               }
               
-              # Add fill aesthetic if specified
-              if (!is.null(fill_col()) && fill_col() != "") {
-                if (!is.null(y_col()) && y_col() != "") {
-                  aes_call <- substitute(
-                    ggplot2::aes(x = X, y = Y, fill = FILL),
-                    list(X = as.name(x_col()), Y = as.name(y_col()), FILL = as.name(fill_col()))
-                  )
-                } else {
-                  aes_call <- substitute(
-                    ggplot2::aes(x = "", y = X, fill = FILL),
-                    list(X = as.name(x_col()), FILL = as.name(fill_col()))
-                  )
-                }
+              # Add optional aesthetics
+              if (r_color() != "(none)") {
+                aes_parts <- c(aes_parts, glue::glue("colour = {r_color()}"))
+              }
+              if (r_fill() != "(none)") {
+                aes_parts <- c(aes_parts, glue::glue("fill = {r_fill()}"))
               }
               
-              # Build boxplot
-              if (show_outliers_val()) {
-                plot_expr <- substitute(
-                  ggplot2::ggplot(data, AES) + ggplot2::geom_boxplot(),
-                  list(AES = aes_call)
-                )
+              aes_text <- paste(aes_parts, collapse = ", ")
+              
+              # Build boxplot with outlier setting
+              if (r_show_outliers()) {
+                plot_text <- glue::glue("ggplot2::ggplot(data, ggplot2::aes({aes_text})) + ggplot2::geom_boxplot()")
               } else {
-                plot_expr <- substitute(
-                  ggplot2::ggplot(data, AES) + ggplot2::geom_boxplot(outlier.shape = NA),
-                  list(AES = aes_call)
-                )
+                plot_text <- glue::glue("ggplot2::ggplot(data, ggplot2::aes({aes_text})) + ggplot2::geom_boxplot(outlier.shape = NA)")
               }
               
-              # Add title if specified
-              if (!is.null(plot_title()) && plot_title() != "") {
-                plot_expr <- substitute(
-                  PLOT + ggplot2::labs(title = TITLE),
-                  list(PLOT = plot_expr, TITLE = plot_title())
-                )
-              }
-              
-              plot_expr
+              parse(text = plot_text)[[1]]
             }),
             state = list(
-              x = x_col, 
-              y = y_col,
-              color = color_col, 
-              fill = fill_col,
-              title = plot_title,
-              show_outliers = show_outliers_val
+              x = r_x, 
+              y = r_y,
+              color = r_color, 
+              fill = r_fill,
+              show_outliers = r_show_outliers
             )
           )
         }
@@ -151,51 +121,40 @@ new_boxplot_block <- function(x = character(), y = character(),
           div(
             class = "col-md-6",
             selectInput(
-              inputId = NS(id, "xcol"),
-              label = "X-axis (Categorical)",
-              choices = x,
-              selected = x
+              inputId = NS(id, "x"),
+              label = "Group By (Categorical)",
+              choices = c("(none)", x),
+              selected = if (length(x) == 0) "(none)" else x
             ),
             selectInput(
-              inputId = NS(id, "ycol"),
-              label = "Y-axis (Numeric, optional)",
+              inputId = NS(id, "y"),
+              label = "Values (Numeric)",
               choices = y,
               selected = y
-            )
+            ),
+            helpText("Group By is optional - leave as '(none)' for single boxplot")
           ),
           div(
             class = "col-md-6",
             selectInput(
-              inputId = NS(id, "colcol"),
+              inputId = NS(id, "color"),
               label = "Color By",
-              choices = color,
-              selected = color
+              choices = c("(none)", color),
+              selected = if (length(color) == 0) "(none)" else color
             ),
             selectInput(
-              inputId = NS(id, "fillcol"),
+              inputId = NS(id, "fill"),
               label = "Fill By",
-              choices = fill,
-              selected = fill
-            )
-          )
-        ),
-        div(
-          class = "row",
-          div(
-            class = "col-md-8",
-            textInput(
-              inputId = NS(id, "title"),
-              label = "Plot Title",
-              value = title,
-              placeholder = "Enter plot title..."
-            )
-          ),
-          div(
-            class = "col-md-4",
-            checkboxInput(
-              inputId = NS(id, "show_outliers"),
-              label = "Show Outliers",
-              value = show_outliers
+              choices = c("(none)", fill),
+              selected = if (length(fill) == 0) "(none)" else fill
+            ),
+            div(
+              style = "margin-top: 25px;",
+              checkboxInput(
+                inputId = NS(id, "show_outliers"),
+                label = "Show Outliers",
+                value = show_outliers
+              )
             )
           )
         )

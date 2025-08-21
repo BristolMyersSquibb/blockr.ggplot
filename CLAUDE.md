@@ -47,6 +47,7 @@ observeEvent(
   cols(),
   {
     # ONLY update column-dependent SelectInputs
+    # NEVER filter columns by type - let ggplot2 handle type validation
     updateSelectInput(
       session,
       inputId = "x",
@@ -186,6 +187,7 @@ Use this checklist to ensure all blocks are feature-complete and follow consiste
 - [ ] **Reactive values**: Use `r_*` prefix, proper initialization with `"(none)"` or appropriate defaults
 - [ ] **Update functions**: Only column-dependent inputs need updates in `observeEvent(cols())`
 - [ ] **Expression building**: Use `glue::glue()` pattern with conditional aesthetic building
+- [ ] **No column type filtering**: Use `cols()` for all column choices, let ggplot2 handle type validation
 
 ### ✨ **Feature Completeness**
 - [ ] **Core aesthetics**: Implement all relevant aesthetics for the plot type
@@ -205,8 +207,51 @@ Use this checklist to ensure all blocks are feature-complete and follow consiste
 - [ ] **No old initialization**: Don't use `if (length(x) == 0) "(none)" else x` in UI choices
 - [ ] **No missing validation**: Always validate required fields
 - [ ] **No tagList UI**: Use proper Bootstrap layout instead of simple tagList
+- [ ] **No column type filtering**: Never use `numeric_cols`, `factor_cols` - use `cols()` for all choices
 
 Use this checklist when creating new blocks or updating existing ones to ensure consistency and completeness across all blockr.ggplot blocks.
+
+## TESTING REQUIREMENTS
+
+### 📋 **Test Coverage for All Blocks**
+
+Every block must have comprehensive tests following the established pattern:
+
+```r
+test_that("block_name_block constructor", {
+  # Test basic constructor
+  blk <- new_block_name_block()
+  expect_s3_class(blk, c("block_name_block", "ggplot_block", "plot_block", "block"))
+  
+  # Test constructor with parameters
+  blk <- new_block_name_block(x = "col1", y = "col2")
+  expect_s3_class(blk, c("block_name_block", "ggplot_block", "plot_block", "block"))
+  
+  # Test constructor with all parameters
+  blk <- new_block_name_block(x = "col1", y = "col2", color = "col3", ...)
+  expect_s3_class(blk, c("block_name_block", "ggplot_block", "plot_block", "block"))
+})
+```
+
+### 🧪 **Required Test Cases**
+
+1. **Constructor tests**: Basic, with parameters, with all parameters
+2. **Parameter variation tests**: Empty, single, multiple values  
+3. **Structure tests**: Required components, class hierarchy
+4. **Expression generation tests**: Block can generate valid expressions
+5. **Edge case tests**: character(0) inputs, boundary values
+
+### ▶️ **Running Tests**
+
+```bash
+# Run all tests
+devtools::test()
+
+# Run specific test file
+devtools::test(filter = "scatter_plot_block")
+```
+
+All tests must pass before considering a block complete. Tests serve as both quality assurance and documentation of expected behavior.
 
 ## KNOWN ISSUES - AVOID THESE PATTERNS
 
