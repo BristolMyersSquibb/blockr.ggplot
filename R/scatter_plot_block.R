@@ -13,7 +13,7 @@
 #'
 #' @export
 new_scatter_plot_block <- function(x = character(), y = character(), color = character(),
-                                   shape = character(), alpha = 0.7, add_smooth = FALSE, ...) {
+                                   shape = character(), size = character(), alpha = 0.7, add_smooth = FALSE, ...) {
   new_ggplot_block(
     function(id, data) {
       moduleServer(
@@ -26,6 +26,7 @@ new_scatter_plot_block <- function(x = character(), y = character(), color = cha
           r_y <- reactiveVal(y)
           r_color <- reactiveVal(if (length(color) == 0) "(none)" else color)
           r_shape <- reactiveVal(if (length(shape) == 0) "(none)" else shape)
+          r_size <- reactiveVal(if (length(size) == 0) "(none)" else size)
           r_alpha <- reactiveVal(alpha)
           r_add_smooth <- reactiveVal(add_smooth)
 
@@ -33,6 +34,7 @@ new_scatter_plot_block <- function(x = character(), y = character(), color = cha
           observeEvent(input$y, r_y(input$y))
           observeEvent(input$color, r_color(input$color))
           observeEvent(input$shape, r_shape(input$shape))
+          observeEvent(input$size, r_size(input$size))
           observeEvent(input$alpha, r_alpha(input$alpha))
           observeEvent(input$add_smooth, r_add_smooth(input$add_smooth))
 
@@ -63,11 +65,22 @@ new_scatter_plot_block <- function(x = character(), y = character(), color = cha
                 choices = c("(none)", cols()),
                 selected = r_shape()
               )
+              updateSelectInput(
+                session,
+                inputId = "size",
+                choices = c("(none)", cols()),
+                selected = r_size()
+              )
             }
           )
 
           list(
             expr = reactive({
+              # Validate required fields
+              if (!isTruthy(r_x()) || length(r_x()) == 0 || !isTruthy(r_y()) || length(r_y()) == 0) {
+                return(quote(ggplot2::ggplot() + ggplot2::geom_blank()))
+              }
+              
               # Build aesthetics dynamically
               aes_parts <- c(
                 glue::glue("x = {r_x()}"),
@@ -82,6 +95,10 @@ new_scatter_plot_block <- function(x = character(), y = character(), color = cha
               if (r_shape() != "(none)") {
                 aes_parts <- c(aes_parts, glue::glue("shape = {r_shape()}"))
               }
+              
+              if (r_size() != "(none)") {
+                aes_parts <- c(aes_parts, glue::glue("size = {r_size()}"))
+              }
 
               aes_text <- paste(aes_parts, collapse = ", ")
 
@@ -95,49 +112,79 @@ new_scatter_plot_block <- function(x = character(), y = character(), color = cha
 
               parse(text = text)[[1]]
             }),
-            state = list(x = r_x, y = r_y, color = r_color, shape = r_shape, alpha = r_alpha, add_smooth = r_add_smooth)
+            state = list(x = r_x, y = r_y, color = r_color, shape = r_shape, size = r_size, alpha = r_alpha, add_smooth = r_add_smooth)
           )
         }
       )
     },
     function(id) {
-      tagList(
-        selectInput(
-          inputId = NS(id, "x"),
-          label = "X-axis",
-          choices = x,
-          selected = x
+      div(
+        class = "m-3",
+        h4("Scatter Plot Configuration"),
+        div(
+          class = "row",
+          div(
+            class = "col-md-6",
+            selectInput(
+              inputId = NS(id, "x"),
+              label = "X-axis",
+              choices = x,
+              selected = x
+            ),
+            selectInput(
+              inputId = NS(id, "y"),
+              label = "Y-axis",
+              choices = y,
+              selected = y
+            ),
+            helpText("Both X and Y axes are required for scatter plots")
+          ),
+          div(
+            class = "col-md-6",
+            selectInput(
+              inputId = NS(id, "color"),
+              label = "Color By",
+              choices = c("(none)", color),
+              selected = if (length(color) == 0) "(none)" else color
+            ),
+            selectInput(
+              inputId = NS(id, "shape"),
+              label = "Shape By",
+              choices = c("(none)", shape),
+              selected = if (length(shape) == 0) "(none)" else shape
+            ),
+            selectInput(
+              inputId = NS(id, "size"),
+              label = "Size By",
+              choices = c("(none)", size),
+              selected = if (length(size) == 0) "(none)" else size
+            )
+          )
         ),
-        selectInput(
-          inputId = NS(id, "y"),
-          label = "Y-axis",
-          choices = y,
-          selected = y
-        ),
-        selectInput(
-          inputId = NS(id, "color"),
-          label = "Color By",
-          choices = if (length(color) == 0) "(none)" else color,
-          selected = if (length(color) == 0) "(none)" else color
-        ),
-        selectInput(
-          inputId = NS(id, "shape"),
-          label = "Shape By",
-          choices = if (length(shape) == 0) "(none)" else shape,
-          selected = if (length(shape) == 0) "(none)" else shape
-        ),
-        sliderInput(
-          inputId = NS(id, "alpha"),
-          label = "Transparency",
-          min = 0.1,
-          max = 1.0,
-          value = alpha,
-          step = 0.1
-        ),
-        checkboxInput(
-          inputId = NS(id, "add_smooth"),
-          label = "Add Trendline",
-          value = add_smooth
+        div(
+          class = "row",
+          div(
+            class = "col-md-6",
+            sliderInput(
+              inputId = NS(id, "alpha"),
+              label = "Point Transparency",
+              min = 0.1,
+              max = 1.0,
+              value = alpha,
+              step = 0.1
+            )
+          ),
+          div(
+            class = "col-md-6",
+            div(
+              style = "margin-top: 25px;", # Align with slider
+              checkboxInput(
+                inputId = NS(id, "add_smooth"),
+                label = "Add Trendline",
+                value = add_smooth
+              )
+            )
+          )
         )
       )
     },
