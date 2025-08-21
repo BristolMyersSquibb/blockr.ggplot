@@ -6,13 +6,14 @@
 #' @param x Column for x-axis (required)
 #' @param y Column for y-axis (required) 
 #' @param fill Column for fill aesthetic (optional, for stacking multiple areas)
+#' @param color Column for color aesthetic (outline color, optional)
 #' @param position Area position: "stack", "fill" (default "stack")
 #' @param alpha Transparency level (default 0.7)
 #' @param ... Forwarded to [new_block()]
 #'
 #' @export
 new_area_chart_block <- function(x = character(), y = character(),
-                                fill = character(), position = "stack",
+                                fill = character(), color = character(), position = "stack",
                                 alpha = 0.7, ...) {
   new_ggplot_block(
     function(id, data) {
@@ -25,12 +26,14 @@ new_area_chart_block <- function(x = character(), y = character(),
           r_x <- reactiveVal(x)
           r_y <- reactiveVal(y)
           r_fill <- reactiveVal(if (length(fill) == 0) "(none)" else fill)
+          r_color <- reactiveVal(if (length(color) == 0) "(none)" else color)
           r_position <- reactiveVal(position)
           r_alpha <- reactiveVal(alpha)
 
           observeEvent(input$x, r_x(input$x))
           observeEvent(input$y, r_y(input$y))
           observeEvent(input$fill, r_fill(input$fill))
+          observeEvent(input$color, r_color(input$color))
           observeEvent(input$position, r_position(input$position))
           observeEvent(input$alpha, r_alpha(input$alpha))
 
@@ -56,6 +59,12 @@ new_area_chart_block <- function(x = character(), y = character(),
                 choices = c("(none)", cols()),
                 selected = r_fill()
               )
+              updateSelectInput(
+                session,
+                inputId = "color",
+                choices = c("(none)", cols()),
+                selected = r_color()
+              )
             }
           )
 
@@ -70,6 +79,9 @@ new_area_chart_block <- function(x = character(), y = character(),
               aes_parts <- c(glue::glue("x = {r_x()}"), glue::glue("y = {r_y()}"))
               if (r_fill() != "(none)") {
                 aes_parts <- c(aes_parts, glue::glue("fill = {r_fill()}"))
+              }
+              if (r_color() != "(none)") {
+                aes_parts <- c(aes_parts, glue::glue("colour = {r_color()}"))
               }
               
               aes_text <- paste(aes_parts, collapse = ", ")
@@ -91,6 +103,7 @@ new_area_chart_block <- function(x = character(), y = character(),
               x = r_x,
               y = r_y,
               fill = r_fill,
+              color = r_color,
               position = r_position,
               alpha = r_alpha
             )
@@ -129,6 +142,12 @@ new_area_chart_block <- function(x = character(), y = character(),
               selected = if (length(fill) == 0) "(none)" else fill
             ),
             selectInput(
+              inputId = NS(id, "color"),
+              label = "Outline Color By",
+              choices = c("(none)", color),
+              selected = if (length(color) == 0) "(none)" else color
+            ),
+            selectInput(
               inputId = NS(id, "position"),
               label = "Area Position",
               choices = list(
@@ -153,7 +172,7 @@ new_area_chart_block <- function(x = character(), y = character(),
       )
     },
     class = "area_chart_block",
-    allow_empty_state = c("fill"),  # fill is optional
+    allow_empty_state = c("fill", "color"),  # fill and color are optional
     ...
   )
 }

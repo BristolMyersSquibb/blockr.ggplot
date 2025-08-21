@@ -8,6 +8,7 @@
 #' @param y Column for y-axis (required)
 #' @param fill Column for fill aesthetic (optional)
 #' @param color Column for color aesthetic (optional)
+#' @param alpha Transparency level (0-1, default 1.0)
 #' @param trim Whether to trim the tails (default TRUE)
 #' @param scale Scaling method: "area", "count", "width" (default "area")
 #' @param ... Forwarded to [new_block()]
@@ -15,7 +16,7 @@
 #' @export
 new_violin_plot_block <- function(x = character(), y = character(),
                                  fill = character(), color = character(),
-                                 trim = TRUE, scale = "area", ...) {
+                                 alpha = 1.0, trim = TRUE, scale = "area", ...) {
   new_ggplot_block(
     function(id, data) {
       moduleServer(
@@ -28,6 +29,7 @@ new_violin_plot_block <- function(x = character(), y = character(),
           r_y <- reactiveVal(y)
           r_fill <- reactiveVal(if (length(fill) == 0) "(none)" else fill)
           r_color <- reactiveVal(if (length(color) == 0) "(none)" else color)
+          r_alpha <- reactiveVal(alpha)
           r_trim <- reactiveVal(trim)
           r_scale <- reactiveVal(scale)
 
@@ -35,6 +37,7 @@ new_violin_plot_block <- function(x = character(), y = character(),
           observeEvent(input$y, r_y(input$y))
           observeEvent(input$fill, r_fill(input$fill))
           observeEvent(input$color, r_color(input$color))
+          observeEvent(input$alpha, r_alpha(input$alpha))
           observeEvent(input$trim, r_trim(input$trim))
           observeEvent(input$scale, r_scale(input$scale))
 
@@ -89,6 +92,7 @@ new_violin_plot_block <- function(x = character(), y = character(),
               
               # Build geom arguments
               geom_args <- c(
+                glue::glue("alpha = {r_alpha()}"),
                 glue::glue("trim = {r_trim()}"),
                 glue::glue('scale = "{r_scale()}"')
               )
@@ -105,6 +109,7 @@ new_violin_plot_block <- function(x = character(), y = character(),
               y = r_y,
               fill = r_fill,
               color = r_color,
+              alpha = r_alpha,
               trim = r_trim,
               scale = r_scale
             )
@@ -158,8 +163,16 @@ new_violin_plot_block <- function(x = character(), y = character(),
               ),
               selected = scale
             ),
+            sliderInput(
+              inputId = NS(id, "alpha"),
+              label = "Transparency",
+              min = 0.1,
+              max = 1.0,
+              value = alpha,
+              step = 0.1
+            ),
             div(
-              style = "margin-top: 15px;",
+              style = "margin-top: 10px;",
               checkboxInput(
                 inputId = NS(id, "trim"),
                 label = "Trim Tails",

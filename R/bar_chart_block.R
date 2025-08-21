@@ -6,14 +6,16 @@
 #' @param x Column for x-axis
 #' @param y Column for y-axis (optional - if not provided, uses count)
 #' @param fill Column for fill aesthetic (for grouping/stacking)
+#' @param color Column for color aesthetic (outline color, optional)
 #' @param position Bar position: "stack", "dodge", "fill" (default "stack")
+#' @param alpha Transparency level (0-1, default 1.0)
 #' @param flip_coords Whether to flip coordinates (horizontal bars, default FALSE)
 #' @param ... Forwarded to [new_block()]
 #'
 #' @export
 new_bar_chart_block <- function(x = character(), y = character(),
-                               fill = character(), position = "stack",
-                               flip_coords = FALSE, ...) {
+                               fill = character(), color = character(), position = "stack",
+                               alpha = 1.0, flip_coords = FALSE, ...) {
   new_ggplot_block(
     function(id, data) {
       moduleServer(
@@ -25,13 +27,17 @@ new_bar_chart_block <- function(x = character(), y = character(),
           r_x <- reactiveVal(x)  # Required field
           r_y <- reactiveVal(if (length(y) == 0) "(none)" else y)  # Optional: "(none)" means count
           r_fill <- reactiveVal(if (length(fill) == 0) "(none)" else fill)
+          r_color <- reactiveVal(if (length(color) == 0) "(none)" else color)
           r_position <- reactiveVal(position)
+          r_alpha <- reactiveVal(alpha)
           r_flip_coords <- reactiveVal(flip_coords)
 
           observeEvent(input$x, r_x(input$x))
           observeEvent(input$y, r_y(input$y))
           observeEvent(input$fill, r_fill(input$fill))
+          observeEvent(input$color, r_color(input$color))
           observeEvent(input$position, r_position(input$position))
+          observeEvent(input$alpha, r_alpha(input$alpha))
           observeEvent(input$flip_coords, r_flip_coords(input$flip_coords))
 
           observeEvent(
@@ -55,6 +61,12 @@ new_bar_chart_block <- function(x = character(), y = character(),
                 choices = c("(none)", cols()),
                 selected = r_fill()
               )
+              updateSelectInput(
+                session,
+                inputId = "color",
+                choices = c("(none)", cols()),
+                selected = r_color()
+              )
             }
           )
 
@@ -71,17 +83,22 @@ new_bar_chart_block <- function(x = character(), y = character(),
               if (r_fill() != "(none)") {
                 aes_parts <- c(aes_parts, glue::glue("fill = {r_fill()}"))
               }
+              if (r_color() != "(none)") {
+                aes_parts <- c(aes_parts, glue::glue("colour = {r_color()}"))
+              }
 
               aes_text <- paste(aes_parts, collapse = ", ")
 
               # Build geom arguments
-              geom_args <- ""
+              geom_args <- c()
               if (r_fill() != "(none)") {
-                geom_args <- glue::glue('position = "{r_position()}"')
+                geom_args <- c(geom_args, glue::glue('position = "{r_position()}"'))
               }
+              geom_args <- c(geom_args, glue::glue("alpha = {r_alpha()}"))
+              geom_args_text <- paste(geom_args, collapse = ", ")
 
               # Build basic plot
-              plot_text <- glue::glue("ggplot2::ggplot(data, ggplot2::aes({aes_text})) + ggplot2::{geom_func}({geom_args})")
+              plot_text <- glue::glue("ggplot2::ggplot(data, ggplot2::aes({aes_text})) + ggplot2::{geom_func}({geom_args_text})")
 
               # Add coordinate flip if requested
               if (r_flip_coords()) {
@@ -94,7 +111,9 @@ new_bar_chart_block <- function(x = character(), y = character(),
               x = r_x,
               y = r_y,
               fill = r_fill,
+              color = r_color,
               position = r_position,
+              alpha = r_alpha,
               flip_coords = r_flip_coords
             )
           )
@@ -132,6 +151,12 @@ new_bar_chart_block <- function(x = character(), y = character(),
               selected = if (length(fill) == 0) "(none)" else fill
             ),
             selectInput(
+              inputId = NS(id, "color"),
+              label = "Outline Color By",
+              choices = c("(none)", color),
+              selected = if (length(color) == 0) "(none)" else color
+            ),
+            selectInput(
               inputId = NS(id, "position"),
               label = "Bar Position",
               choices = list(
@@ -146,18 +171,32 @@ new_bar_chart_block <- function(x = character(), y = character(),
         div(
           class = "row",
           div(
-            class = "col-md-4",
-            checkboxInput(
-              inputId = NS(id, "flip_coords"),
-              label = "Horizontal Bars",
-              value = flip_coords
+            class = "col-md-6",
+            sliderInput(
+              inputId = NS(id, "alpha"),
+              label = "Transparency",
+              min = 0.1,
+              max = 1.0,
+              value = alpha,
+              step = 0.1
+            )
+          ),
+          div(
+            class = "col-md-6",
+            div(
+              style = "margin-top: 25px;",
+              checkboxInput(
+                inputId = NS(id, "flip_coords"),
+                label = "Horizontal Bars",
+                value = flip_coords
+              )
             )
           )
         )
       )
     },
     class = "bar_chart_block",
-    allow_empty_state = c("y", "fill"),  # y is optional (empty = count), fill is optional
+    allow_empty_state = c("y", "fill", "color"),  # y is optional (empty = count), fill and color are optional
     ...
   )
 }

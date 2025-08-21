@@ -211,6 +211,9 @@ Use this checklist to ensure all blocks are feature-complete and follow consiste
 
 ### ✨ **Feature Completeness**
 - [ ] **Core aesthetics**: Implement all relevant aesthetics for the plot type
+- [ ] **Universal aesthetics**: All blocks should have `alpha` (transparency) where applicable
+- [ ] **Common aesthetics**: Add `color` for outlines, `linewidth` for line thickness where relevant
+- [ ] **Geom-specific aesthetics**: Implement specialized aesthetics (stroke, fill, width, etc.)
 - [ ] **Advanced options**: Add meaningful customization (position, flip, smooth, etc.)
 - [ ] **Optional parameters**: Support both basic and advanced use cases
 - [ ] **Proper defaults**: Sensible default values that work out of the box
@@ -230,6 +233,52 @@ Use this checklist to ensure all blocks are feature-complete and follow consiste
 - [ ] **No column type filtering**: Never use `numeric_cols`, `factor_cols` - use `cols()` for all choices
 
 Use this checklist when creating new blocks or updating existing ones to ensure consistency and completeness across all blockr.ggplot blocks.
+
+## AESTHETIC COMPLETENESS STANDARDS
+
+### Universal Aesthetics (All Applicable Blocks)
+- **alpha**: Transparency control (0-1 scale)
+- **color**: Outline/border colors where applicable
+
+### Geom-Specific Aesthetic Standards
+
+#### **geom_point** (scatter_plot_block)
+**Core**: x, y, color, shape, size, alpha
+**Advanced**: fill (for shapes 21-25), stroke (border width)
+
+#### **geom_col/geom_bar** (bar_chart_block)  
+**Core**: x, y, fill, color, alpha
+**Advanced**: width (bar width)
+
+#### **geom_line** (line_chart_block)
+**Core**: x, y, color, linetype, alpha, linewidth
+**Advanced**: None typically needed
+
+#### **geom_boxplot** (boxplot_block)
+**Core**: x, y, color, fill, alpha
+**Advanced**: linewidth, width
+
+#### **geom_violin** (violin_plot_block)
+**Core**: x, y, fill, color, alpha
+**Advanced**: linewidth, width
+
+#### **geom_density** (density_plot_block)
+**Core**: x, fill, color, alpha
+**Advanced**: linewidth
+
+#### **geom_area** (area_chart_block)
+**Core**: x, y, fill, color, alpha
+**Advanced**: linewidth
+
+#### **geom_tile** (heatmap_block)
+**Core**: x, y, fill, color, alpha
+**Advanced**: linewidth, width, height
+
+### Priority Implementation Order
+1. **Phase 1**: Add missing `alpha` to all blocks
+2. **Phase 2**: Add missing `color` for outlines
+3. **Phase 3**: Add `linewidth` where relevant
+4. **Phase 4**: Add specialized aesthetics (stroke, width, etc.)
 
 ## TESTING REQUIREMENTS
 

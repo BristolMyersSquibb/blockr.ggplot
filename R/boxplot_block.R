@@ -7,13 +7,14 @@
 #' @param y Column for y-axis (numeric variable, optional for single variable boxplots)
 #' @param color Column for color aesthetic (optional)
 #' @param fill Column for fill aesthetic (optional)
+#' @param alpha Transparency level (0-1, default 1.0)
 #' @param show_outliers Whether to show outliers (default TRUE)
 #' @param ... Forwarded to [new_block()]
 #'
 #' @export
 new_boxplot_block <- function(x = character(), y = character(), 
                              color = character(), fill = character(),
-                             show_outliers = TRUE, ...) {
+                             alpha = 1.0, show_outliers = TRUE, ...) {
 	new_ggplot_block(
     function(id, data) {
       moduleServer(
@@ -26,12 +27,14 @@ new_boxplot_block <- function(x = character(), y = character(),
           r_y <- reactiveVal(y)
           r_color <- reactiveVal(if (length(color) == 0) "(none)" else color)
           r_fill <- reactiveVal(if (length(fill) == 0) "(none)" else fill)
+          r_alpha <- reactiveVal(alpha)
           r_show_outliers <- reactiveVal(show_outliers)
 
           observeEvent(input$x, r_x(input$x))
           observeEvent(input$y, r_y(input$y))
           observeEvent(input$color, r_color(input$color))
           observeEvent(input$fill, r_fill(input$fill))
+          observeEvent(input$alpha, r_alpha(input$alpha))
           observeEvent(input$show_outliers, r_show_outliers(input$show_outliers))
 
           observeEvent(
@@ -91,11 +94,11 @@ new_boxplot_block <- function(x = character(), y = character(),
               
               aes_text <- paste(aes_parts, collapse = ", ")
               
-              # Build boxplot with outlier setting
+              # Build boxplot with outlier setting and alpha
               if (r_show_outliers()) {
-                plot_text <- glue::glue("ggplot2::ggplot(data, ggplot2::aes({aes_text})) + ggplot2::geom_boxplot()")
+                plot_text <- glue::glue("ggplot2::ggplot(data, ggplot2::aes({aes_text})) + ggplot2::geom_boxplot(alpha = {r_alpha()})")
               } else {
-                plot_text <- glue::glue("ggplot2::ggplot(data, ggplot2::aes({aes_text})) + ggplot2::geom_boxplot(outlier.shape = NA)")
+                plot_text <- glue::glue("ggplot2::ggplot(data, ggplot2::aes({aes_text})) + ggplot2::geom_boxplot(alpha = {r_alpha()}, outlier.shape = NA)")
               }
               
               parse(text = plot_text)[[1]]
@@ -105,6 +108,7 @@ new_boxplot_block <- function(x = character(), y = character(),
               y = r_y,
               color = r_color, 
               fill = r_fill,
+              alpha = r_alpha,
               show_outliers = r_show_outliers
             )
           )
@@ -147,8 +151,16 @@ new_boxplot_block <- function(x = character(), y = character(),
               choices = c("(none)", fill),
               selected = if (length(fill) == 0) "(none)" else fill
             ),
+            sliderInput(
+              inputId = NS(id, "alpha"),
+              label = "Transparency",
+              min = 0.1,
+              max = 1.0,
+              value = alpha,
+              step = 0.1
+            ),
             div(
-              style = "margin-top: 25px;",
+              style = "margin-top: 15px;",
               checkboxInput(
                 inputId = NS(id, "show_outliers"),
                 label = "Show Outliers",
