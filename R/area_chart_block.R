@@ -3,18 +3,17 @@
 #' This block creates area charts using [ggplot2::geom_area()]. Perfect for 
 #' showing cumulative values over time with stacking support.
 #'
-#' @param x Column for x-axis (often time/date variable)
-#' @param y Column for y-axis (numeric variable)
-#' @param fill Column for fill aesthetic (for stacking multiple areas)
+#' @param x Column for x-axis (required)
+#' @param y Column for y-axis (required) 
+#' @param fill Column for fill aesthetic (optional, for stacking multiple areas)
 #' @param position Area position: "stack", "fill" (default "stack")
 #' @param alpha Transparency level (default 0.7)
-#' @param title Plot title (optional)
 #' @param ... Forwarded to [new_block()]
 #'
 #' @export
 new_area_chart_block <- function(x = character(), y = character(),
                                 fill = character(), position = "stack",
-                                alpha = 0.7, title = character(), ...) {
+                                alpha = 0.7, ...) {
   new_ggplot_block(
     function(id, data) {
       moduleServer(
@@ -23,89 +22,77 @@ new_area_chart_block <- function(x = character(), y = character(),
 
           cols <- reactive(colnames(data()))
 
-          x_col <- reactiveVal(x)
-          y_col <- reactiveVal(y)
-          fill_col <- reactiveVal(fill)
-          position_val <- reactiveVal(position)
-          alpha_val <- reactiveVal(alpha)
-          plot_title <- reactiveVal(title)
+          r_x <- reactiveVal(x)
+          r_y <- reactiveVal(y)
+          r_fill <- reactiveVal(if (length(fill) == 0) "(none)" else fill)
+          r_position <- reactiveVal(position)
+          r_alpha <- reactiveVal(alpha)
 
-          observeEvent(input$xcol, x_col(input$xcol))
-          observeEvent(input$ycol, y_col(input$ycol))
-          observeEvent(input$fillcol, fill_col(input$fillcol))
-          observeEvent(input$position, position_val(input$position))
-          observeEvent(input$alpha, alpha_val(input$alpha))
-          observeEvent(input$title, plot_title(input$title))
+          observeEvent(input$x, r_x(input$x))
+          observeEvent(input$y, r_y(input$y))
+          observeEvent(input$fill, r_fill(input$fill))
+          observeEvent(input$position, r_position(input$position))
+          observeEvent(input$alpha, r_alpha(input$alpha))
 
           observeEvent(
             cols(),
             {
-              numeric_cols <- cols()[sapply(data(), is.numeric)]
-              date_numeric_cols <- cols()[sapply(data(), function(x) {
-                is.numeric(x) || inherits(x, c("Date", "POSIXt"))
-              })]
-              
+              # Never filter columns by type - let ggplot2 handle type validation
               updateSelectInput(
                 session,
-                inputId = "xcol",
-                choices = c("", date_numeric_cols),
-                selected = x_col()
+                inputId = "x",
+                choices = cols(),
+                selected = r_x()
               )
               updateSelectInput(
                 session,
-                inputId = "ycol",
-                choices = c("", numeric_cols),
-                selected = y_col()
+                inputId = "y",
+                choices = cols(),
+                selected = r_y()
               )
               updateSelectInput(
                 session,
-                inputId = "fillcol",
-                choices = c("", cols()),
-                selected = fill_col()
+                inputId = "fill",
+                choices = c("(none)", cols()),
+                selected = r_fill()
               )
             }
           )
 
           list(
             expr = reactive({
-              # Build basic plot text
-              if (!isTruthy(x_col()) || !isTruthy(y_col())) {
+              # Validate required fields
+              if (!isTruthy(r_x()) || length(r_x()) == 0 || !isTruthy(r_y()) || length(r_y()) == 0) {
                 return(quote(ggplot2::ggplot() + ggplot2::geom_blank()))
               }
               
               # Build aesthetics
-              aes_parts <- c(glue::glue("x = {x_col()}"), glue::glue("y = {y_col()}"))
-              if (isTruthy(fill_col())) {
-                aes_parts <- c(aes_parts, glue::glue("fill = {fill_col()}"))
+              aes_parts <- c(glue::glue("x = {r_x()}"), glue::glue("y = {r_y()}"))
+              if (r_fill() != "(none)") {
+                aes_parts <- c(aes_parts, glue::glue("fill = {r_fill()}"))
               }
               
               aes_text <- paste(aes_parts, collapse = ", ")
               
               # Build geom arguments
-              geom_args <- c(glue::glue("alpha = {alpha_val()}"))
-              if (isTruthy(fill_col())) {
-                geom_args <- c(geom_args, glue::glue('position = "{position_val()}"'))
+              geom_args <- c(glue::glue("alpha = {r_alpha()}"))
+              if (r_fill() != "(none)") {
+                geom_args <- c(geom_args, glue::glue('position = "{r_position()}"'))
               }
               
               geom_args_text <- paste(geom_args, collapse = ", ")
               
-              # Build basic plot
+              # Build plot
               plot_text <- glue::glue("ggplot2::ggplot(data, ggplot2::aes({aes_text})) + ggplot2::geom_area({geom_args_text})")
-              
-              # Add title if specified
-              if (isTruthy(plot_title())) {
-                plot_text <- glue::glue('({plot_text}) + ggplot2::labs(title = "{plot_title()}")')
-              }
               
               parse(text = plot_text)[[1]]
             }),
             state = list(
-              x = x_col,
-              y = y_col,
-              fill = fill_col,
-              position = position_val,
-              alpha = alpha_val,
-              title = plot_title
+              x = r_x,
+              y = r_y,
+              fill = r_fill,
+              position = r_position,
+              alpha = r_alpha
             )
           )
         }
@@ -120,25 +107,26 @@ new_area_chart_block <- function(x = character(), y = character(),
           div(
             class = "col-md-6",
             selectInput(
-              inputId = NS(id, "xcol"),
-              label = "X-axis (Numeric/Date)",
+              inputId = NS(id, "x"),
+              label = "X-axis",
               choices = x,
               selected = x
             ),
             selectInput(
-              inputId = NS(id, "ycol"),
-              label = "Y-axis (Numeric)",
+              inputId = NS(id, "y"),
+              label = "Y-axis",
               choices = y,
               selected = y
-            )
+            ),
+            helpText("Both X and Y axes are required for area charts")
           ),
           div(
             class = "col-md-6",
             selectInput(
-              inputId = NS(id, "fillcol"),
-              label = "Stack/Fill By",
-              choices = fill,
-              selected = fill
+              inputId = NS(id, "fill"),
+              label = "Fill/Stack By",
+              choices = c("(none)", fill),
+              selected = if (length(fill) == 0) "(none)" else fill
             ),
             selectInput(
               inputId = NS(id, "position"),
@@ -148,29 +136,17 @@ new_area_chart_block <- function(x = character(), y = character(),
                 "Filled (100%)" = "fill"
               ),
               selected = position
-            )
-          )
-        ),
-        div(
-          class = "row",
-          div(
-            class = "col-md-8",
-            textInput(
-              inputId = NS(id, "title"),
-              label = "Plot Title",
-              value = title,
-              placeholder = "Enter plot title..."
-            )
-          ),
-          div(
-            class = "col-md-4",
-            sliderInput(
-              inputId = NS(id, "alpha"),
-              label = "Transparency",
-              value = alpha,
-              min = 0.1,
-              max = 1.0,
-              step = 0.1
+            ),
+            div(
+              style = "margin-top: 25px;",
+              sliderInput(
+                inputId = NS(id, "alpha"),
+                label = "Transparency",
+                value = alpha,
+                min = 0.1,
+                max = 1.0,
+                step = 0.1
+              )
             )
           )
         )

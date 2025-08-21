@@ -41,21 +41,17 @@ new_line_chart_block <- function(x = character(), y = character(),
           observeEvent(
             cols(),
             {
-              numeric_cols <- cols()[sapply(data(), is.numeric)]
-              date_numeric_cols <- cols()[sapply(data(), function(x) {
-                is.numeric(x) || inherits(x, c("Date", "POSIXt"))
-              })]
-              
+              # Never filter columns by type - let ggplot2 handle type validation
               updateSelectInput(
                 session,
                 inputId = "x",
-                choices = date_numeric_cols,
+                choices = cols(),
                 selected = r_x()
               )
               updateSelectInput(
                 session,
                 inputId = "y",
-                choices = numeric_cols,
+                choices = cols(),
                 selected = r_y()
               )
               updateSelectInput(

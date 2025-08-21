@@ -3,18 +3,17 @@
 #' This block creates pie charts using [ggplot2::geom_col()] with polar coordinates.
 #' Supports categorical data visualization with optional donut chart style.
 #'
-#' @param x Column for categories (categorical variable)
-#' @param y Column for values (numeric variable, optional - if not provided, uses count)
+#' @param x Column for categories (required)
+#' @param y Column for values (optional - if not provided, uses count)
 #' @param fill Column for fill colors (optional, defaults to x)
 #' @param donut Whether to create a donut chart (default FALSE)
-#' @param title Plot title (optional)
 #' @param show_labels Whether to show percentage labels (default TRUE)
 #' @param ... Forwarded to [new_block()]
 #'
 #' @export
 new_pie_chart_block <- function(x = character(), y = character(),
                                fill = character(), donut = FALSE,
-                               title = character(), show_labels = TRUE, ...) {
+                               show_labels = TRUE, ...) {
   new_ggplot_block(
     function(id, data) {
       moduleServer(
@@ -23,65 +22,61 @@ new_pie_chart_block <- function(x = character(), y = character(),
 
           cols <- reactive(colnames(data()))
 
-          x_col <- reactiveVal(x)
-          y_col <- reactiveVal(y)
-          fill_col <- reactiveVal(fill)
-          donut_val <- reactiveVal(donut)
-          plot_title <- reactiveVal(title)
-          show_labels_val <- reactiveVal(show_labels)
+          r_x <- reactiveVal(x)
+          r_y <- reactiveVal(if (length(y) == 0) "(none)" else y)
+          r_fill <- reactiveVal(if (length(fill) == 0) "(none)" else fill)
+          r_donut <- reactiveVal(donut)
+          r_show_labels <- reactiveVal(show_labels)
 
-          observeEvent(input$xcol, x_col(input$xcol))
-          observeEvent(input$ycol, y_col(input$ycol))
-          observeEvent(input$fillcol, fill_col(input$fillcol))
-          observeEvent(input$donut, donut_val(input$donut))
-          observeEvent(input$title, plot_title(input$title))
-          observeEvent(input$show_labels, show_labels_val(input$show_labels))
+          observeEvent(input$x, r_x(input$x))
+          observeEvent(input$y, r_y(input$y))
+          observeEvent(input$fill, r_fill(input$fill))
+          observeEvent(input$donut, r_donut(input$donut))
+          observeEvent(input$show_labels, r_show_labels(input$show_labels))
 
           observeEvent(
             cols(),
             {
-              numeric_cols <- cols()[sapply(data(), is.numeric)]
-              factor_cols <- cols()[sapply(data(), function(x) is.factor(x) || is.character(x))]
-              
+              # Never filter columns by type - let ggplot2 handle type validation
               updateSelectInput(
                 session,
-                inputId = "xcol",
-                choices = c("", factor_cols),
-                selected = x_col()
+                inputId = "x",
+                choices = cols(),
+                selected = r_x()
               )
               updateSelectInput(
                 session,
-                inputId = "ycol",
-                choices = c("", numeric_cols),
-                selected = y_col()
+                inputId = "y",
+                choices = c("(none)", cols()),
+                selected = r_y()
               )
               updateSelectInput(
                 session,
-                inputId = "fillcol",
-                choices = c("", cols()),
-                selected = fill_col()
+                inputId = "fill",
+                choices = c("(none)", cols()),
+                selected = r_fill()
               )
             }
           )
 
           list(
             expr = reactive({
-              # Build basic plot text
-              if (!isTruthy(x_col())) {
+              # Validate required field
+              if (!isTruthy(r_x()) || length(r_x()) == 0) {
                 return(quote(ggplot2::ggplot() + ggplot2::geom_blank()))
               }
               
               # Determine y variable and data preparation
-              if (isTruthy(y_col())) {
-                y_var <- y_col()
-                data_prep <- glue::glue('data <- data[!is.na(data${x_col()}), ]')
+              if (r_y() != "(none)") {
+                y_var <- r_y()
+                data_prep <- glue::glue('data <- data[!is.na(data${r_x()}), ]')
               } else {
                 y_var <- "n"
-                data_prep <- glue::glue('data <- data[!is.na(data${x_col()}), ]; data <- data %>% dplyr::count({x_col()}, name = "n")')
+                data_prep <- glue::glue('data <- data[!is.na(data${r_x()}), ]; data <- data %>% dplyr::count({r_x()}, name = "n")')
               }
               
-              # Use fill_col if specified, otherwise use x_col
-              fill_var <- if (isTruthy(fill_col())) fill_col() else x_col()
+              # Use fill if specified, otherwise use x
+              fill_var <- if (r_fill() != "(none)") r_fill() else r_x()
               
               # Build aesthetics
               aes_text <- glue::glue('x = "", y = {y_var}, fill = {fill_var}')
@@ -90,25 +85,20 @@ new_pie_chart_block <- function(x = character(), y = character(),
               plot_text <- glue::glue('ggplot2::ggplot(data, ggplot2::aes({aes_text})) + ggplot2::geom_col(width = 1) + ggplot2::coord_polar("y", start = 0) + ggplot2::theme_void()')
               
               # Add donut hole if requested
-              if (donut_val()) {
+              if (r_donut()) {
                 plot_text <- glue::glue('({plot_text}) + ggplot2::xlim(c(-1, 1.5))')
               }
               
               # Add labels if requested
-              if (show_labels_val()) {
-                if (isTruthy(y_col())) {
+              if (r_show_labels()) {
+                if (r_y() != "(none)") {
                   # Custom y values
-                  label_text <- glue::glue('paste0(round({y_col()} / sum({y_col()}) * 100, 1), "%")')
+                  label_text <- glue::glue('paste0(round({r_y()} / sum({r_y()}) * 100, 1), "%")')
                 } else {
                   # Count values
                   label_text <- 'paste0(round(n / sum(n) * 100, 1), "%")'
                 }
                 plot_text <- glue::glue('({plot_text}) + ggplot2::geom_text(ggplot2::aes(label = {label_text}), position = ggplot2::position_stack(vjust = 0.5))')
-              }
-              
-              # Add title if specified
-              if (isTruthy(plot_title())) {
-                plot_text <- glue::glue('({plot_text}) + ggplot2::labs(title = "{plot_title()}")')
               }
               
               # Combine data preparation and plot
@@ -117,12 +107,11 @@ new_pie_chart_block <- function(x = character(), y = character(),
               parse(text = final_text)[[1]]
             }),
             state = list(
-              x = x_col,
-              y = y_col,
-              fill = fill_col,
-              donut = donut_val,
-              title = plot_title,
-              show_labels = show_labels_val
+              x = r_x,
+              y = r_y,
+              fill = r_fill,
+              donut = r_donut,
+              show_labels = r_show_labels
             )
           )
         }
@@ -137,29 +126,29 @@ new_pie_chart_block <- function(x = character(), y = character(),
           div(
             class = "col-md-6",
             selectInput(
-              inputId = NS(id, "xcol"),
-              label = "Categories (Categorical)",
+              inputId = NS(id, "x"),
+              label = "Categories",
               choices = x,
               selected = x
             ),
             selectInput(
-              inputId = NS(id, "ycol"),
-              label = "Values (Numeric, optional)",
-              choices = y,
-              selected = y
+              inputId = NS(id, "y"),
+              label = "Values",
+              choices = c("(none)", y),
+              selected = if (length(y) == 0) "(none)" else y
             ),
-            helpText("If Values is empty, will count occurrences of Categories")
+            helpText("Categories is required. If Values is '(none)', will count occurrences.")
           ),
           div(
             class = "col-md-6",
             selectInput(
-              inputId = NS(id, "fillcol"),
-              label = "Color By (optional)",
-              choices = fill,
-              selected = fill
+              inputId = NS(id, "fill"),
+              label = "Color By",
+              choices = c("(none)", fill),
+              selected = if (length(fill) == 0) "(none)" else fill
             ),
             div(
-              class = "mt-3",
+              style = "margin-top: 25px;",
               checkboxInput(
                 inputId = NS(id, "donut"),
                 label = "Donut Chart Style",
@@ -170,18 +159,6 @@ new_pie_chart_block <- function(x = character(), y = character(),
                 label = "Show Percentage Labels",
                 value = show_labels
               )
-            )
-          )
-        ),
-        div(
-          class = "row",
-          div(
-            class = "col-md-12",
-            textInput(
-              inputId = NS(id, "title"),
-              label = "Plot Title",
-              value = title,
-              placeholder = "Enter plot title..."
             )
           )
         )

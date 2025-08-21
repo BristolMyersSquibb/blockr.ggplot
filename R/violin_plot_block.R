@@ -4,11 +4,10 @@
 #' probability density of data at different values, similar to boxplots but with 
 #' more detailed shape information.
 #'
-#' @param x Column for x-axis (categorical variable)
-#' @param y Column for y-axis (numeric variable)
+#' @param x Column for x-axis (required)
+#' @param y Column for y-axis (required)
 #' @param fill Column for fill aesthetic (optional)
 #' @param color Column for color aesthetic (optional)
-#' @param title Plot title (optional)
 #' @param trim Whether to trim the tails (default TRUE)
 #' @param scale Scaling method: "area", "count", "width" (default "area")
 #' @param ... Forwarded to [new_block()]
@@ -16,8 +15,7 @@
 #' @export
 new_violin_plot_block <- function(x = character(), y = character(),
                                  fill = character(), color = character(),
-                                 title = character(), trim = TRUE,
-                                 scale = "area", ...) {
+                                 trim = TRUE, scale = "area", ...) {
   new_ggplot_block(
     function(id, data) {
       moduleServer(
@@ -26,99 +24,89 @@ new_violin_plot_block <- function(x = character(), y = character(),
 
           cols <- reactive(colnames(data()))
 
-          x_col <- reactiveVal(x)
-          y_col <- reactiveVal(y)
-          fill_col <- reactiveVal(fill)
-          color_col <- reactiveVal(color)
-          plot_title <- reactiveVal(title)
-          trim_val <- reactiveVal(trim)
-          scale_val <- reactiveVal(scale)
+          r_x <- reactiveVal(x)
+          r_y <- reactiveVal(y)
+          r_fill <- reactiveVal(if (length(fill) == 0) "(none)" else fill)
+          r_color <- reactiveVal(if (length(color) == 0) "(none)" else color)
+          r_trim <- reactiveVal(trim)
+          r_scale <- reactiveVal(scale)
 
-          observeEvent(input$xcol, x_col(input$xcol))
-          observeEvent(input$ycol, y_col(input$ycol))
-          observeEvent(input$fillcol, fill_col(input$fillcol))
-          observeEvent(input$colorcol, color_col(input$colorcol))
-          observeEvent(input$title, plot_title(input$title))
-          observeEvent(input$trim, trim_val(input$trim))
-          observeEvent(input$scale, scale_val(input$scale))
+          observeEvent(input$x, r_x(input$x))
+          observeEvent(input$y, r_y(input$y))
+          observeEvent(input$fill, r_fill(input$fill))
+          observeEvent(input$color, r_color(input$color))
+          observeEvent(input$trim, r_trim(input$trim))
+          observeEvent(input$scale, r_scale(input$scale))
 
           observeEvent(
             cols(),
             {
-              numeric_cols <- cols()[sapply(data(), is.numeric)]
-              factor_cols <- cols()[sapply(data(), function(x) is.factor(x) || is.character(x))]
-              
+              # Never filter columns by type - let ggplot2 handle type validation
               updateSelectInput(
                 session,
-                inputId = "xcol",
-                choices = c("", factor_cols),
-                selected = x_col()
+                inputId = "x",
+                choices = cols(),
+                selected = r_x()
               )
               updateSelectInput(
                 session,
-                inputId = "ycol",
-                choices = c("", numeric_cols),
-                selected = y_col()
+                inputId = "y",
+                choices = cols(),
+                selected = r_y()
               )
               updateSelectInput(
                 session,
-                inputId = "fillcol",
-                choices = c("", cols()),
-                selected = fill_col()
+                inputId = "fill",
+                choices = c("(none)", cols()),
+                selected = r_fill()
               )
               updateSelectInput(
                 session,
-                inputId = "colorcol",
-                choices = c("", cols()),
-                selected = color_col()
+                inputId = "color",
+                choices = c("(none)", cols()),
+                selected = r_color()
               )
             }
           )
 
           list(
             expr = reactive({
-              # Build basic plot text
-              if (!isTruthy(x_col()) || !isTruthy(y_col())) {
+              # Validate required fields
+              if (!isTruthy(r_x()) || length(r_x()) == 0 || !isTruthy(r_y()) || length(r_y()) == 0) {
                 return(quote(ggplot2::ggplot() + ggplot2::geom_blank()))
               }
               
               # Build aesthetics
-              aes_parts <- c(glue::glue("x = {x_col()}"), glue::glue("y = {y_col()}"))
-              if (isTruthy(fill_col())) {
-                aes_parts <- c(aes_parts, glue::glue("fill = {fill_col()}"))
+              aes_parts <- c(glue::glue("x = {r_x()}"), glue::glue("y = {r_y()}"))
+              if (r_fill() != "(none)") {
+                aes_parts <- c(aes_parts, glue::glue("fill = {r_fill()}"))
               }
-              if (isTruthy(color_col())) {
-                aes_parts <- c(aes_parts, glue::glue("colour = {color_col()}"))
+              if (r_color() != "(none)") {
+                aes_parts <- c(aes_parts, glue::glue("colour = {r_color()}"))
               }
               
               aes_text <- paste(aes_parts, collapse = ", ")
               
               # Build geom arguments
               geom_args <- c(
-                glue::glue("trim = {trim_val()}"),
-                glue::glue('scale = "{scale_val()}"')
+                glue::glue("trim = {r_trim()}"),
+                glue::glue('scale = "{r_scale()}"')
               )
               
               geom_args_text <- paste(geom_args, collapse = ", ")
               
-              # Build basic plot
+              # Build plot
               plot_text <- glue::glue("ggplot2::ggplot(data, ggplot2::aes({aes_text})) + ggplot2::geom_violin({geom_args_text})")
-              
-              # Add title if specified
-              if (isTruthy(plot_title())) {
-                plot_text <- glue::glue('({plot_text}) + ggplot2::labs(title = "{plot_title()}")')
-              }
               
               parse(text = plot_text)[[1]]
             }),
             state = list(
-              x = x_col,
-              y = y_col,
-              fill = fill_col,
-              color = color_col,
-              title = plot_title,
-              trim = trim_val,
-              scale = scale_val
+              x = r_x,
+              y = r_y,
+              fill = r_fill,
+              color = r_color,
+              trim = r_trim,
+              scale = r_scale
             )
           )
         }
@@ -133,31 +121,32 @@ new_violin_plot_block <- function(x = character(), y = character(),
           div(
             class = "col-md-6",
             selectInput(
-              inputId = NS(id, "xcol"),
-              label = "X-axis (Categorical)",
+              inputId = NS(id, "x"),
+              label = "X-axis",
               choices = x,
               selected = x
             ),
             selectInput(
-              inputId = NS(id, "ycol"),
-              label = "Y-axis (Numeric)",
+              inputId = NS(id, "y"),
+              label = "Y-axis",
               choices = y,
               selected = y
             ),
-            selectInput(
-              inputId = NS(id, "fillcol"),
-              label = "Fill By",
-              choices = fill,
-              selected = fill
-            )
+            helpText("Both X and Y axes are required for violin plots")
           ),
           div(
             class = "col-md-6",
             selectInput(
-              inputId = NS(id, "colorcol"),
+              inputId = NS(id, "fill"),
+              label = "Fill By",
+              choices = c("(none)", fill),
+              selected = if (length(fill) == 0) "(none)" else fill
+            ),
+            selectInput(
+              inputId = NS(id, "color"),
               label = "Color By",
-              choices = color,
-              selected = color
+              choices = c("(none)", color),
+              selected = if (length(color) == 0) "(none)" else color
             ),
             selectInput(
               inputId = NS(id, "scale"),
@@ -169,22 +158,13 @@ new_violin_plot_block <- function(x = character(), y = character(),
               ),
               selected = scale
             ),
-            checkboxInput(
-              inputId = NS(id, "trim"),
-              label = "Trim Tails",
-              value = trim
-            )
-          )
-        ),
-        div(
-          class = "row",
-          div(
-            class = "col-md-12",
-            textInput(
-              inputId = NS(id, "title"),
-              label = "Plot Title",
-              value = title,
-              placeholder = "Enter plot title..."
+            div(
+              style = "margin-top: 15px;",
+              checkboxInput(
+                inputId = NS(id, "trim"),
+                label = "Trim Tails",
+                value = trim
+              )
             )
           )
         )
