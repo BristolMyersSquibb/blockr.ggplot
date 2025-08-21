@@ -168,6 +168,46 @@ if (r_color() != "(none)") {
 aes_text <- paste(aes_parts, collapse = ", ")
 ```
 
+## BLOCK COMPLETENESS CHECKLIST
+
+Use this checklist to ensure all blocks are feature-complete and follow consistent patterns:
+
+### 🎨 **UI/UX Standards**
+- [ ] **Bootstrap grid layout**: Use `div(class="row")` and `div(class="col-md-6")` structure
+- [ ] **Section header**: Add `h4("Block Name Configuration")` 
+- [ ] **Organized controls**: Group related inputs logically (aesthetics together, options together)
+- [ ] **Professional styling**: Use `class="m-3"` for margins, align controls properly
+- [ ] **Help text**: Add `helpText()` to explain complex or non-obvious functionality
+
+### 🔧 **Technical Implementation**
+- [ ] **Validation**: Add required field validation with blank plot fallback
+- [ ] **Modern patterns**: Use `c("(none)", field)` for optional aesthetics, not old conditional patterns
+- [ ] **Complete state**: ALL constructor parameters in state list (except avoided ones like title)
+- [ ] **Reactive values**: Use `r_*` prefix, proper initialization with `"(none)"` or appropriate defaults
+- [ ] **Update functions**: Only column-dependent inputs need updates in `observeEvent(cols())`
+- [ ] **Expression building**: Use `glue::glue()` pattern with conditional aesthetic building
+
+### ✨ **Feature Completeness**
+- [ ] **Core aesthetics**: Implement all relevant aesthetics for the plot type
+- [ ] **Advanced options**: Add meaningful customization (position, flip, smooth, etc.)
+- [ ] **Optional parameters**: Support both basic and advanced use cases
+- [ ] **Proper defaults**: Sensible default values that work out of the box
+- [ ] **Error handling**: Graceful degradation when fields are empty/invalid
+
+### 📝 **Documentation Standards**
+- [ ] **Constructor docs**: Complete `@param` documentation for all parameters
+- [ ] **Clear labels**: Descriptive UI labels that explain what each control does
+- [ ] **Consistent naming**: Follow established parameter naming conventions
+- [ ] **Help text**: Explain non-obvious behavior (e.g., "empty Y-axis means count")
+
+### 🚫 **Avoid These Patterns**
+- [ ] **No textInput fields**: Avoid title/text inputs (see Known Issues)
+- [ ] **No old initialization**: Don't use `if (length(x) == 0) "(none)" else x` in UI choices
+- [ ] **No missing validation**: Always validate required fields
+- [ ] **No tagList UI**: Use proper Bootstrap layout instead of simple tagList
+
+Use this checklist when creating new blocks or updating existing ones to ensure consistency and completeness across all blockr.ggplot blocks.
+
 ## KNOWN ISSUES - AVOID THESE PATTERNS
 
 ### Title/TextInput Fields Issue
