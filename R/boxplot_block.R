@@ -7,7 +7,6 @@
 #' @param y Column for y-axis (numeric variable, optional for single variable boxplots)
 #' @param color Column for color aesthetic (optional)
 #' @param fill Column for fill aesthetic (optional)
-#' @param title Plot title (optional)
 #' @param show_outliers Whether to show outliers (default TRUE)
 #' @param ... Forwarded to [new_block()]
 #'

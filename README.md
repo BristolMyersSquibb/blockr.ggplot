@@ -56,7 +56,7 @@ library(blockr.ui)
 
 board <- blockr.ui::new_dag_board(
   blocks = c(
-    data_block = new_dataset_block("mtcars"),
+    data_block = new_dataset_block("mtcars", package = "datasets"),
     bar_chart = new_bar_chart_block(x = "cyl", fill = "gear", position = "stack")
   ),
   links = c(
@@ -93,11 +93,13 @@ library(blockr.ui)
 
 board <- blockr.ui::new_dag_board(
   blocks = c(
-    data_block = new_dataset_block("economics"),
+    data_block = new_dataset_block("ChickWeight", package = "datasets"),
     line_chart = new_line_chart_block(
-      x = "date",
-      y = "unemploy",
-      title = "Unemployment Over Time"
+      x = "Time",
+      y = "weight",
+      color = "Diet",
+      title = "Chick Weight Over Time by Diet",
+      show_points = TRUE
     )
   ),
   links = c(
@@ -140,7 +142,7 @@ library(blockr.ui)
 
 board <- blockr.ui::new_dag_board(
   blocks = c(
-    data_block = new_dataset_block("iris"),
+    data_block = new_dataset_block("iris", package = "datasets"),
     scatter_plot = new_scatter_plot_block(
       x = "Sepal.Length",
       y = "Petal.Length",
@@ -171,11 +173,11 @@ Visualize categorical data proportions with standard and donut chart styles.
 library(blockr.ggplot)
 blockr.core::serve(
   new_pie_chart_block(
-    x = "cyl",
-    title = "Distribution of Cylinders",
+    x = "Species",
+    y = "Sepal.Length",
     show_labels = TRUE
   ),
-  data = list(data = mtcars)
+  data = list(data = iris)
 )
 ```
 
@@ -186,7 +188,7 @@ library(blockr.ui)
 
 board <- blockr.ui::new_dag_board(
   blocks = c(
-    data_block = new_dataset_block("mtcars"),
+    data_block = new_dataset_block("mtcars", package = "datasets"),
     pie_chart = new_pie_chart_block(x = "gear", donut = TRUE)
   ),
   links = c(
@@ -228,7 +230,7 @@ library(blockr.ui)
 
 board <- blockr.ui::new_dag_board(
   blocks = c(
-    data_block = new_dataset_block("iris"),
+    data_block = new_dataset_block("iris", package = "datasets"),
     boxplot = new_boxplot_block(
       x = "Species",
       y = "Sepal.Length",
@@ -274,7 +276,7 @@ library(blockr.ui)
 
 board <- blockr.ui::new_dag_board(
   blocks = c(
-    data_block = new_dataset_block("faithful"),
+    data_block = new_dataset_block("faithful", package = "datasets"),
     histogram = new_histogram_block(x = "eruptions", bins = 20)
   ),
   links = c(
@@ -315,11 +317,11 @@ library(blockr.ui)
 
 board <- blockr.ui::new_dag_board(
   blocks = c(
-    data_block = new_dataset_block("economics"),
+    data_block = new_dataset_block("BOD", package = "datasets"),
     area_chart = new_area_chart_block(
-      x = "date",
-      y = "pop",
-      position = "stack"
+      x = "Time",
+      y = "demand",
+      title = "BOD Demand Over Time"
     )
   ),
   links = c(
@@ -344,22 +346,18 @@ Visualize 2D categorical data or correlation matrices with color intensity.
 ```r
 library(blockr.ggplot)
 
-# Create sample correlation data
-cor_data <- expand.grid(
-  var1 = paste0("V", 1:5),
-  var2 = paste0("V", 1:5)
-)
-cor_data$correlation <- runif(25, -1, 1)
+# Use admissions contingency table from datasets and convert to data.frame
+ucb <- as.data.frame(UCBAdmissions)
 
 blockr.core::serve(
   new_heatmap_block(
-    x = "var1",
-    y = "var2",
-    fill = "correlation",
+    x = "Dept",
+    y = "Gender",
+    fill = "Freq",
     color_palette = "viridis",
     show_values = TRUE
   ),
-  data = list(data = cor_data)
+  data = list(data = ucb)
 )
 ```
 
@@ -370,12 +368,12 @@ library(blockr.ui)
 
 board <- blockr.ui::new_dag_board(
   blocks = c(
-    data_block = new_dataset_block("cor_data"),
+    data_block = new_dataset_block("warpbreaks", package = "datasets"),
     heatmap = new_heatmap_block(
-      x = "var1",
-      y = "var2",
-      fill = "correlation",
-      color_palette = "plasma"
+      x = "wool",
+      y = "tension",
+      fill = "breaks",
+      color_palette = "viridis"
     )
   ),
   links = c(
@@ -417,7 +415,7 @@ library(blockr.ui)
 
 board <- blockr.ui::new_dag_board(
   blocks = c(
-    data_block = new_dataset_block("iris"),
+    data_block = new_dataset_block("iris", package = "datasets"),
     density_plot = new_density_plot_block(
       x = "Sepal.Length",
       fill = "Species",
@@ -463,7 +461,7 @@ library(blockr.ui)
 
 board <- blockr.ui::new_dag_board(
   blocks = c(
-    data_block = new_dataset_block("iris"),
+    data_block = new_dataset_block("iris", package = "datasets"),
     violin_plot = new_violin_plot_block(
       x = "Species",
       y = "Petal.Length",

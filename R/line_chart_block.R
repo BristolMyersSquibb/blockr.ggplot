@@ -9,7 +9,6 @@
 #' @param linetype Column for linetype aesthetic (optional)
 #' @param size Line size (default 1)
 #' @param show_points Whether to show points on the line (default TRUE)
-#' @param title Plot title (optional)
 #' @param ... Forwarded to [new_block()]
 #'
 #' @export

@@ -54,21 +54,21 @@ observeEvent(
       choices = cols(),
       selected = r_x()  # NEVER check length of reactive value!
     )
-    
+
     updateSelectInput(
       session,
-      inputId = "y", 
+      inputId = "y",
       choices = c("(none)", cols()),
       selected = r_y()
     )
-    
+
     updateSelectInput(
       session,
       inputId = "color",
       choices = c("(none)", cols()),
       selected = r_color()
     )
-    
+
     # DON'T update non-column-dependent inputs here:
     # - Static selectInputs (position with fixed choices)
     # - TextInputs (title, labels)
@@ -175,7 +175,7 @@ Use this checklist to ensure all blocks are feature-complete and follow consiste
 
 ### 🎨 **UI/UX Standards**
 - [ ] **Bootstrap grid layout**: Use `div(class="row")` and `div(class="col-md-6")` structure
-- [ ] **Section header**: Add `h4("Block Name Configuration")` 
+- [ ] **Section header**: Add `h4("Block Name Configuration")`
 - [ ] **Organized controls**: Group related inputs logically (aesthetics together, options together)
 - [ ] **Professional styling**: Use `class="m-3"` for margins, align controls properly
 - [ ] **Help text**: Add `helpText()` to explain complex or non-obvious functionality
@@ -222,11 +222,11 @@ test_that("block_name_block constructor", {
   # Test basic constructor
   blk <- new_block_name_block()
   expect_s3_class(blk, c("block_name_block", "ggplot_block", "plot_block", "block"))
-  
+
   # Test constructor with parameters
   blk <- new_block_name_block(x = "col1", y = "col2")
   expect_s3_class(blk, c("block_name_block", "ggplot_block", "plot_block", "block"))
-  
+
   # Test constructor with all parameters
   blk <- new_block_name_block(x = "col1", y = "col2", color = "col3", ...)
   expect_s3_class(blk, c("block_name_block", "ggplot_block", "plot_block", "block"))
@@ -236,7 +236,7 @@ test_that("block_name_block constructor", {
 ### 🧪 **Required Test Cases**
 
 1. **Constructor tests**: Basic, with parameters, with all parameters
-2. **Parameter variation tests**: Empty, single, multiple values  
+2. **Parameter variation tests**: Empty, single, multiple values
 3. **Structure tests**: Required components, class hierarchy
 4. **Expression generation tests**: Block can generate valid expressions
 5. **Edge case tests**: character(0) inputs, boundary values
@@ -261,7 +261,7 @@ All tests must pass before considering a block complete. Tests serve as both qua
 
 **Symptoms:**
 - Block UI appears correctly
-- All other fields work fine  
+- All other fields work fine
 - Plot area remains blank/empty
 - No errors in R console
 
@@ -276,7 +276,7 @@ All tests must pass before considering a block complete. Tests serve as both qua
 - Having textInput-related reactive values in state breaks rendering
 - But removing them from state causes blockr errors about missing required state
 
-**Current solution:** 
+**Current solution:**
 - **DO NOT implement title/textInput fields in any blocks**
 - Use other input types (selectInput, checkboxInput, sliderInput) which work reliably
 - Remove `title` parameter from all block constructors
@@ -300,12 +300,12 @@ All tests must pass before considering a block complete. Tests serve as both qua
 ```
 Authors@R: c(
     person(given = "Nicolas",
-           family = "Bennett", 
+           family = "Bennett",
            role = c("aut", "cre"),
            email = "nicolas@cynkra.com"),
     person(given = "Christoph",
            family = "Sax",
-           role = "aut", 
+           role = "aut",
            email = "christoph@cynkra.com"))
 ```
 
@@ -391,7 +391,7 @@ expr = reactive({
     aes_parts <- c(aes_parts, glue::glue("colour = {color_col()}"))
   }
   aes_text <- paste(aes_parts, collapse = ", ")
-  
+
   # Build plot
   plot_text <- glue::glue("ggplot2::ggplot(data, ggplot2::aes({aes_text})) + ggplot2::geom_point()")
   parse(text = plot_text)[[1]]
@@ -404,15 +404,15 @@ expr = reactive({
   # Build aesthetics and geom args separately
   aes_text <- glue::glue("x = {x_col()}, y = {y_col()}")
   geom_args <- glue::glue("alpha = {alpha_val()}, size = {size_val()}")
-  
+
   # Compose final expression
   plot_text <- glue::glue("ggplot2::ggplot(data, ggplot2::aes({aes_text})) + ggplot2::geom_point({geom_args})")
-  
+
   # Add layers conditionally
   if (add_smooth_val()) {
     plot_text <- glue::glue("({plot_text}) + ggplot2::geom_smooth()")
   }
-  
+
   parse(text = plot_text)[[1]]
 })
 ```
@@ -422,7 +422,7 @@ expr = reactive({
 # DON'T DO THIS - This pattern is DEPRECATED
 expr = reactive({
   bquote(
-    ggplot2::ggplot(data, ggplot2::aes(x = .(x), y = .(y), colour = .(col))) + 
+    ggplot2::ggplot(data, ggplot2::aes(x = .(x), y = .(y), colour = .(col))) +
       ggplot2::geom_point(),
     list(x = as.name(x_col()), y = as.name(y_col()), col = as.name(color_col()))
   )
@@ -433,7 +433,7 @@ expr = reactive({
 All existing blocks have been converted from bquote to parse/glue pattern. When creating new blocks:
 
 1. **Start with simple case**: Basic aesthetics using `glue::glue()`
-2. **Add conditionals**: Use if/else for optional aesthetics or geom arguments  
+2. **Add conditionals**: Use if/else for optional aesthetics or geom arguments
 3. **Build incrementally**: Compose complex expressions by concatenating simpler parts
 4. **Test frequently**: Print the generated text to verify correctness
 5. **Follow examples**: Use existing converted blocks as templates

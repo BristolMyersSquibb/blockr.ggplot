@@ -7,7 +7,6 @@
 #' @param y Column for y-axis (optional - if not provided, uses count)
 #' @param fill Column for fill aesthetic (for grouping/stacking)
 #' @param position Bar position: "stack", "dodge", "fill" (default "stack")
-#' @param title Plot title (optional)
 #' @param flip_coords Whether to flip coordinates (horizontal bars, default FALSE)
 #' @param ... Forwarded to [new_block()]
 #'
