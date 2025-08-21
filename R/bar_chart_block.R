@@ -14,7 +14,7 @@
 #' @export
 new_bar_chart_block <- function(x = character(), y = character(),
                                fill = character(), position = "stack",
-                               title = character(), flip_coords = FALSE, ...) {
+                               flip_coords = FALSE, ...) {
   new_ggplot_block(
     function(id, data) {
       moduleServer(
@@ -27,14 +27,12 @@ new_bar_chart_block <- function(x = character(), y = character(),
           r_y <- reactiveVal(if (length(y) == 0) "(none)" else y)  # Optional: "(none)" means count
           r_fill <- reactiveVal(if (length(fill) == 0) "(none)" else fill)
           r_position <- reactiveVal(position)
-          r_title <- reactiveVal(if (length(title) == 0) "" else title)
           r_flip_coords <- reactiveVal(flip_coords)
 
           observeEvent(input$x, r_x(input$x))
           observeEvent(input$y, r_y(input$y))
           observeEvent(input$fill, r_fill(input$fill))
           observeEvent(input$position, r_position(input$position))
-          observeEvent(input$title, r_title(input$title))
           observeEvent(input$flip_coords, r_flip_coords(input$flip_coords))
 
           observeEvent(
@@ -91,11 +89,6 @@ new_bar_chart_block <- function(x = character(), y = character(),
                 plot_text <- glue::glue("({plot_text}) + ggplot2::coord_flip()")
               }
 
-              # Add title if specified
-              if (isTruthy(r_title())) {
-                plot_text <- glue::glue('({plot_text}) + ggplot2::labs(title = "{r_title()}")')
-              }
-
               parse(text = plot_text)[[1]]
             }),
             state = list(
@@ -103,7 +96,6 @@ new_bar_chart_block <- function(x = character(), y = character(),
               y = r_y,
               fill = r_fill,
               position = r_position,
-              title = r_title,
               flip_coords = r_flip_coords
             )
           )
@@ -154,15 +146,6 @@ new_bar_chart_block <- function(x = character(), y = character(),
         ),
         div(
           class = "row",
-          div(
-            class = "col-md-8",
-            textInput(
-              inputId = NS(id, "title"),
-              label = "Plot Title",
-              value = if (length(title) == 0) "" else title,
-              placeholder = "Enter plot title..."
-            )
-          ),
           div(
             class = "col-md-4",
             checkboxInput(

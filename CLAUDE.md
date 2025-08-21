@@ -29,10 +29,11 @@ r_fill <- reactiveVal(if (length(fill) == 0) "(none)" else fill)
 r_y <- reactiveVal(if (length(y) == 0) "(none)" else y)
 ```
 
-**TextInput Fields (title, labels):**
+**TextInput Fields - AVOID FOR NOW:**
 ```r
-# Initialize with empty string if character()
-r_title <- reactiveVal(if (length(title) == 0) "" else title)
+# WARNING: TextInput fields like title cause mysterious rendering issues
+# AVOID implementing title/label fields until root cause is found
+# See "Known Issues" section below
 ```
 
 ##### 2. Update Functions Pattern
@@ -105,14 +106,10 @@ selectInput(
 )
 ```
 
-**TextInput:**
+**TextInput - AVOID:**
 ```r
-textInput(
-  inputId = NS(id, "title"),
-  label = "Plot Title",
-  value = if (length(title) == 0) "" else title,  # Ensure it's a string
-  placeholder = "Enter plot title..."
-)
+# DO NOT implement textInput fields like title - they cause rendering issues
+# Focus on selectInput and checkboxInput which work reliably
 ```
 
 ##### 4. State List - MANDATORY
@@ -128,10 +125,9 @@ list(
     color = r_color,
     fill = r_fill,
     position = r_position,
-    title = r_title,
     flip_coords = r_flip_coords,
     alpha = r_alpha
-    # EVERY argument must be here!
+    # EVERY argument must be here (except avoided ones like title)!
   )
 )
 ```
@@ -151,11 +147,10 @@ if (r_color() != "(none)") {
 }
 ```
 
-**TextInputs - Use isTruthy() check:**
+**TextInputs - AVOID FOR NOW:**
 ```r
-if (isTruthy(r_title())) {
-  plot_text <- glue::glue('({plot_text}) + ggplot2::labs(title = "{r_title()}")')
-}
+# DO NOT implement textInput fields - they cause mysterious rendering issues
+# Focus on working patterns: selectInput with "(none)" and checkboxInput
 ```
 
 #### Reactive Values and Input ID Naming
@@ -172,6 +167,39 @@ if (r_color() != "(none)") {
 }
 aes_text <- paste(aes_parts, collapse = ", ")
 ```
+
+## KNOWN ISSUES - AVOID THESE PATTERNS
+
+### Title/TextInput Fields Issue
+
+**Problem:** Adding title fields (or any textInput fields) to blocks causes plots to not render at all.
+
+**Symptoms:**
+- Block UI appears correctly
+- All other fields work fine  
+- Plot area remains blank/empty
+- No errors in R console
+
+**What we've tried:**
+- Different reactive value initialization (`""`, `NULL`, `character()`)
+- With/without `isTruthy()` checks
+- With/without UI textInput elements
+- Various state list configurations
+
+**Root cause:** Unknown. The issue appears to be:
+- blockr.core requires all constructor parameters in state list
+- Having textInput-related reactive values in state breaks rendering
+- But removing them from state causes blockr errors about missing required state
+
+**Current solution:** 
+- **DO NOT implement title/textInput fields in any blocks**
+- Use other input types (selectInput, checkboxInput, sliderInput) which work reliably
+- Remove `title` parameter from all block constructors
+
+**Future investigation needed:**
+- Deep dive into blockr.core state management
+- Test with minimal textInput examples
+- Check if specific parameter names (like "title") are reserved
 
 ## IMPORTANT RULES - NEVER BREAK THESE
 
