@@ -153,6 +153,7 @@ new_density_plot_block <- function(x = character(), fill = character(),
       )
     },
     class = "density_plot_block",
+    allow_empty_state = c("fill", "color"),  # Both fill and color are optional
     ...
   )
 }

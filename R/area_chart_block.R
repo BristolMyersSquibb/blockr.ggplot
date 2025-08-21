@@ -153,6 +153,7 @@ new_area_chart_block <- function(x = character(), y = character(),
       )
     },
     class = "area_chart_block",
+    allow_empty_state = c("fill"),  # fill is optional
     ...
   )
 }

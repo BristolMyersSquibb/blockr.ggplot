@@ -29,11 +29,11 @@ r_fill <- reactiveVal(if (length(fill) == 0) "(none)" else fill)
 r_y <- reactiveVal(if (length(y) == 0) "(none)" else y)
 ```
 
-**TextInput Fields - AVOID FOR NOW:**
+**TextInput Fields - SOLVED! ✅**
 ```r
-# WARNING: TextInput fields like title cause mysterious rendering issues
-# AVOID implementing title/label fields until root cause is found
-# See "Known Issues" section below
+# ✅ TextInput fields like title now work with allow_empty_state parameter!
+# Use allow_empty_state = c("title") in block constructor 
+# See "Known Issues" section for complete solution
 ```
 
 ##### 2. Update Functions Pattern
@@ -133,7 +133,26 @@ list(
 )
 ```
 
-##### 5. Expression Building Checks
+##### 5. allow_empty_state Parameter - CRITICAL FOR OPTIONAL FIELDS
+
+**Any field using "(none)" pattern MUST be listed in allow_empty_state:**
+
+```r
+new_my_block <- function(x = character(), y = character(), 
+                        color = character(), fill = character(), ...) {
+  new_ggplot_block(
+    # ... server and UI functions ...
+    class = "my_block",
+    # List ALL optional fields that use "(none)" pattern:
+    allow_empty_state = c("y", "color", "fill"),  # Prevents evaluation blocking!
+    ...
+  )
+}
+```
+
+**Rule:** If a field can be "(none)", it MUST be in `allow_empty_state`
+
+##### 6. Expression Building Checks
 
 **Required fields - No validation needed:**
 ```r
@@ -188,6 +207,7 @@ Use this checklist to ensure all blocks are feature-complete and follow consiste
 - [ ] **Update functions**: Only column-dependent inputs need updates in `observeEvent(cols())`
 - [ ] **Expression building**: Use `glue::glue()` pattern with conditional aesthetic building
 - [ ] **No column type filtering**: Use `cols()` for all column choices, let ggplot2 handle type validation
+- [ ] **allow_empty_state**: List ALL optional fields (those using "(none)" pattern) in `allow_empty_state` parameter
 
 ### ✨ **Feature Completeness**
 - [ ] **Core aesthetics**: Implement all relevant aesthetics for the plot type
@@ -203,7 +223,7 @@ Use this checklist to ensure all blocks are feature-complete and follow consiste
 - [ ] **Help text**: Explain non-obvious behavior (e.g., "empty Y-axis means count")
 
 ### 🚫 **Avoid These Patterns**
-- [ ] **No textInput fields**: Avoid title/text inputs (see Known Issues)
+- [ ] **TextInput without allow_empty_state**: Use `allow_empty_state = c("title")` for textInput fields
 - [ ] **No old initialization**: Don't use `if (length(x) == 0) "(none)" else x` in UI choices
 - [ ] **No missing validation**: Always validate required fields
 - [ ] **No tagList UI**: Use proper Bootstrap layout instead of simple tagList
@@ -276,15 +296,35 @@ All tests must pass before considering a block complete. Tests serve as both qua
 - Having textInput-related reactive values in state breaks rendering
 - But removing them from state causes blockr errors about missing required state
 
-**Current solution:**
-- **DO NOT implement title/textInput fields in any blocks**
-- Use other input types (selectInput, checkboxInput, sliderInput) which work reliably
-- Remove `title` parameter from all block constructors
+**✅ SOLUTION DISCOVERED:** Use `allow_empty_state` parameter for ALL optional fields!
 
-**Future investigation needed:**
-- Deep dive into blockr.core state management
-- Test with minimal textInput examples
-- Check if specific parameter names (like "title") are reserved
+**✅ Root cause identified:**
+- blockr.core blocks evaluation when ANY state field is empty/invalid  
+- Optional fields (using "(none)" pattern) can start empty, blocking evaluation
+- The `allow_empty_state` parameter tells blockr.core which fields can be empty
+
+**✅ CRITICAL PATTERN: List ALL optional fields in allow_empty_state:**
+
+```r
+new_my_block <- function(x = character(), y = character(), 
+                        color = character(), fill = character(), ...) {
+  new_ggplot_block(
+    # ... server and UI with "(none)" pattern for optional fields ...
+    class = "my_block", 
+    # List ALL fields that use "(none)" pattern:
+    allow_empty_state = c("color", "fill"),  # All optional aesthetics!
+    ...
+  )
+}
+```
+
+**Note on titles:** While `allow_empty_state` solves the title rendering issue, we still avoid title fields by default (design choice). The solution is documented here for reference if titles are ever explicitly requested.
+
+**✅ Verified solution works:**
+- Tested with comprehensive scatter plot block with title
+- Block renders perfectly with empty or filled titles  
+- No more mysterious rendering failures
+- Solution is simple and elegant
 
 ## IMPORTANT RULES - NEVER BREAK THESE
 

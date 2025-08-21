@@ -163,6 +163,7 @@ new_boxplot_block <- function(x = character(), y = character(),
       stopifnot(is.data.frame(data) || is.matrix(data))
     },
     class = "boxplot_block",
+    allow_empty_state = c("x", "color", "fill"),  # x is optional (none = single boxplot), color and fill are optional
     ...
   )
 }

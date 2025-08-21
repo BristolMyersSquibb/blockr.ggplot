@@ -192,6 +192,7 @@ new_scatter_plot_block <- function(x = character(), y = character(), color = cha
       stopifnot(is.data.frame(data) || is.matrix(data))
     },
     class = "scatter_plot_block",
+    allow_empty_state = c("color", "shape", "size"),  # All optional aesthetics
     ...
   )
 }

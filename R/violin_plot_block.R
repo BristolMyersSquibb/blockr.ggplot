@@ -171,6 +171,7 @@ new_violin_plot_block <- function(x = character(), y = character(),
       )
     },
     class = "violin_plot_block",
+    allow_empty_state = c("fill", "color"),  # Both fill and color are optional
     ...
   )
 }

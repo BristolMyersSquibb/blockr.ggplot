@@ -174,6 +174,7 @@ new_line_chart_block <- function(x = character(), y = character(),
       )
     },
     class = "line_chart_block",
+    allow_empty_state = c("color", "linetype"),  # Both color and linetype are optional
     ...
   )
 }

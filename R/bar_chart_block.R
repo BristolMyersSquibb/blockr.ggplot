@@ -157,6 +157,7 @@ new_bar_chart_block <- function(x = character(), y = character(),
       )
     },
     class = "bar_chart_block",
+    allow_empty_state = c("y", "fill"),  # y is optional (empty = count), fill is optional
     ...
   )
 }
