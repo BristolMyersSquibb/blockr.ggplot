@@ -24,10 +24,10 @@ new_bar_chart_block <- function(x = character(), y = character(),
           cols <- reactive(colnames(data()))
 
           r_x <- reactiveVal(x)  # Required field
-          r_y <- reactiveVal(y)  # Optional: empty means count
+          r_y <- reactiveVal(if (length(y) == 0) "(none)" else y)  # Optional: "(none)" means count
           r_fill <- reactiveVal(if (length(fill) == 0) "(none)" else fill)
           r_position <- reactiveVal(position)
-          r_title <- reactiveVal(if (length(title) == 0) "(none)" else title)
+          r_title <- reactiveVal(if (length(title) == 0) "" else title)
           r_flip_coords <- reactiveVal(flip_coords)
 
           observeEvent(input$x, r_x(input$x))
@@ -49,7 +49,7 @@ new_bar_chart_block <- function(x = character(), y = character(),
               updateSelectInput(
                 session,
                 inputId = "y",
-                choices = c("(none)", cols()),  # Empty string means count
+                choices = c("(none)", cols()),
                 selected = r_y()
               )
               updateSelectInput(
@@ -63,12 +63,9 @@ new_bar_chart_block <- function(x = character(), y = character(),
 
           list(
             expr = reactive({
-              # Build basic plot text
-              if (!isTruthy(r_x())) return(quote(ggplot2::ggplot() + ggplot2::geom_blank()))
-
               # Build aesthetics
               aes_parts <- c(glue::glue("x = {r_x()}"))
-              if (isTruthy(r_y())) {
+              if (r_y() != "(none)") {
                 aes_parts <- c(aes_parts, glue::glue("y = {r_y()}"))
                 geom_func <- "geom_col"
               } else {
@@ -95,7 +92,7 @@ new_bar_chart_block <- function(x = character(), y = character(),
               }
 
               # Add title if specified
-              if (r_title() != "(none)") {
+              if (isTruthy(r_title())) {
                 plot_text <- glue::glue('({plot_text}) + ggplot2::labs(title = "{r_title()}")')
               }
 
@@ -124,14 +121,14 @@ new_bar_chart_block <- function(x = character(), y = character(),
             selectInput(
               inputId = NS(id, "x"),
               label = "X-axis",
-              choices = character(),  # Start empty, will be populated by updateSelectInput
-              selected = character()
+              choices = x,
+              selected = x
             ),
             selectInput(
               inputId = NS(id, "y"),
               label = "Y-axis (optional)",
-              choices = character(),  # Start empty, will be populated by updateSelectInput
-              selected = character()
+              choices = c("(none)", y),
+              selected = if (length(y) == 0) "(none)" else y
             ),
             helpText("If Y-axis is empty, will count occurrences of X-axis values")
           ),
@@ -140,8 +137,8 @@ new_bar_chart_block <- function(x = character(), y = character(),
             selectInput(
               inputId = NS(id, "fill"),
               label = "Group/Stack By",
-              choices = character(),  # Start empty, will be populated by updateSelectInput
-              selected = character()
+              choices = c("(none)", fill),
+              selected = if (length(fill) == 0) "(none)" else fill
             ),
             selectInput(
               inputId = NS(id, "position"),
@@ -162,7 +159,7 @@ new_bar_chart_block <- function(x = character(), y = character(),
             textInput(
               inputId = NS(id, "title"),
               label = "Plot Title",
-              value = title,
+              value = if (length(title) == 0) "" else title,
               placeholder = "Enter plot title..."
             )
           ),

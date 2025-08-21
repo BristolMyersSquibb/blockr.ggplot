@@ -4,31 +4,164 @@
 
 ### UI/Server Patterns for blockr.ggplot
 
-#### Reactive Values Naming
-- Use `r_*` prefix for all reactive values (e.g., `r_x`, `r_color`, not `x_col`)
-- Keep names concise and meaningful
+#### Complete Field Handling Pattern
 
-#### Input ID Naming
-- Use simple names without suffixes (e.g., `x`, `color`, not `xcol` or `colorcol`)
+This is the MANDATORY pattern for handling all fields in blockr.ggplot blocks. Follow these patterns exactly to ensure robust behavior with empty/unselected fields.
+
+##### 1. Reactive Values Initialization
+
+**Required Fields (must always have a value):**
+```r
+# Constructor might receive character() or actual value
+r_x <- reactiveVal(x)  # Just pass through - will be populated by updateSelectInput
+```
+
+**Optional SelectInput Fields (color, shape, fill, etc):**
+```r
+# Initialize with "(none)" if empty
+r_color <- reactiveVal(if (length(color) == 0) "(none)" else color)
+r_fill <- reactiveVal(if (length(fill) == 0) "(none)" else fill)
+```
+
+**Special Optional Fields (y in bar chart = count when empty):**
+```r
+# Use "(none)" pattern like other optional fields
+r_y <- reactiveVal(if (length(y) == 0) "(none)" else y)
+```
+
+**TextInput Fields (title, labels):**
+```r
+# Initialize with empty string if character()
+r_title <- reactiveVal(if (length(title) == 0) "" else title)
+```
+
+##### 2. Update Functions Pattern
+
+**Update functions in observeEvent(cols()) are only needed for column-dependent inputs!**
+
+The observeEvent(cols()) handler updates inputs when the available columns change.
+
+```r
+observeEvent(
+  cols(),
+  {
+    # ONLY update column-dependent SelectInputs
+    updateSelectInput(
+      session,
+      inputId = "x",
+      choices = cols(),
+      selected = r_x()  # NEVER check length of reactive value!
+    )
+    
+    updateSelectInput(
+      session,
+      inputId = "y", 
+      choices = c("(none)", cols()),
+      selected = r_y()
+    )
+    
+    updateSelectInput(
+      session,
+      inputId = "color",
+      choices = c("(none)", cols()),
+      selected = r_color()
+    )
+    
+    # DON'T update non-column-dependent inputs here:
+    # - Static selectInputs (position with fixed choices)
+    # - TextInputs (title, labels)
+    # - CheckboxInputs (flip_coords, show_legend)
+    # - SliderInputs (alpha, size)
+    # These work fine with just their observeEvent handlers
+  }
+)
+```
+
+**Non-column-dependent inputs only need:**
+1. Initial value in UI
+2. Reactive value initialization
+3. observeEvent to update reactive from input
+4. Include in state list
+
+##### 3. UI Initialization
+
+**Required SelectInput:**
+```r
+selectInput(
+  inputId = NS(id, "x"),
+  label = "X-axis",
+  choices = x,  # Can be character() - updateSelectInput will populate
+  selected = x
+)
+```
+
+**Optional SelectInput:**
+```r
+selectInput(
+  inputId = NS(id, "color"),
+  label = "Color By",
+  choices = c("(none)", color),
+  selected = if (length(color) == 0) "(none)" else color
+)
+```
+
+**TextInput:**
+```r
+textInput(
+  inputId = NS(id, "title"),
+  label = "Plot Title",
+  value = if (length(title) == 0) "" else title,  # Ensure it's a string
+  placeholder = "Enter plot title..."
+)
+```
+
+##### 4. State List - MANDATORY
+
+**ALL reactive values MUST be included in the state list:**
+
+```r
+list(
+  expr = reactive({ ... }),
+  state = list(
+    x = r_x,
+    y = r_y,
+    color = r_color,
+    fill = r_fill,
+    position = r_position,
+    title = r_title,
+    flip_coords = r_flip_coords,
+    alpha = r_alpha
+    # EVERY argument must be here!
+  )
+)
+```
+
+##### 5. Expression Building Checks
+
+**Required fields - No validation needed:**
+```r
+# Assume they always have values
+aes_parts <- c(glue::glue("x = {r_x()}"))
+```
+
+**Optional SelectInputs - Use != "(none)" check:**
+```r
+if (r_color() != "(none)") {
+  aes_parts <- c(aes_parts, glue::glue("colour = {r_color()}"))
+}
+```
+
+**TextInputs - Use isTruthy() check:**
+```r
+if (isTruthy(r_title())) {
+  plot_text <- glue::glue('({plot_text}) + ggplot2::labs(title = "{r_title()}")')
+}
+```
+
+#### Reactive Values and Input ID Naming
+- Use `r_*` prefix for all reactive values (e.g., `r_x`, `r_color`)
+- Use simple names for input IDs (e.g., `x`, `color`, not `xcol` or `colorcol`)
 - Input IDs in UI must match observer names in server
-
-#### Optional vs Required Fields
-
-**Required Fields:**
-- No "(none)" option in choices
-- Use standard validation: `if (!isTruthy(r_x())) return(quote(ggplot2::ggplot() + ggplot2::geom_blank()))`
-- Examples: x-axis in bar charts, x/y in scatter plots
-
-**Optional Aesthetic Fields (color, shape, fill):**
-- Initialize empty parameters to "(none)": `r_color <- reactiveVal(if (length(color) == 0) "(none)" else color)`
-- Use "(none)" string literal for "not selected" state
-- Check with string comparison: `if (r_color() != "(none)") { ... }`
-- UI choices: `c("(none)", cols())` in updateSelectInput
-- Initial UI can be empty, will be populated by updateSelectInput
-
-**Special Optional Fields:**
-- Y-axis in bar charts: Empty means "count", not "(none)"
-- Use empty string "" and `isTruthy()` check for these cases
 
 #### Expression Building Pattern
 Always use dynamic aesthetic building:
