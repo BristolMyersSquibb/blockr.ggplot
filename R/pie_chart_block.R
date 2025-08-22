@@ -1,6 +1,7 @@
 #' Pie chart block constructor
 #'
-#' This block creates pie charts using [ggplot2::geom_col()] with polar coordinates.
+#' This block creates pie charts using [ggplot2::geom_col()] with
+#' polar coordinates.
 #' Supports categorical data visualization with optional donut chart style.
 #'
 #' @param x Column for categories (required)
@@ -37,7 +38,7 @@ new_pie_chart_block <- function(x = character(), y = character(),
           observeEvent(
             cols(),
             {
-              # Never filter columns by type - let ggplot2 handle type validation
+              # Let ggplot2 handle type validation
               updateSelectInput(
                 session,
                 inputId = "x",
@@ -65,10 +66,10 @@ new_pie_chart_block <- function(x = character(), y = character(),
               if (!isTruthy(r_x())) {
                 return(quote(ggplot2::ggplot() + ggplot2::geom_blank()))
               }
-              
+
               # Build aesthetics - use bar chart pattern
               aes_parts <- c(glue::glue("x = {r_x()}"))
-              
+
               # Choose geom based on y variable (like bar chart)
               if (r_y() != "(none)") {
                 aes_parts <- c(aes_parts, glue::glue("y = {r_y()}"))
@@ -76,33 +77,49 @@ new_pie_chart_block <- function(x = character(), y = character(),
               } else {
                 geom_func <- "geom_bar"
               }
-              
+
               # Use fill if specified, otherwise use x
               fill_var <- if (r_fill() != "(none)") r_fill() else r_x()
               aes_parts <- c(aes_parts, glue::glue("fill = {fill_var}"))
-              
+
               aes_text <- paste(aes_parts, collapse = ", ")
-              
+
               # Build basic plot with pie transformation
-              plot_text <- glue::glue("ggplot2::ggplot(data, ggplot2::aes({aes_text})) + ggplot2::{geom_func}(width = 1) + ggplot2::coord_polar('y', start = 0) + ggplot2::theme_void()")
-              
+              plot_text <- glue::glue(
+                "ggplot2::ggplot(data, ggplot2::aes({aes_text})) + ",
+                "ggplot2::{geom_func}(width = 1) + ",
+                "ggplot2::coord_polar('y', start = 0) + ",
+                "ggplot2::theme_void()"
+              )
+
               # Add donut hole if requested
               if (r_donut()) {
-                plot_text <- glue::glue("({plot_text}) + ggplot2::xlim(c(-1, 1.5))")
+                plot_text <- glue::glue(
+                  "({plot_text}) + ggplot2::xlim(c(-1, 1.5))"
+                )
               }
-              
+
               # Add labels if requested
               if (r_show_labels()) {
                 if (r_y() != "(none)") {
                   # Custom y values
-                  label_text <- glue::glue("paste0(round({r_y()} / sum({r_y()}) * 100, 1), '%')")
+                  label_text <- glue::glue(
+                    "paste0(round({r_y()} / sum({r_y()}) * 100, 1), '%')"
+                  )
                 } else {
                   # Use ..count.. for automatic counting
-                  label_text <- "paste0(round(..count.. / sum(..count..) * 100, 1), '%')"
+                  label_text <- paste0(
+                    "paste0(round(..count.. / sum(..count..) * 100, 1), '%')"
+                  )
                 }
-                plot_text <- glue::glue("({plot_text}) + ggplot2::geom_text(ggplot2::aes(label = {label_text}), stat = 'count', position = ggplot2::position_stack(vjust = 0.5))")
+                plot_text <- glue::glue(
+                  "({plot_text}) + ggplot2::geom_text(",
+                  "ggplot2::aes(label = {label_text}), ",
+                  "stat = 'count', ",
+                  "position = ggplot2::position_stack(vjust = 0.5))"
+                )
               }
-              
+
               parse(text = plot_text)[[1]]
             }),
             state = list(
@@ -136,7 +153,10 @@ new_pie_chart_block <- function(x = character(), y = character(),
               choices = c("(none)", y),
               selected = if (length(y) == 0) "(none)" else y
             ),
-            helpText("Categories is required. If Values is '(none)', will count occurrences.")
+            helpText(
+              "Categories is required. If Values is '(none)', ",
+              "will count occurrences."
+            )
           ),
           div(
             class = "col-md-6",
@@ -164,7 +184,8 @@ new_pie_chart_block <- function(x = character(), y = character(),
       )
     },
     class = "pie_chart_block",
-    allow_empty_state = c("y", "fill"),  # y is optional (empty = count), fill is optional
+    # y is optional (empty = count), fill is optional
+    allow_empty_state = c("y", "fill"),
     ...
   )
 }

@@ -1,7 +1,8 @@
 #' Violin plot block constructor
 #'
-#' This block creates violin plots using [ggplot2::geom_violin()]. Shows the 
-#' probability density of data at different values, similar to boxplots but with 
+#' This block creates violin plots using [ggplot2::geom_violin()].
+#' Combines density and boxplot concepts for detailed distribution
+#' visualization.
 #' more detailed shape information.
 #'
 #' @param x Column for x-axis (required)
@@ -15,8 +16,10 @@
 #'
 #' @export
 new_violin_plot_block <- function(x = character(), y = character(),
-                                 fill = character(), color = character(),
-                                 alpha = 1.0, trim = TRUE, scale = "area", ...) {
+                                  fill = character(),
+                                  color = character(),
+                                  alpha = 1.0, trim = TRUE,
+                                  scale = "area", ...) {
   new_ggplot_block(
     function(id, data) {
       moduleServer(
@@ -44,7 +47,7 @@ new_violin_plot_block <- function(x = character(), y = character(),
           observeEvent(
             cols(),
             {
-              # Never filter columns by type - let ggplot2 handle type validation
+              # Let ggplot2 handle type validation
               updateSelectInput(
                 session,
                 inputId = "x",
@@ -75,33 +78,40 @@ new_violin_plot_block <- function(x = character(), y = character(),
           list(
             expr = reactive({
               # Validate required fields
-              if (!isTruthy(r_x()) || length(r_x()) == 0 || !isTruthy(r_y()) || length(r_y()) == 0) {
+              if (!isTruthy(r_x()) || length(r_x()) == 0 ||
+                  !isTruthy(r_y()) || length(r_y()) == 0) {
                 return(quote(ggplot2::ggplot() + ggplot2::geom_blank()))
               }
-              
+
               # Build aesthetics
-              aes_parts <- c(glue::glue("x = {r_x()}"), glue::glue("y = {r_y()}"))
+              aes_parts <- c(
+                glue::glue("x = {r_x()}"),
+                glue::glue("y = {r_y()}")
+              )
               if (r_fill() != "(none)") {
                 aes_parts <- c(aes_parts, glue::glue("fill = {r_fill()}"))
               }
               if (r_color() != "(none)") {
                 aes_parts <- c(aes_parts, glue::glue("colour = {r_color()}"))
               }
-              
+
               aes_text <- paste(aes_parts, collapse = ", ")
-              
+
               # Build geom arguments
               geom_args <- c(
                 glue::glue("alpha = {r_alpha()}"),
                 glue::glue("trim = {r_trim()}"),
                 glue::glue('scale = "{r_scale()}"')
               )
-              
+
               geom_args_text <- paste(geom_args, collapse = ", ")
-              
+
               # Build plot
-              plot_text <- glue::glue("ggplot2::ggplot(data, ggplot2::aes({aes_text})) + ggplot2::geom_violin({geom_args_text})")
-              
+              plot_text <- glue::glue(
+                "ggplot2::ggplot(data, ggplot2::aes({aes_text})) + ",
+                "ggplot2::geom_violin({geom_args_text})"
+              )
+
               parse(text = plot_text)[[1]]
             }),
             state = list(
@@ -158,7 +168,7 @@ new_violin_plot_block <- function(x = character(), y = character(),
               label = "Scaling Method",
               choices = list(
                 "Equal Area" = "area",
-                "Count-based" = "count", 
+                "Count-based" = "count",
                 "Equal Width" = "width"
               ),
               selected = scale

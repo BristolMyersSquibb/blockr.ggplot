@@ -112,7 +112,9 @@ test_that("heatmap_block expression generation", {
 
 test_that("heatmap_block handles empty parameters correctly", {
   # Test with character(0) inputs - should not fail
-  blk <- new_heatmap_block(x = character(0), y = character(0), fill = character(0))
+  blk <- new_heatmap_block(
+    x = character(0), y = character(0), fill = character(0)
+  )
   expect_s3_class(
     blk,
     c("heatmap_block", "ggplot_block", "plot_block", "block")

@@ -1,7 +1,8 @@
 #' Line chart block constructor
 #'
-#' This block creates line charts using [ggplot2::geom_line()] and optionally [ggplot2::geom_point()].
-#' Perfect for time series data and trend visualization with grouping support.
+#' This block creates line charts using [ggplot2::geom_line()] and
+#' optionally [ggplot2::geom_point()]. Perfect for time series data and
+#' trend visualization with grouping support.
 #'
 #' @param x Column for x-axis (often time/date variable)
 #' @param y Column for y-axis (numeric variable)
@@ -14,8 +15,10 @@
 #'
 #' @export
 new_line_chart_block <- function(x = character(), y = character(),
-                                color = character(), linetype = character(),
-                                linewidth = 1, alpha = 1.0, show_points = TRUE, ...) {
+                                 color = character(),
+                                 linetype = character(),
+                                 linewidth = 1, alpha = 1.0,
+                                 show_points = TRUE, ...) {
   new_ggplot_block(
     function(id, data) {
       moduleServer(
@@ -27,7 +30,9 @@ new_line_chart_block <- function(x = character(), y = character(),
           r_x <- reactiveVal(x)
           r_y <- reactiveVal(y)
           r_color <- reactiveVal(if (length(color) == 0) "(none)" else color)
-          r_linetype <- reactiveVal(if (length(linetype) == 0) "(none)" else linetype)
+          r_linetype <- reactiveVal(
+            if (length(linetype) == 0) "(none)" else linetype
+          )
           r_linewidth <- reactiveVal(linewidth)
           r_alpha <- reactiveVal(alpha)
           r_show_points <- reactiveVal(show_points)
@@ -43,7 +48,7 @@ new_line_chart_block <- function(x = character(), y = character(),
           observeEvent(
             cols(),
             {
-              # Never filter columns by type - let ggplot2 handle type validation
+              # Let ggplot2 handle type validation
               updateSelectInput(
                 session,
                 inputId = "x",
@@ -74,29 +79,42 @@ new_line_chart_block <- function(x = character(), y = character(),
           list(
             expr = reactive({
               # Validate required fields
-              if (!isTruthy(r_x()) || length(r_x()) == 0 || !isTruthy(r_y()) || length(r_y()) == 0) {
+              if (!isTruthy(r_x()) || length(r_x()) == 0 ||
+                  !isTruthy(r_y()) || length(r_y()) == 0) {
                 return(quote(ggplot2::ggplot() + ggplot2::geom_blank()))
               }
-              
+
               # Build aesthetics
-              aes_parts <- c(glue::glue("x = {r_x()}"), glue::glue("y = {r_y()}"))
+              aes_parts <- c(
+                glue::glue("x = {r_x()}"),
+                glue::glue("y = {r_y()}")
+              )
               if (r_color() != "(none)") {
                 aes_parts <- c(aes_parts, glue::glue("colour = {r_color()}"))
               }
               if (r_linetype() != "(none)") {
-                aes_parts <- c(aes_parts, glue::glue("linetype = {r_linetype()}"))
+                aes_parts <- c(
+                  aes_parts,
+                  glue::glue("linetype = {r_linetype()}")
+                )
               }
-              
+
               aes_text <- paste(aes_parts, collapse = ", ")
-              
+
               # Build basic plot with line
-              plot_text <- glue::glue("ggplot2::ggplot(data, ggplot2::aes({aes_text})) + ggplot2::geom_line(linewidth = {r_linewidth()}, alpha = {r_alpha()})")
-              
+              plot_text <- glue::glue(
+                "ggplot2::ggplot(data, ggplot2::aes({aes_text})) + ",
+                "ggplot2::geom_line(linewidth = {r_linewidth()}, ",
+                "alpha = {r_alpha()})"
+              )
+
               # Add points if requested
               if (r_show_points()) {
-                plot_text <- glue::glue("({plot_text}) + ggplot2::geom_point(alpha = {r_alpha()})")
+                plot_text <- glue::glue(
+                  "({plot_text}) + ggplot2::geom_point(alpha = {r_alpha()})"
+                )
               }
-              
+
               parse(text = plot_text)[[1]]
             }),
             state = list(
@@ -132,7 +150,9 @@ new_line_chart_block <- function(x = character(), y = character(),
               choices = y,
               selected = y
             ),
-            helpText("Line charts work best with time series or sequential data")
+            helpText(
+              "Line charts work best with time series or sequential data"
+            )
           ),
           div(
             class = "col-md-6",
@@ -189,7 +209,8 @@ new_line_chart_block <- function(x = character(), y = character(),
       )
     },
     class = "line_chart_block",
-    allow_empty_state = c("color", "linetype"),  # Both color and linetype are optional
+    # Color and linetype are optional
+    allow_empty_state = c("color", "linetype"),
     ...
   )
 }
