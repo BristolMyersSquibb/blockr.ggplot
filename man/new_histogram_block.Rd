@@ -27,6 +27,7 @@ new_histogram_block(
 \item{...}{Forwarded to \code{\link[blockr.core:new_block]{blockr.core::new_block()}}}
 }
 \description{
-This block draws a histogram using \code{\link[ggplot2:geom_histogram]{ggplot2::geom_histogram()}}. Supports customizable
-aesthetics including x-axis variable, binning options, color/fill, and styling.
+This block draws a histogram using \code{\link[ggplot2:geom_histogram]{ggplot2::geom_histogram()}}. Supports
+customizable aesthetics including x-axis variable, binning options,
+color/fill, and styling.
 }

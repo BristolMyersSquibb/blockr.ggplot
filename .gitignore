@@ -19,7 +19,6 @@
 /Meta/
 /doc/
 /docs/
-/man/*.Rd
 inst/doc
 
 # macOS
