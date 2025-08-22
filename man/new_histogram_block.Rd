@@ -4,13 +4,30 @@
 \alias{new_histogram_block}
 \title{Histogram block constructor}
 \usage{
-new_histogram_block(x = character(), y = character(), color = character(), ...)
+new_histogram_block(
+  x = character(),
+  fill = character(),
+  color = character(),
+  bins = 30,
+  alpha = 0.7,
+  ...
+)
 }
 \arguments{
-\item{x, y, color}{Columns to use for \code{\link[ggplot2:aes]{ggplot2::aes()}}}
+\item{x}{Column for x-axis (numeric variable)}
 
-\item{...}{Forwarded to \code{\link[=new_block]{new_block()}}}
+\item{fill}{Column for fill aesthetic (optional)}
+
+\item{color}{Column for color (outline) aesthetic (optional)}
+
+\item{bins}{Number of bins (default 30)}
+
+\item{alpha}{Transparency level (default 0.7)}
+
+\item{...}{Forwarded to \code{\link[blockr.core:new_block]{blockr.core::new_block()}}}
 }
 \description{
-This block draws a boxplot using \code{\link[ggplot2:geom_histogram]{ggplot2::geom_histogram()}}.
+This block draws a histogram using \code{\link[ggplot2:geom_histogram]{ggplot2::geom_histogram()}}. Supports
+customizable aesthetics including x-axis variable, binning options,
+color/fill, and styling.
 }

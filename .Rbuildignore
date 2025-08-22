@@ -1,1 +1,13 @@
 ^LICENSE\.md$
+^.*\.Rproj$
+^\.Rproj\.user$
+^\.github$
+^CLAUDE\.md$
+^\.lintr$
+^\.git$
+^\.gitignore$
+^README\.md$
+^README\.html$
+^\.DS_Store$
+^\.\.Rcheck$
+^\.claude$

@@ -4,13 +4,34 @@
 \alias{new_boxplot_block}
 \title{Boxplot block constructor}
 \usage{
-new_boxplot_block(x = character(), color = character(), ...)
+new_boxplot_block(
+  x = character(),
+  y = character(),
+  color = character(),
+  fill = character(),
+  alpha = 1,
+  show_outliers = TRUE,
+  ...
+)
 }
 \arguments{
-\item{x, color}{Columns to use for \code{\link[ggplot2:aes]{ggplot2::aes()}}}
+\item{x}{Column for x-axis (categorical variable)}
 
-\item{...}{Forwarded to \code{\link[=new_block]{new_block()}}}
+\item{y}{Column for y-axis (numeric variable, optional for single
+variable boxplots)}
+
+\item{color}{Column for color aesthetic (optional)}
+
+\item{fill}{Column for fill aesthetic (optional)}
+
+\item{alpha}{Transparency level (0-1, default 1.0)}
+
+\item{show_outliers}{Whether to show outliers (default TRUE)}
+
+\item{...}{Forwarded to \code{\link[blockr.core:new_block]{blockr.core::new_block()}}}
 }
 \description{
 This block draws a boxplot using \code{\link[ggplot2:geom_boxplot]{ggplot2::geom_boxplot()}}.
+Supports customizable aesthetics including x-axis, y-axis grouping,
+color/fill, and styling options.
 }

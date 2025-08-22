@@ -1,20 +1,19 @@
-#' Histogram block constructor
+#' Density plot block constructor
 #'
-#' This block draws a histogram using [ggplot2::geom_histogram()]. Supports
-#' customizable aesthetics including x-axis variable, binning options,
-#' color/fill, and styling.
+#' This block creates density plots using [ggplot2::geom_density()]. Perfect for
+#' visualizing the distribution of continuous variables with smooth curves.
 #'
-#' @param x Column for x-axis (numeric variable)
-#' @param fill Column for fill aesthetic (optional)
-#' @param color Column for color (outline) aesthetic (optional)
-#' @param bins Number of bins (default 30)
-#' @param alpha Transparency level (default 0.7)
+#' @param x Column for x-axis (required)
+#' @param fill Column for fill aesthetic (optional, for multiple density curves)
+#' @param color Column for color aesthetic (optional)
+#' @param alpha Transparency level (default 0.5)
+#' @param adjust Bandwidth adjustment for density calculation (default 1)
 #' @param ... Forwarded to [blockr.core::new_block()]
 #'
 #' @export
-new_histogram_block <- function(x = character(), fill = character(),
-                                color = character(), bins = 30,
-                                alpha = 0.7, ...) {
+new_density_plot_block <- function(x = character(), fill = character(),
+                                   color = character(), alpha = 0.5,
+                                   adjust = 1, ...) {
   new_ggplot_block(
     function(id, data) {
       moduleServer(
@@ -26,14 +25,14 @@ new_histogram_block <- function(x = character(), fill = character(),
           r_x <- reactiveVal(x)
           r_fill <- reactiveVal(if (length(fill) == 0) "(none)" else fill)
           r_color <- reactiveVal(if (length(color) == 0) "(none)" else color)
-          r_bins <- reactiveVal(bins)
           r_alpha <- reactiveVal(alpha)
+          r_adjust <- reactiveVal(adjust)
 
           observeEvent(input$x, r_x(input$x))
           observeEvent(input$fill, r_fill(input$fill))
           observeEvent(input$color, r_color(input$color))
-          observeEvent(input$bins, r_bins(input$bins))
           observeEvent(input$alpha, r_alpha(input$alpha))
+          observeEvent(input$adjust, r_adjust(input$adjust))
 
           observeEvent(
             cols(),
@@ -63,7 +62,7 @@ new_histogram_block <- function(x = character(), fill = character(),
           list(
             expr = reactive({
               # Validate required field
-              if (!isTruthy(r_x())) {
+              if (!isTruthy(r_x()) || length(r_x()) == 0) {
                 return(quote(ggplot2::ggplot() + ggplot2::geom_blank()))
               }
 
@@ -80,16 +79,16 @@ new_histogram_block <- function(x = character(), fill = character(),
 
               # Build geom arguments
               geom_args <- c(
-                glue::glue("bins = {r_bins()}"),
-                glue::glue("alpha = {r_alpha()}")
+                glue::glue("alpha = {r_alpha()}"),
+                glue::glue("adjust = {r_adjust()}")
               )
 
               geom_args_text <- paste(geom_args, collapse = ", ")
 
-              # Build basic plot
+              # Build plot
               plot_text <- glue::glue(
                 "ggplot2::ggplot(data, ggplot2::aes({aes_text})) + ",
-                "ggplot2::geom_histogram({geom_args_text})"
+                "ggplot2::geom_density({geom_args_text})"
               )
 
               parse(text = plot_text)[[1]]
@@ -98,8 +97,8 @@ new_histogram_block <- function(x = character(), fill = character(),
               x = r_x,
               fill = r_fill,
               color = r_color,
-              bins = r_bins,
-              alpha = r_alpha
+              alpha = r_alpha,
+              adjust = r_adjust
             )
           )
         }
@@ -108,14 +107,14 @@ new_histogram_block <- function(x = character(), fill = character(),
     function(id) {
       div(
         class = "m-3",
-        h4("Histogram Configuration"),
+        h4("Density Plot Configuration"),
         div(
           class = "row",
           div(
             class = "col-md-6",
             selectInput(
               inputId = NS(id, "x"),
-              label = "X-axis (Numeric)",
+              label = "X-axis",
               choices = x,
               selected = x
             ),
@@ -124,28 +123,15 @@ new_histogram_block <- function(x = character(), fill = character(),
               label = "Fill By",
               choices = c("(none)", fill),
               selected = if (length(fill) == 0) "(none)" else fill
-            )
-          ),
-          div(
-            class = "col-md-6",
+            ),
             selectInput(
               inputId = NS(id, "color"),
               label = "Color By",
               choices = c("(none)", color),
               selected = if (length(color) == 0) "(none)" else color
             ),
-            numericInput(
-              inputId = NS(id, "bins"),
-              label = "Number of Bins",
-              value = bins,
-              min = 5,
-              max = 100,
-              step = 1
-            )
-          )
-        ),
-        div(
-          class = "row",
+            helpText("X-axis is required for density plots")
+          ),
           div(
             class = "col-md-6",
             sliderInput(
@@ -155,13 +141,23 @@ new_histogram_block <- function(x = character(), fill = character(),
               min = 0.1,
               max = 1.0,
               step = 0.1
-            )
+            ),
+            sliderInput(
+              inputId = NS(id, "adjust"),
+              label = "Bandwidth Adjustment",
+              value = adjust,
+              min = 0.1,
+              max = 3.0,
+              step = 0.1
+            ),
+            helpText("Higher values = smoother curves")
           )
         )
       )
     },
-    class = "histogram_block",
-    allow_empty_state = c("fill", "color"),  # Optional aesthetics
+    class = "density_plot_block",
+    # Both fill and color are optional
+    allow_empty_state = c("fill", "color"),
     ...
   )
 }

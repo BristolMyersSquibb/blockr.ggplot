@@ -1,20 +1,21 @@
-#' Histogram block constructor
+#' Area chart block constructor
 #'
-#' This block draws a histogram using [ggplot2::geom_histogram()]. Supports
-#' customizable aesthetics including x-axis variable, binning options,
-#' color/fill, and styling.
+#' This block creates area charts using [ggplot2::geom_area()]. Perfect for
+#' showing cumulative values over time with stacking support.
 #'
-#' @param x Column for x-axis (numeric variable)
-#' @param fill Column for fill aesthetic (optional)
-#' @param color Column for color (outline) aesthetic (optional)
-#' @param bins Number of bins (default 30)
+#' @param x Column for x-axis (required)
+#' @param y Column for y-axis (required)
+#' @param fill Column for fill aesthetic (optional, for stacking multiple areas)
+#' @param color Column for color aesthetic (outline color, optional)
+#' @param position Area position: "stack", "fill" (default "stack")
 #' @param alpha Transparency level (default 0.7)
 #' @param ... Forwarded to [blockr.core::new_block()]
 #'
 #' @export
-new_histogram_block <- function(x = character(), fill = character(),
-                                color = character(), bins = 30,
-                                alpha = 0.7, ...) {
+new_area_chart_block <- function(x = character(), y = character(),
+                                 fill = character(), color = character(),
+                                 position = "stack",
+                                 alpha = 0.7, ...) {
   new_ggplot_block(
     function(id, data) {
       moduleServer(
@@ -24,15 +25,17 @@ new_histogram_block <- function(x = character(), fill = character(),
           cols <- reactive(colnames(data()))
 
           r_x <- reactiveVal(x)
+          r_y <- reactiveVal(y)
           r_fill <- reactiveVal(if (length(fill) == 0) "(none)" else fill)
           r_color <- reactiveVal(if (length(color) == 0) "(none)" else color)
-          r_bins <- reactiveVal(bins)
+          r_position <- reactiveVal(position)
           r_alpha <- reactiveVal(alpha)
 
           observeEvent(input$x, r_x(input$x))
+          observeEvent(input$y, r_y(input$y))
           observeEvent(input$fill, r_fill(input$fill))
           observeEvent(input$color, r_color(input$color))
-          observeEvent(input$bins, r_bins(input$bins))
+          observeEvent(input$position, r_position(input$position))
           observeEvent(input$alpha, r_alpha(input$alpha))
 
           observeEvent(
@@ -44,6 +47,12 @@ new_histogram_block <- function(x = character(), fill = character(),
                 inputId = "x",
                 choices = cols(),
                 selected = r_x()
+              )
+              updateSelectInput(
+                session,
+                inputId = "y",
+                choices = cols(),
+                selected = r_y()
               )
               updateSelectInput(
                 session,
@@ -62,13 +71,17 @@ new_histogram_block <- function(x = character(), fill = character(),
 
           list(
             expr = reactive({
-              # Validate required field
-              if (!isTruthy(r_x())) {
+              # Validate required fields
+              if (!isTruthy(r_x()) || length(r_x()) == 0 ||
+                    !isTruthy(r_y()) || length(r_y()) == 0) {
                 return(quote(ggplot2::ggplot() + ggplot2::geom_blank()))
               }
 
               # Build aesthetics
-              aes_parts <- c(glue::glue("x = {r_x()}"))
+              aes_parts <- c(
+                glue::glue("x = {r_x()}"),
+                glue::glue("y = {r_y()}")
+              )
               if (r_fill() != "(none)") {
                 aes_parts <- c(aes_parts, glue::glue("fill = {r_fill()}"))
               }
@@ -77,28 +90,31 @@ new_histogram_block <- function(x = character(), fill = character(),
               }
 
               aes_text <- paste(aes_parts, collapse = ", ")
-
               # Build geom arguments
               geom_args <- c(
-                glue::glue("bins = {r_bins()}"),
                 glue::glue("alpha = {r_alpha()}")
               )
+              if (r_fill() != "(none)") {
+                geom_args <- c(
+                  geom_args,
+                  glue::glue('position = "{r_position()}"')
+                )
+              }
 
               geom_args_text <- paste(geom_args, collapse = ", ")
-
-              # Build basic plot
+              # Build plot
               plot_text <- glue::glue(
                 "ggplot2::ggplot(data, ggplot2::aes({aes_text})) + ",
-                "ggplot2::geom_histogram({geom_args_text})"
+                "ggplot2::geom_area({geom_args_text})"
               )
-
               parse(text = plot_text)[[1]]
             }),
             state = list(
               x = r_x,
+              y = r_y,
               fill = r_fill,
               color = r_color,
-              bins = r_bins,
+              position = r_position,
               alpha = r_alpha
             )
           )
@@ -108,60 +124,65 @@ new_histogram_block <- function(x = character(), fill = character(),
     function(id) {
       div(
         class = "m-3",
-        h4("Histogram Configuration"),
+        h4("Area Chart Configuration"),
         div(
           class = "row",
           div(
             class = "col-md-6",
             selectInput(
               inputId = NS(id, "x"),
-              label = "X-axis (Numeric)",
+              label = "X-axis",
               choices = x,
               selected = x
             ),
             selectInput(
-              inputId = NS(id, "fill"),
-              label = "Fill By",
-              choices = c("(none)", fill),
-              selected = if (length(fill) == 0) "(none)" else fill
-            )
+              inputId = NS(id, "y"),
+              label = "Y-axis",
+              choices = y,
+              selected = y
+            ),
+            helpText("Both X and Y axes are required for area charts")
           ),
           div(
             class = "col-md-6",
             selectInput(
+              inputId = NS(id, "fill"),
+              label = "Fill/Stack By",
+              choices = c("(none)", fill),
+              selected = if (length(fill) == 0) "(none)" else fill
+            ),
+            selectInput(
               inputId = NS(id, "color"),
-              label = "Color By",
+              label = "Outline Color By",
               choices = c("(none)", color),
               selected = if (length(color) == 0) "(none)" else color
             ),
-            numericInput(
-              inputId = NS(id, "bins"),
-              label = "Number of Bins",
-              value = bins,
-              min = 5,
-              max = 100,
-              step = 1
-            )
-          )
-        ),
-        div(
-          class = "row",
-          div(
-            class = "col-md-6",
-            sliderInput(
-              inputId = NS(id, "alpha"),
-              label = "Transparency",
-              value = alpha,
-              min = 0.1,
-              max = 1.0,
-              step = 0.1
+            selectInput(
+              inputId = NS(id, "position"),
+              label = "Area Position",
+              choices = list(
+                "Stacked" = "stack",
+                "Filled (100%)" = "fill"
+              ),
+              selected = position
+            ),
+            div(
+              style = "margin-top: 25px;",
+              sliderInput(
+                inputId = NS(id, "alpha"),
+                label = "Transparency",
+                value = alpha,
+                min = 0.1,
+                max = 1.0,
+                step = 0.1
+              )
             )
           )
         )
       )
     },
-    class = "histogram_block",
-    allow_empty_state = c("fill", "color"),  # Optional aesthetics
+    class = "area_chart_block",
+    allow_empty_state = c("fill", "color"),  # fill and color are optional
     ...
   )
 }
