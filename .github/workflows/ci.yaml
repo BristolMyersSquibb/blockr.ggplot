@@ -1,0 +1,25 @@
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+name: ci
+
+jobs:
+
+  lint:
+    uses: ./.github/workflows/lint.yaml
+    secrets: inherit
+
+  smoke:
+    needs: lint
+    uses: ./.github/workflows/smoke.yaml
+    secrets: inherit
+
+  check:
+    needs: smoke
+    # Only run full checks on main/master branch (not on PRs)
+    if: github.event_name != 'pull_request'
+    uses: ./.github/workflows/check.yaml
+    secrets: inherit

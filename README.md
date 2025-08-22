@@ -1,8 +1,7 @@
 # blockr.ggplot
 
 <!-- badges: start -->
-[![R-CMD-check](https://github.com/BristolMyersSquibb/blockr.ggplot/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/BristolMyersSquibb/blockr.ggplot/actions/workflows/R-CMD-check.yaml)
-[![lint](https://github.com/BristolMyersSquibb/blockr.ggplot/actions/workflows/lint.yaml/badge.svg)](https://github.com/BristolMyersSquibb/blockr.ggplot/actions/workflows/lint.yaml)
+[![ci](https://github.com/BristolMyersSquibb/blockr.ggplot/actions/workflows/ci.yaml/badge.svg)](https://github.com/BristolMyersSquibb/blockr.ggplot/actions/workflows/ci.yaml)
 <!-- badges: end -->
 
 **Data visualization blocks for blockr.core**
