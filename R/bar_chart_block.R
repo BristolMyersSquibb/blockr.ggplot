@@ -1,6 +1,7 @@
 #' Bar chart block constructor
 #'
-#' This block creates bar charts using [ggplot2::geom_col()] or [ggplot2::geom_bar()].
+#' This block creates bar charts using [ggplot2::geom_col()] or
+#' [ggplot2::geom_bar()].
 #' Supports grouped and stacked bar charts with customizable aesthetics.
 #'
 #' @param x Column for x-axis
@@ -9,13 +10,15 @@
 #' @param color Column for color aesthetic (outline color, optional)
 #' @param position Bar position: "stack", "dodge", "fill" (default "stack")
 #' @param alpha Transparency level (0-1, default 1.0)
-#' @param flip_coords Whether to flip coordinates (horizontal bars, default FALSE)
+#' @param flip_coords Whether to flip coordinates for horizontal bars
+#'   (default FALSE)
 #' @param ... Forwarded to [new_block()]
 #'
 #' @export
 new_bar_chart_block <- function(x = character(), y = character(),
-                               fill = character(), color = character(), position = "stack",
-                               alpha = 1.0, flip_coords = FALSE, ...) {
+                                fill = character(), color = character(),
+                                position = "stack",
+                                alpha = 1.0, flip_coords = FALSE, ...) {
   new_ggplot_block(
     function(id, data) {
       moduleServer(
@@ -25,7 +28,8 @@ new_bar_chart_block <- function(x = character(), y = character(),
           cols <- reactive(colnames(data()))
 
           r_x <- reactiveVal(x)  # Required field
-          r_y <- reactiveVal(if (length(y) == 0) "(none)" else y)  # Optional: "(none)" means count
+          # Optional: "(none)" means count
+          r_y <- reactiveVal(if (length(y) == 0) "(none)" else y)
           r_fill <- reactiveVal(if (length(fill) == 0) "(none)" else fill)
           r_color <- reactiveVal(if (length(color) == 0) "(none)" else color)
           r_position <- reactiveVal(position)
@@ -92,13 +96,22 @@ new_bar_chart_block <- function(x = character(), y = character(),
               # Build geom arguments
               geom_args <- c()
               if (r_fill() != "(none)") {
-                geom_args <- c(geom_args, glue::glue('position = "{r_position()}"'))
+                geom_args <- c(
+                  geom_args,
+                  glue::glue('position = "{r_position()}"')
+                )
               }
-              geom_args <- c(geom_args, glue::glue("alpha = {r_alpha()}"))
+              geom_args <- c(
+                geom_args,
+                glue::glue("alpha = {r_alpha()}")
+              )
               geom_args_text <- paste(geom_args, collapse = ", ")
 
               # Build basic plot
-              plot_text <- glue::glue("ggplot2::ggplot(data, ggplot2::aes({aes_text})) + ggplot2::{geom_func}({geom_args_text})")
+              plot_text <- glue::glue(
+                "ggplot2::ggplot(data, ggplot2::aes({aes_text})) + ",
+                "ggplot2::{geom_func}({geom_args_text})"
+              )
 
               # Add coordinate flip if requested
               if (r_flip_coords()) {
@@ -140,7 +153,9 @@ new_bar_chart_block <- function(x = character(), y = character(),
               choices = c("(none)", y),
               selected = if (length(y) == 0) "(none)" else y
             ),
-            helpText("If Y-axis is empty, will count occurrences of X-axis values")
+            helpText(
+              "If Y-axis is empty, will count occurrences of X values"
+            )
           ),
           div(
             class = "col-md-6",
@@ -196,7 +211,8 @@ new_bar_chart_block <- function(x = character(), y = character(),
       )
     },
     class = "bar_chart_block",
-    allow_empty_state = c("y", "fill", "color"),  # y is optional (empty = count), fill and color are optional
+    # y is optional (empty = count), fill and color are optional
+    allow_empty_state = c("y", "fill", "color"),
     ...
   )
 }

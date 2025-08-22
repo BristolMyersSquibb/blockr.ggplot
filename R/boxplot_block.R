@@ -1,10 +1,12 @@
 #' Boxplot block constructor
 #'
-#' This block draws a boxplot using [ggplot2::geom_boxplot()]. Supports customizable
-#' aesthetics including x-axis, y-axis grouping, color/fill, and styling options.
+#' This block draws a boxplot using [ggplot2::geom_boxplot()].
+#' Supports customizable aesthetics including x-axis, y-axis grouping,
+#' color/fill, and styling options.
 #'
 #' @param x Column for x-axis (categorical variable)
-#' @param y Column for y-axis (numeric variable, optional for single variable boxplots)
+#' @param y Column for y-axis (numeric variable, optional for single
+#'   variable boxplots)
 #' @param color Column for color aesthetic (optional)
 #' @param fill Column for fill aesthetic (optional)
 #' @param alpha Transparency level (0-1, default 1.0)
@@ -12,9 +14,9 @@
 #' @param ... Forwarded to [new_block()]
 #'
 #' @export
-new_boxplot_block <- function(x = character(), y = character(), 
-                             color = character(), fill = character(),
-                             alpha = 1.0, show_outliers = TRUE, ...) {
+new_boxplot_block <- function(x = character(), y = character(),
+                              color = character(), fill = character(),
+                              alpha = 1.0, show_outliers = TRUE, ...) {
   new_ggplot_block(
     function(id, data) {
       moduleServer(
@@ -35,21 +37,26 @@ new_boxplot_block <- function(x = character(), y = character(),
           observeEvent(input$color, r_color(input$color))
           observeEvent(input$fill, r_fill(input$fill))
           observeEvent(input$alpha, r_alpha(input$alpha))
-          observeEvent(input$show_outliers, r_show_outliers(input$show_outliers))
+          observeEvent(
+            input$show_outliers,
+            r_show_outliers(input$show_outliers)
+          )
 
           observeEvent(
             cols(),
             {
-              # Never filter columns by type - let ggplot2 handle type validation
+              # Let ggplot2 handle type validation
               updateSelectInput(
                 session,
                 inputId = "x",
                 choices = c("(none)", cols()),
-                selected = if (r_x() %in% c("(none)", cols())) r_x() else "(none)"
+                selected = if (
+                  r_x() %in% c("(none)", cols())
+                ) r_x() else "(none)"
               )
               updateSelectInput(
                 session,
-                inputId = "y", 
+                inputId = "y",
                 choices = cols(),
                 selected = r_y()
               )
@@ -74,33 +81,48 @@ new_boxplot_block <- function(x = character(), y = character(),
               if (!isTruthy(r_y()) || length(r_y()) == 0) {
                 return(quote(ggplot2::ggplot() + ggplot2::geom_blank()))
               }
-              
+
               # Build aesthetics
               if (r_x() != "(none)") {
                 # Two variable boxplot (x = categorical, y = numeric)
-                aes_parts <- c(glue::glue("x = {r_x()}"), glue::glue("y = {r_y()}"))
+                aes_parts <- c(
+                  glue::glue("x = {r_x()}"),
+                  glue::glue("y = {r_y()}")
+                )
               } else {
                 # Single variable boxplot (no grouping)
                 aes_parts <- c('x = ""', glue::glue("y = {r_y()}"))
               }
-              
+
               # Add optional aesthetics
               if (r_color() != "(none)") {
-                aes_parts <- c(aes_parts, glue::glue("colour = {r_color()}"))
+                aes_parts <- c(
+                  aes_parts,
+                  glue::glue("colour = {r_color()}")
+                )
               }
               if (r_fill() != "(none)") {
-                aes_parts <- c(aes_parts, glue::glue("fill = {r_fill()}"))
+                aes_parts <- c(
+                  aes_parts,
+                  glue::glue("fill = {r_fill()}")
+                )
               }
-              
+
               aes_text <- paste(aes_parts, collapse = ", ")
-              
               # Build boxplot with outlier setting and alpha
               if (r_show_outliers()) {
-                plot_text <- glue::glue("ggplot2::ggplot(data, ggplot2::aes({aes_text})) + ggplot2::geom_boxplot(alpha = {r_alpha()})")
+                plot_text <- glue::glue(
+                  "ggplot2::ggplot(data, ggplot2::aes({aes_text})) + ",
+                  "ggplot2::geom_boxplot(alpha = {r_alpha()})"
+                )
               } else {
-                plot_text <- glue::glue("ggplot2::ggplot(data, ggplot2::aes({aes_text})) + ggplot2::geom_boxplot(alpha = {r_alpha()}, outlier.shape = NA)")
+                plot_text <- glue::glue(
+                  "ggplot2::ggplot(data, ggplot2::aes({aes_text})) + ",
+                  "ggplot2::geom_boxplot(alpha = {r_alpha()}, ",
+                  "outlier.shape = NA)"
+                )
               }
-              
+
               parse(text = plot_text)[[1]]
             }),
             state = list(
