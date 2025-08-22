@@ -7,8 +7,9 @@
 #' @param fill Column for fill aesthetic (optional)
 #' @param color Column for color (outline) aesthetic (optional)
 #' @param bins Number of bins (default 30)
+#' @param title Plot title (optional)
 #' @param alpha Transparency level (default 0.7)
-#' @param ... Forwarded to [new_block()]
+#' @param ... Forwarded to [blockr.core::new_block()]
 #'
 #' @export
 new_histogram_block <- function(x = character(), fill = character(),

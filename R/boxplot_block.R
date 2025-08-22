@@ -11,7 +11,7 @@
 #' @param fill Column for fill aesthetic (optional)
 #' @param alpha Transparency level (0-1, default 1.0)
 #' @param show_outliers Whether to show outliers (default TRUE)
-#' @param ... Forwarded to [new_block()]
+#' @param ... Forwarded to [blockr.core::new_block()]
 #'
 #' @export
 new_boxplot_block <- function(x = character(), y = character(),

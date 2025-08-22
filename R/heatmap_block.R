@@ -8,7 +8,7 @@
 #' @param fill Column for fill/color intensity (required)
 #' @param show_values Whether to show values as text on tiles (default FALSE)
 #' @param color_palette Color palette: "viridis", "plasma", "inferno", "magma", "blues" (default "viridis")
-#' @param ... Forwarded to [new_block()]
+#' @param ... Forwarded to [blockr.core::new_block()]
 #'
 #' @export
 new_heatmap_block <- function(x = character(), y = character(),

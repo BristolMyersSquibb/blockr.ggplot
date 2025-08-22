@@ -8,7 +8,7 @@
 #' @param color Column for color aesthetic (optional)
 #' @param alpha Transparency level (default 0.5)
 #' @param adjust Bandwidth adjustment for density calculation (default 1)
-#' @param ... Forwarded to [new_block()]
+#' @param ... Forwarded to [blockr.core::new_block()]
 #'
 #' @export
 new_density_plot_block <- function(x = character(), fill = character(),

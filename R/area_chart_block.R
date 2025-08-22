@@ -9,7 +9,7 @@
 #' @param color Column for color aesthetic (outline color, optional)
 #' @param position Area position: "stack", "fill" (default "stack")
 #' @param alpha Transparency level (default 0.7)
-#' @param ... Forwarded to [new_block()]
+#' @param ... Forwarded to [blockr.core::new_block()]
 #'
 #' @export
 new_area_chart_block <- function(x = character(), y = character(),

@@ -10,7 +10,7 @@
 #' @param linewidth Line width (default 1)
 #' @param alpha Transparency level (0-1, default 1.0)
 #' @param show_points Whether to show points on the line (default TRUE)
-#' @param ... Forwarded to [new_block()]
+#' @param ... Forwarded to [blockr.core::new_block()]
 #'
 #' @export
 new_line_chart_block <- function(x = character(), y = character(),

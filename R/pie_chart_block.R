@@ -8,7 +8,7 @@
 #' @param fill Column for fill colors (optional, defaults to x)
 #' @param donut Whether to create a donut chart (default FALSE)
 #' @param show_labels Whether to show percentage labels (default TRUE)
-#' @param ... Forwarded to [new_block()]
+#' @param ... Forwarded to [blockr.core::new_block()]
 #'
 #' @export
 new_pie_chart_block <- function(x = character(), y = character(),

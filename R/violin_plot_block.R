@@ -11,7 +11,7 @@
 #' @param alpha Transparency level (0-1, default 1.0)
 #' @param trim Whether to trim the tails (default TRUE)
 #' @param scale Scaling method: "area", "count", "width" (default "area")
-#' @param ... Forwarded to [new_block()]
+#' @param ... Forwarded to [blockr.core::new_block()]
 #'
 #' @export
 new_violin_plot_block <- function(x = character(), y = character(),

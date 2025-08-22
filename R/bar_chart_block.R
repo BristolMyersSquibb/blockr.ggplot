@@ -12,7 +12,7 @@
 #' @param alpha Transparency level (0-1, default 1.0)
 #' @param flip_coords Whether to flip coordinates for horizontal bars
 #'   (default FALSE)
-#' @param ... Forwarded to [new_block()]
+#' @param ... Forwarded to [blockr.core::new_block()]
 #'
 #' @export
 new_bar_chart_block <- function(x = character(), y = character(),

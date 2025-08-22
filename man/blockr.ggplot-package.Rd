@@ -4,12 +4,17 @@
 \name{blockr.ggplot-package}
 \alias{blockr.ggplot}
 \alias{blockr.ggplot-package}
-\title{blockr.ggplot: What the Package Does (One Line, Title Case)}
+\title{blockr.ggplot: GGplots for the blockr ecosystem}
 \description{
-What the package does (one paragraph).
+Provides comprehensive blocks for plotting with blockr using 'ggplot2'. Includes PowerBI-style chart types (bar charts, line charts, pie charts, scatter plots) as well as statistical plots (boxplots, histograms, density plots, violin plots, heatmaps) with rich customization options and intuitive user interfaces.
 }
 \author{
 \strong{Maintainer}: Nicolas Bennett \email{nicolas@cynkra.com}
+
+Authors:
+\itemize{
+  \item Christoph Sax \email{christoph@cynkra.com}
+}
 
 }
 \keyword{internal}
