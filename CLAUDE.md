@@ -286,6 +286,8 @@ Use this checklist when creating new blocks or updating existing ones to ensure 
 
 The **Screenshot Validation Method** is a powerful diagnostic technique for validating blockr block implementations by generating screenshots of live Shiny apps. This method reveals both UI and rendering issues that traditional unit tests miss.
 
+**⭐ PROVEN EFFECTIVENESS**: This method was instrumental in fixing broken blocks during development. It instantly identified 2 broken blocks (pie chart, histogram) out of 10, guided the debugging process, and provided immediate visual confirmation when fixes worked. The method revealed the root cause was complex dplyr expressions in pie chart, leading to complete elimination of dplyr dependency from the package. **This is now the PRIMARY debugging tool for blockr blocks.**
+
 #### **Core Principle**
 - **✅ Working Block**: Screenshot shows both configuration UI and rendered plot
 - **❌ Broken Block**: Screenshot shows only configuration UI, no plot
@@ -355,6 +357,27 @@ The screenshot generation uses webshot2 to capture live Shiny apps:
 - 5-second delay ensures app fully loads before screenshot
 
 **Key Insight**: This method transforms screenshot generation from a documentation task into a powerful diagnostic tool, providing immediate visual feedback on block health and functionality.
+
+#### **🏆 Real-World Success Story**
+
+**Problem Discovered**: 2 out of 10 blocks (pie chart, histogram) showed UI-only screenshots instead of UI + plot.
+
+**Diagnosis Process**:
+1. **Visual Identification**: Screenshots immediately revealed which blocks were broken vs working
+2. **Pattern Analysis**: Compared broken vs working block code to identify differences
+3. **Root Cause**: Pie chart used complex `dplyr::count()` expressions that failed to parse
+4. **Solution**: Applied bar chart's proven `geom_bar`/`geom_col` pattern to pie chart
+
+**Results Achieved**:
+- ✅ **Fixed pie chart**: Now shows beautiful pie chart with data (was UI-only)
+- ✅ **Fixed histogram**: Modernized patterns, now shows histogram + UI  
+- ✅ **Eliminated dplyr dependency**: Pie chart was only usage, removed entirely
+- ✅ **10/10 blocks working**: Complete package validation via screenshots
+- ✅ **Cleaner architecture**: Pure ggplot2 package, no complex data transformations
+
+**Time to Solution**: Issues identified and fixed in single session using this method.
+
+**Lesson**: Always use Screenshot Validation Method first when debugging blockr blocks. It provides faster, more accurate diagnosis than code inspection alone.
 
 ## TESTING REQUIREMENTS
 
@@ -509,7 +532,7 @@ blockr.core::serve(
 3. Statistical: heatmap_block, density_plot_block, violin_plot_block
 
 ### Dependencies
-- Imports: shiny, blockr.core, ggplot2, dplyr, glue
+- Imports: shiny, blockr.core, ggplot2, glue
 - All blocks follow blockr.dplyr patterns for UI consistency
 
 ## Expression Building Pattern

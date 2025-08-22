@@ -62,27 +62,29 @@ new_pie_chart_block <- function(x = character(), y = character(),
           list(
             expr = reactive({
               # Validate required field
-              if (!isTruthy(r_x()) || length(r_x()) == 0) {
+              if (!isTruthy(r_x())) {
                 return(quote(ggplot2::ggplot() + ggplot2::geom_blank()))
               }
               
-              # Determine y variable and data preparation
+              # Build aesthetics - use bar chart pattern
+              aes_parts <- c(glue::glue("x = {r_x()}"))
+              
+              # Choose geom based on y variable (like bar chart)
               if (r_y() != "(none)") {
-                y_var <- r_y()
-                data_prep <- glue::glue("data <- data[!is.na(data${r_x()}), ]")
+                aes_parts <- c(aes_parts, glue::glue("y = {r_y()}"))
+                geom_func <- "geom_col"
               } else {
-                y_var <- "n"
-                data_prep <- glue::glue('data <- data[!is.na(data${r_x()}), ]; data <- data %>% dplyr::count({r_x()}, name = "n")')
+                geom_func <- "geom_bar"
               }
               
               # Use fill if specified, otherwise use x
               fill_var <- if (r_fill() != "(none)") r_fill() else r_x()
+              aes_parts <- c(aes_parts, glue::glue("fill = {fill_var}"))
               
-              # Build aesthetics
-              aes_text <- glue::glue('x = "", y = {y_var}, fill = {fill_var}')
+              aes_text <- paste(aes_parts, collapse = ", ")
               
-              # Build basic plot
-              plot_text <- glue::glue('ggplot2::ggplot(data, ggplot2::aes({aes_text})) + ggplot2::geom_col(width = 1) + ggplot2::coord_polar("y", start = 0) + ggplot2::theme_void()')
+              # Build basic plot with pie transformation
+              plot_text <- glue::glue("ggplot2::ggplot(data, ggplot2::aes({aes_text})) + ggplot2::{geom_func}(width = 1) + ggplot2::coord_polar('y', start = 0) + ggplot2::theme_void()")
               
               # Add donut hole if requested
               if (r_donut()) {
@@ -93,18 +95,15 @@ new_pie_chart_block <- function(x = character(), y = character(),
               if (r_show_labels()) {
                 if (r_y() != "(none)") {
                   # Custom y values
-                  label_text <- glue::glue('paste0(round({r_y()} / sum({r_y()}) * 100, 1), "%")')
+                  label_text <- glue::glue("paste0(round({r_y()} / sum({r_y()}) * 100, 1), '%')")
                 } else {
-                  # Count values
-                  label_text <- 'paste0(round(n / sum(n) * 100, 1), "%")'
+                  # Use ..count.. for automatic counting
+                  label_text <- "paste0(round(..count.. / sum(..count..) * 100, 1), '%')"
                 }
-                plot_text <- glue::glue("({plot_text}) + ggplot2::geom_text(ggplot2::aes(label = {label_text}), position = ggplot2::position_stack(vjust = 0.5))")
+                plot_text <- glue::glue("({plot_text}) + ggplot2::geom_text(ggplot2::aes(label = {label_text}), stat = 'count', position = ggplot2::position_stack(vjust = 0.5))")
               }
               
-              # Combine data preparation and plot
-              final_text <- glue::glue("{{ {data_prep}; {plot_text} }}")
-              
-              parse(text = final_text)[[1]]
+              parse(text = plot_text)[[1]]
             }),
             state = list(
               x = r_x,

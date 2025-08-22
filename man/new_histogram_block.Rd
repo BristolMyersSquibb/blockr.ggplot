@@ -9,7 +9,6 @@ new_histogram_block(
   fill = character(),
   color = character(),
   bins = 30,
-  title = character(),
   alpha = 0.7,
   ...
 )
@@ -22,8 +21,6 @@ new_histogram_block(
 \item{color}{Column for color (outline) aesthetic (optional)}
 
 \item{bins}{Number of bins (default 30)}
-
-\item{title}{Plot title (optional)}
 
 \item{alpha}{Transparency level (default 0.7)}
 

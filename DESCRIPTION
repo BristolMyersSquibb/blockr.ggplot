@@ -22,7 +22,6 @@ Imports:
     shiny,
     blockr.core (>= 0.0.1),
     ggplot2,
-    dplyr,
     glue
 Suggests:
     testthat (>= 3.0.0)
