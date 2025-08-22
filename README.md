@@ -40,7 +40,7 @@ This launches an interactive web interface where you can:
 
 Create bar charts with support for grouping, stacking, and horizontal orientation.
 
-![Bar Chart](man/figures/bar-chart.png)
+<img src="man/figures/bar-chart.png" alt="Bar Chart" width="50%">
 
 **Simple usage:**
 ```r
@@ -56,7 +56,7 @@ blockr.core::serve(
 
 Perfect for time series data and trend visualization with multiple line support.
 
-![Line Chart](man/figures/line-chart.png)
+<img src="man/figures/line-chart.png" alt="Line Chart" width="50%">
 
 **Simple usage:**
 ```r
@@ -72,7 +72,7 @@ blockr.core::serve(
 
 Explore relationships between variables with full aesthetic mapping support.
 
-![Scatter Plot](man/figures/scatter-plot.png)
+<img src="man/figures/scatter-plot.png" alt="Scatter Plot" width="50%">
 
 **Simple usage:**
 ```r
@@ -94,7 +94,7 @@ blockr.core::serve(
 
 Visualize categorical data proportions with standard and donut chart styles.
 
-![Pie Chart](man/figures/pie-chart.png)
+<img src="man/figures/pie-chart.png" alt="Pie Chart" width="50%">
 
 **Simple usage:**
 ```r
@@ -114,7 +114,7 @@ blockr.core::serve(
 
 Enhanced boxplot visualization for exploring data distributions and outliers.
 
-![Boxplot](man/figures/boxplot.png)
+<img src="man/figures/boxplot.png" alt="Boxplot" width="50%">
 
 **Simple usage:**
 ```r
@@ -135,7 +135,7 @@ blockr.core::serve(
 
 Visualize data distributions with customizable binning and styling.
 
-![Histogram](man/figures/histogram.png)
+<img src="man/figures/histogram.png" alt="Histogram" width="50%">
 
 **Simple usage:**
 ```r
@@ -156,7 +156,7 @@ blockr.core::serve(
 
 Show cumulative values over time with stacking support.
 
-![Area Chart](man/figures/area-chart.png)
+<img src="man/figures/area-chart.png" alt="Area Chart" width="50%">
 
 **Simple usage:**
 ```r
@@ -176,7 +176,7 @@ blockr.core::serve(
 
 Visualize 2D categorical data or correlation matrices with color intensity.
 
-![Heatmap](man/figures/heatmap.png)
+<img src="man/figures/heatmap.png" alt="Heatmap" width="50%">
 
 **Simple usage:**
 ```r
@@ -202,7 +202,7 @@ blockr.core::serve(
 
 Create smooth density curves for continuous variable distributions.
 
-![Density Plot](man/figures/density-plot.png)
+<img src="man/figures/density-plot.png" alt="Density Plot" width="50%">
 
 **Simple usage:**
 ```r
@@ -223,7 +223,7 @@ blockr.core::serve(
 
 Show detailed distribution shapes combining density and boxplot concepts.
 
-![Violin Plot](man/figures/violin-plot.png)
+<img src="man/figures/violin-plot.png" alt="Violin Plot" width="50%">
 
 **Simple usage:**
 ```r
