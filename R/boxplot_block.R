@@ -15,7 +15,7 @@
 new_boxplot_block <- function(x = character(), y = character(), 
                              color = character(), fill = character(),
                              alpha = 1.0, show_outliers = TRUE, ...) {
-	new_ggplot_block(
+  new_ggplot_block(
     function(id, data) {
       moduleServer(
         id,

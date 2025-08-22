@@ -73,10 +73,10 @@ new_heatmap_block <- function(x = character(), y = character(),
               
               # Build basic plot with theme
               plot_text <- glue::glue(
-                'ggplot2::ggplot(data, ggplot2::aes({aes_text})) + ',
-                'ggplot2::geom_tile(color = "white") + ',
-                'ggplot2::theme_minimal() + ',
-                'ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 45, hjust = 1), panel.grid = ggplot2::element_blank())'
+                "ggplot2::ggplot(data, ggplot2::aes({aes_text})) + ",
+                "ggplot2::geom_tile(color = \"white\") + ",
+                "ggplot2::theme_minimal() + ",
+                "ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 45, hjust = 1), panel.grid = ggplot2::element_blank())"
               )
               
               # Add color scale based on palette choice

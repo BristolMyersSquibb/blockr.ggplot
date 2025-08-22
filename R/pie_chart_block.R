@@ -69,7 +69,7 @@ new_pie_chart_block <- function(x = character(), y = character(),
               # Determine y variable and data preparation
               if (r_y() != "(none)") {
                 y_var <- r_y()
-                data_prep <- glue::glue('data <- data[!is.na(data${r_x()}), ]')
+                data_prep <- glue::glue("data <- data[!is.na(data${r_x()}), ]")
               } else {
                 y_var <- "n"
                 data_prep <- glue::glue('data <- data[!is.na(data${r_x()}), ]; data <- data %>% dplyr::count({r_x()}, name = "n")')
@@ -86,7 +86,7 @@ new_pie_chart_block <- function(x = character(), y = character(),
               
               # Add donut hole if requested
               if (r_donut()) {
-                plot_text <- glue::glue('({plot_text}) + ggplot2::xlim(c(-1, 1.5))')
+                plot_text <- glue::glue("({plot_text}) + ggplot2::xlim(c(-1, 1.5))")
               }
               
               # Add labels if requested
@@ -98,11 +98,11 @@ new_pie_chart_block <- function(x = character(), y = character(),
                   # Count values
                   label_text <- 'paste0(round(n / sum(n) * 100, 1), "%")'
                 }
-                plot_text <- glue::glue('({plot_text}) + ggplot2::geom_text(ggplot2::aes(label = {label_text}), position = ggplot2::position_stack(vjust = 0.5))')
+                plot_text <- glue::glue("({plot_text}) + ggplot2::geom_text(ggplot2::aes(label = {label_text}), position = ggplot2::position_stack(vjust = 0.5))")
               }
               
               # Combine data preparation and plot
-              final_text <- glue::glue('{{ {data_prep}; {plot_text} }}')
+              final_text <- glue::glue("{{ {data_prep}; {plot_text} }}")
               
               parse(text = final_text)[[1]]
             }),
