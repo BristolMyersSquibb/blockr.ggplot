@@ -1,0 +1,44 @@
+# R specific
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+*.Rproj
+
+# R package check
+..Rcheck
+*.Rcheck/
+*.tar.gz
+
+# R build artifacts
+*.o
+*.so
+*.dll
+
+# Documentation
+/Meta/
+/doc/
+/docs/
+/man/*.Rd
+inst/doc
+
+# macOS
+.DS_Store
+
+# Temporary files
+*~
+*.swp
+*.swo
+*.bak
+.~lock.*
+
+# IDE
+.vscode/
+.idea/
+
+# Logs
+*.log
+
+# Package dependencies
+/packrat/
+/renv/
