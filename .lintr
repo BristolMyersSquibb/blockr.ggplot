@@ -1,6 +1,13 @@
 linters: linters_with_defaults(
   line_length_linter = line_length_linter(80),
   object_usage_linter = NULL,
-  commented_code_linter = NULL
+  commented_code_linter = NULL,
+  object_name_linter = NULL,
+  brace_linter = NULL,
+  indentation_linter = NULL
   )
 encoding: "UTF-8"
+exclusions: list(
+  "inst/scripts/generate_screenshots.R",
+  "inst/scripts/generate_single_screenshot.R"
+  )

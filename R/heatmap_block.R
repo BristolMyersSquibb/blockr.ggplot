@@ -1,19 +1,20 @@
 #' Heatmap block constructor
 #'
-#' This block creates heatmaps using [ggplot2::geom_tile()]. Perfect for 
+#' This block creates heatmaps using [ggplot2::geom_tile()]. Perfect for
 #' visualizing 2D categorical data or correlation matrices.
 #'
 #' @param x Column for x-axis (required)
 #' @param y Column for y-axis (required)
 #' @param fill Column for fill/color intensity (required)
 #' @param show_values Whether to show values as text on tiles (default FALSE)
-#' @param color_palette Color palette: "viridis", "plasma", "inferno", "magma", "blues" (default "viridis")
+#' @param color_palette Color palette: "viridis", "plasma", "inferno",
+#'   "magma", "blues" (default "viridis")
 #' @param ... Forwarded to [blockr.core::new_block()]
 #'
 #' @export
 new_heatmap_block <- function(x = character(), y = character(),
-                             fill = character(), show_values = FALSE, 
-                             color_palette = "viridis", ...) {
+                              fill = character(), show_values = FALSE,
+                              color_palette = "viridis", ...) {
   new_ggplot_block(
     function(id, data) {
       moduleServer(
@@ -32,12 +33,15 @@ new_heatmap_block <- function(x = character(), y = character(),
           observeEvent(input$y, r_y(input$y))
           observeEvent(input$fill, r_fill(input$fill))
           observeEvent(input$show_values, r_show_values(input$show_values))
-          observeEvent(input$color_palette, r_color_palette(input$color_palette))
+          observeEvent(
+            input$color_palette,
+            r_color_palette(input$color_palette)
+          )
 
           observeEvent(
             cols(),
             {
-              # Never filter columns by type - let ggplot2 handle type validation
+              # Let ggplot2 handle type validation
               updateSelectInput(
                 session,
                 inputId = "x",
@@ -62,40 +66,51 @@ new_heatmap_block <- function(x = character(), y = character(),
           list(
             expr = reactive({
               # Validate required fields
-              if (!isTruthy(r_x()) || length(r_x()) == 0 || 
-                  !isTruthy(r_y()) || length(r_y()) == 0 || 
+              if (!isTruthy(r_x()) || length(r_x()) == 0 ||
+                  !isTruthy(r_y()) || length(r_y()) == 0 ||
                   !isTruthy(r_fill()) || length(r_fill()) == 0) {
                 return(quote(ggplot2::ggplot() + ggplot2::geom_blank()))
               }
-              
+
               # Build aesthetics
-              aes_text <- glue::glue("x = {r_x()}, y = {r_y()}, fill = {r_fill()}")
-              
+              aes_text <- glue::glue(
+                "x = {r_x()}, y = {r_y()}, fill = {r_fill()}"
+              )
+
               # Build basic plot with theme
               plot_text <- glue::glue(
                 "ggplot2::ggplot(data, ggplot2::aes({aes_text})) + ",
                 "ggplot2::geom_tile(color = \"white\") + ",
                 "ggplot2::theme_minimal() + ",
-                "ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 45, hjust = 1), panel.grid = ggplot2::element_blank())"
+                "ggplot2::theme(axis.text.x = ",
+                "ggplot2::element_text(angle = 45, hjust = 1), ",
+                "panel.grid = ggplot2::element_blank())"
               )
-              
+
               # Add color scale based on palette choice
               color_scale <- switch(r_color_palette(),
                 "viridis" = "ggplot2::scale_fill_viridis_c()",
                 "plasma" = 'ggplot2::scale_fill_viridis_c(option = "plasma")',
                 "inferno" = 'ggplot2::scale_fill_viridis_c(option = "inferno")',
                 "magma" = 'ggplot2::scale_fill_viridis_c(option = "magma")',
-                "blues" = 'ggplot2::scale_fill_gradient(low = "white", high = "steelblue")',
+                "blues" = paste0(
+                  "ggplot2::scale_fill_gradient(",
+                  "low = 'white', high = 'steelblue')"
+                ),
                 "ggplot2::scale_fill_viridis_c()"  # default
               )
-              
+
               plot_text <- glue::glue("({plot_text}) + {color_scale}")
-              
+
               # Add text values if requested
               if (r_show_values()) {
-                plot_text <- glue::glue('({plot_text}) + ggplot2::geom_text(ggplot2::aes(label = round({r_fill()}, 2)), color = "black", size = 3)')
+                plot_text <- glue::glue(
+                  "({plot_text}) + ggplot2::geom_text(",
+                  "ggplot2::aes(label = round({r_fill()}, 2)), ",
+                  "color = 'black', size = 3)"
+                )
               }
-              
+
               parse(text = plot_text)[[1]]
             }),
             state = list(
@@ -125,7 +140,7 @@ new_heatmap_block <- function(x = character(), y = character(),
             ),
             selectInput(
               inputId = NS(id, "y"),
-              label = "Y-axis", 
+              label = "Y-axis",
               choices = y,
               selected = y
             ),
@@ -135,7 +150,9 @@ new_heatmap_block <- function(x = character(), y = character(),
               choices = fill,
               selected = fill
             ),
-            helpText("All three fields (X, Y, Fill) are required for heatmaps")
+            helpText(
+              "All three fields (X, Y, Fill) are required for heatmaps"
+            )
           ),
           div(
             class = "col-md-6",

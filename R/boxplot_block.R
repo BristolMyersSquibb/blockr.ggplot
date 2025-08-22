@@ -126,9 +126,9 @@ new_boxplot_block <- function(x = character(), y = character(),
               parse(text = plot_text)[[1]]
             }),
             state = list(
-              x = r_x, 
+              x = r_x,
               y = r_y,
-              color = r_color, 
+              color = r_color,
               fill = r_fill,
               alpha = r_alpha,
               show_outliers = r_show_outliers
@@ -157,7 +157,9 @@ new_boxplot_block <- function(x = character(), y = character(),
               choices = y,
               selected = y
             ),
-            helpText("Group By is optional - leave as '(none)' for single boxplot")
+            helpText(
+              "Group By is optional - leave as '(none)' for single boxplot"
+            )
           ),
           div(
             class = "col-md-6",
@@ -197,7 +199,8 @@ new_boxplot_block <- function(x = character(), y = character(),
       stopifnot(is.data.frame(data) || is.matrix(data))
     },
     class = "boxplot_block",
-    allow_empty_state = c("x", "color", "fill"),  # x is optional (none = single boxplot), color and fill are optional
+    # x is optional (none = single boxplot), color and fill are optional
+    allow_empty_state = c("x", "color", "fill"),
     ...
   )
 }

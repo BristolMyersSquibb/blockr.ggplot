@@ -1,7 +1,8 @@
 #' Histogram block constructor
 #'
-#' This block draws a histogram using [ggplot2::geom_histogram()]. Supports customizable
-#' aesthetics including x-axis variable, binning options, color/fill, and styling.
+#' This block draws a histogram using [ggplot2::geom_histogram()]. Supports
+#' customizable aesthetics including x-axis variable, binning options,
+#' color/fill, and styling.
 #'
 #' @param x Column for x-axis (numeric variable)
 #' @param fill Column for fill aesthetic (optional)
@@ -12,7 +13,8 @@
 #'
 #' @export
 new_histogram_block <- function(x = character(), fill = character(),
-                                color = character(), bins = 30, alpha = 0.7, ...) {
+                                color = character(), bins = 30,
+                                alpha = 0.7, ...) {
   new_ggplot_block(
     function(id, data) {
       moduleServer(
@@ -36,7 +38,7 @@ new_histogram_block <- function(x = character(), fill = character(),
           observeEvent(
             cols(),
             {
-              # Never filter columns by type - let ggplot2 handle type validation
+              # Let ggplot2 handle type validation
               updateSelectInput(
                 session,
                 inputId = "x",
@@ -64,7 +66,7 @@ new_histogram_block <- function(x = character(), fill = character(),
               if (!isTruthy(r_x())) {
                 return(quote(ggplot2::ggplot() + ggplot2::geom_blank()))
               }
-              
+
               # Build aesthetics
               aes_parts <- c(glue::glue("x = {r_x()}"))
               if (r_fill() != "(none)") {
@@ -73,24 +75,27 @@ new_histogram_block <- function(x = character(), fill = character(),
               if (r_color() != "(none)") {
                 aes_parts <- c(aes_parts, glue::glue("colour = {r_color()}"))
               }
-              
+
               aes_text <- paste(aes_parts, collapse = ", ")
-              
+
               # Build geom arguments
               geom_args <- c(
                 glue::glue("bins = {r_bins()}"),
                 glue::glue("alpha = {r_alpha()}")
               )
-              
+
               geom_args_text <- paste(geom_args, collapse = ", ")
-              
+
               # Build basic plot
-              plot_text <- glue::glue("ggplot2::ggplot(data, ggplot2::aes({aes_text})) + ggplot2::geom_histogram({geom_args_text})")
-              
+              plot_text <- glue::glue(
+                "ggplot2::ggplot(data, ggplot2::aes({aes_text})) + ",
+                "ggplot2::geom_histogram({geom_args_text})"
+              )
+
               parse(text = plot_text)[[1]]
             }),
             state = list(
-              x = r_x, 
+              x = r_x,
               fill = r_fill,
               color = r_color,
               bins = r_bins,

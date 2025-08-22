@@ -12,8 +12,8 @@
 #'
 #' @export
 new_density_plot_block <- function(x = character(), fill = character(),
-                                  color = character(), alpha = 0.5,
-                                  adjust = 1, ...) {
+                                   color = character(), alpha = 0.5,
+                                   adjust = 1, ...) {
   new_ggplot_block(
     function(id, data) {
       moduleServer(
@@ -37,7 +37,7 @@ new_density_plot_block <- function(x = character(), fill = character(),
           observeEvent(
             cols(),
             {
-              # Never filter columns by type - let ggplot2 handle type validation
+              # Let ggplot2 handle type validation
               updateSelectInput(
                 session,
                 inputId = "x",
@@ -65,7 +65,7 @@ new_density_plot_block <- function(x = character(), fill = character(),
               if (!isTruthy(r_x()) || length(r_x()) == 0) {
                 return(quote(ggplot2::ggplot() + ggplot2::geom_blank()))
               }
-              
+
               # Build aesthetics
               aes_parts <- c(glue::glue("x = {r_x()}"))
               if (r_fill() != "(none)") {
@@ -74,20 +74,23 @@ new_density_plot_block <- function(x = character(), fill = character(),
               if (r_color() != "(none)") {
                 aes_parts <- c(aes_parts, glue::glue("colour = {r_color()}"))
               }
-              
+
               aes_text <- paste(aes_parts, collapse = ", ")
-              
+
               # Build geom arguments
               geom_args <- c(
                 glue::glue("alpha = {r_alpha()}"),
                 glue::glue("adjust = {r_adjust()}")
               )
-              
+
               geom_args_text <- paste(geom_args, collapse = ", ")
-              
+
               # Build plot
-              plot_text <- glue::glue("ggplot2::ggplot(data, ggplot2::aes({aes_text})) + ggplot2::geom_density({geom_args_text})")
-              
+              plot_text <- glue::glue(
+                "ggplot2::ggplot(data, ggplot2::aes({aes_text})) + ",
+                "ggplot2::geom_density({geom_args_text})"
+              )
+
               parse(text = plot_text)[[1]]
             }),
             state = list(
@@ -153,7 +156,8 @@ new_density_plot_block <- function(x = character(), fill = character(),
       )
     },
     class = "density_plot_block",
-    allow_empty_state = c("fill", "color"),  # Both fill and color are optional
+    # Both fill and color are optional
+    allow_empty_state = c("fill", "color"),
     ...
   )
 }
