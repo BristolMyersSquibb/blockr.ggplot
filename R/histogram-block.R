@@ -7,14 +7,12 @@
 #' @param fill Column for fill aesthetic (optional)
 #' @param color Column for color (outline) aesthetic (optional)
 #' @param bins Number of bins (default 30)
-#' @param title Plot title (optional)
 #' @param alpha Transparency level (default 0.7)
 #' @param ... Forwarded to [blockr.core::new_block()]
 #'
 #' @export
 new_histogram_block <- function(x = character(), fill = character(),
-                                color = character(), bins = 30,
-                                title = character(), alpha = 0.7, ...) {
+                                color = character(), bins = 30, alpha = 0.7, ...) {
   new_ggplot_block(
     function(id, data) {
       moduleServer(
@@ -23,68 +21,65 @@ new_histogram_block <- function(x = character(), fill = character(),
 
           cols <- reactive(colnames(data()))
 
-          x_col <- reactiveVal(x)
-          fill_col <- reactiveVal(fill)
-          color_col <- reactiveVal(color)
-          bins_val <- reactiveVal(bins)
-          plot_title <- reactiveVal(title)
-          alpha_val <- reactiveVal(alpha)
+          r_x <- reactiveVal(x)
+          r_fill <- reactiveVal(if (length(fill) == 0) "(none)" else fill)
+          r_color <- reactiveVal(if (length(color) == 0) "(none)" else color)
+          r_bins <- reactiveVal(bins)
+          r_alpha <- reactiveVal(alpha)
 
-          observeEvent(input$xcol, x_col(input$xcol))
-          observeEvent(input$fillcol, fill_col(input$fillcol))
-          observeEvent(input$colcol, color_col(input$colcol))
-          observeEvent(input$bins, bins_val(input$bins))
-          observeEvent(input$title, plot_title(input$title))
-          observeEvent(input$alpha, alpha_val(input$alpha))
+          observeEvent(input$x, r_x(input$x))
+          observeEvent(input$fill, r_fill(input$fill))
+          observeEvent(input$color, r_color(input$color))
+          observeEvent(input$bins, r_bins(input$bins))
+          observeEvent(input$alpha, r_alpha(input$alpha))
 
           observeEvent(
             cols(),
             {
-              numeric_cols <- cols()[sapply(data(), is.numeric)]
-              
+              # Never filter columns by type - let ggplot2 handle type validation
               updateSelectInput(
                 session,
-                inputId = "xcol",
-                choices = c("", numeric_cols),
-                selected = x_col()
+                inputId = "x",
+                choices = cols(),
+                selected = r_x()
               )
               updateSelectInput(
                 session,
-                inputId = "fillcol",
-                choices = c("", cols()),
-                selected = fill_col()
+                inputId = "fill",
+                choices = c("(none)", cols()),
+                selected = r_fill()
               )
               updateSelectInput(
                 session,
-                inputId = "colcol",
-                choices = c("", cols()),
-                selected = color_col()
+                inputId = "color",
+                choices = c("(none)", cols()),
+                selected = r_color()
               )
             }
           )
 
           list(
             expr = reactive({
-              # Build basic plot text - only x is required for histogram
-              if (!isTruthy(x_col())) {
+              # Validate required field
+              if (!isTruthy(r_x())) {
                 return(quote(ggplot2::ggplot() + ggplot2::geom_blank()))
               }
               
               # Build aesthetics
-              aes_parts <- c(glue::glue("x = {x_col()}"))
-              if (isTruthy(fill_col())) {
-                aes_parts <- c(aes_parts, glue::glue("fill = {fill_col()}"))
+              aes_parts <- c(glue::glue("x = {r_x()}"))
+              if (r_fill() != "(none)") {
+                aes_parts <- c(aes_parts, glue::glue("fill = {r_fill()}"))
               }
-              if (isTruthy(color_col())) {
-                aes_parts <- c(aes_parts, glue::glue("colour = {color_col()}"))
+              if (r_color() != "(none)") {
+                aes_parts <- c(aes_parts, glue::glue("colour = {r_color()}"))
               }
               
               aes_text <- paste(aes_parts, collapse = ", ")
               
               # Build geom arguments
               geom_args <- c(
-                glue::glue("bins = {bins_val()}"),
-                glue::glue("alpha = {alpha_val()}")
+                glue::glue("bins = {r_bins()}"),
+                glue::glue("alpha = {r_alpha()}")
               )
               
               geom_args_text <- paste(geom_args, collapse = ", ")
@@ -92,20 +87,14 @@ new_histogram_block <- function(x = character(), fill = character(),
               # Build basic plot
               plot_text <- glue::glue("ggplot2::ggplot(data, ggplot2::aes({aes_text})) + ggplot2::geom_histogram({geom_args_text})")
               
-              # Add title if specified
-              if (isTruthy(plot_title())) {
-                plot_text <- glue::glue('({plot_text}) + ggplot2::labs(title = "{plot_title()}")')
-              }
-              
               parse(text = plot_text)[[1]]
             }),
             state = list(
-              x = x_col, 
-              fill = fill_col,
-              color = color_col,
-              bins = bins_val,
-              title = plot_title,
-              alpha = alpha_val
+              x = r_x, 
+              fill = r_fill,
+              color = r_color,
+              bins = r_bins,
+              alpha = r_alpha
             )
           )
         }
@@ -120,25 +109,25 @@ new_histogram_block <- function(x = character(), fill = character(),
           div(
             class = "col-md-6",
             selectInput(
-              inputId = NS(id, "xcol"),
+              inputId = NS(id, "x"),
               label = "X-axis (Numeric)",
               choices = x,
               selected = x
             ),
             selectInput(
-              inputId = NS(id, "fillcol"),
+              inputId = NS(id, "fill"),
               label = "Fill By",
-              choices = fill,
-              selected = fill
+              choices = c("(none)", fill),
+              selected = if (length(fill) == 0) "(none)" else fill
             )
           ),
           div(
             class = "col-md-6",
             selectInput(
-              inputId = NS(id, "colcol"),
+              inputId = NS(id, "color"),
               label = "Color By",
-              choices = color,
-              selected = color
+              choices = c("(none)", color),
+              selected = if (length(color) == 0) "(none)" else color
             ),
             numericInput(
               inputId = NS(id, "bins"),
@@ -153,16 +142,7 @@ new_histogram_block <- function(x = character(), fill = character(),
         div(
           class = "row",
           div(
-            class = "col-md-8",
-            textInput(
-              inputId = NS(id, "title"),
-              label = "Plot Title",
-              value = title,
-              placeholder = "Enter plot title..."
-            )
-          ),
-          div(
-            class = "col-md-4",
+            class = "col-md-6",
             sliderInput(
               inputId = NS(id, "alpha"),
               label = "Transparency",
@@ -176,6 +156,7 @@ new_histogram_block <- function(x = character(), fill = character(),
       )
     },
     class = "histogram_block",
+    allow_empty_state = c("fill", "color"),  # Optional aesthetics
     ...
   )
 }
