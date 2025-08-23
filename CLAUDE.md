@@ -32,7 +32,7 @@ r_y <- reactiveVal(if (length(y) == 0) "(none)" else y)
 **TextInput Fields - SOLVED! ✅**
 ```r
 # ✅ TextInput fields like title now work with allow_empty_state parameter!
-# Use allow_empty_state = c("title") in block constructor 
+# Use allow_empty_state = c("title") in block constructor
 # See "Known Issues" section for complete solution
 ```
 
@@ -107,11 +107,6 @@ selectInput(
 )
 ```
 
-**TextInput - AVOID:**
-```r
-# DO NOT implement textInput fields like title - they cause rendering issues
-# Focus on selectInput and checkboxInput which work reliably
-```
 
 ##### 4. State List - MANDATORY
 
@@ -128,7 +123,7 @@ list(
     position = r_position,
     flip_coords = r_flip_coords,
     alpha = r_alpha
-    # EVERY argument must be here (except avoided ones like title)!
+    # EVERY argument must be here
   )
 )
 ```
@@ -138,7 +133,7 @@ list(
 **Any field using "(none)" pattern MUST be listed in allow_empty_state:**
 
 ```r
-new_my_block <- function(x = character(), y = character(), 
+new_my_block <- function(x = character(), y = character(),
                         color = character(), fill = character(), ...) {
   new_ggplot_block(
     # ... server and UI functions ...
@@ -167,11 +162,6 @@ if (r_color() != "(none)") {
 }
 ```
 
-**TextInputs - AVOID FOR NOW:**
-```r
-# DO NOT implement textInput fields - they cause mysterious rendering issues
-# Focus on working patterns: selectInput with "(none)" and checkboxInput
-```
 
 #### Reactive Values and Input ID Naming
 - Use `r_*` prefix for all reactive values (e.g., `r_x`, `r_color`)
@@ -246,7 +236,7 @@ Use this checklist when creating new blocks or updating existing ones to ensure 
 **Core**: x, y, color, shape, size, alpha
 **Advanced**: fill (for shapes 21-25), stroke (border width)
 
-#### **geom_col/geom_bar** (bar_chart_block)  
+#### **geom_col/geom_bar** (bar_chart_block)
 **Core**: x, y, fill, color, alpha
 **Advanced**: width (bar width)
 
@@ -298,7 +288,7 @@ The **Screenshot Validation Method** is a powerful diagnostic technique for vali
 - Shows complete interface: configuration controls + scatter plot with data points
 - Indicates: Proper data flow, valid state management, correct ggplot2 expressions
 
-**Broken Block Example (pie-chart.png, histogram.png):**  
+**Broken Block Example (pie-chart.png, histogram.png):**
 - Shows only configuration panels without plots
 - Indicates: Validation errors, missing `allow_empty_state`, malformed expressions, or reactive flow issues
 
@@ -318,13 +308,13 @@ source("inst/scripts/generate_screenshots.R")
 
 **File Structure:**
 - `inst/scripts/generate_single_screenshot.R` - Individual block testing
-- `inst/scripts/generate_screenshots.R` - Batch testing all blocks  
+- `inst/scripts/generate_screenshots.R` - Batch testing all blocks
 - `man/figures/*.png` - Generated screenshots for validation/documentation
 
 #### **Advantages over Traditional Testing**
 
 1. **Real-world validation**: Tests in actual Shiny environment with real data flow
-2. **Visual feedback**: Immediately obvious success/failure from screenshots  
+2. **Visual feedback**: Immediately obvious success/failure from screenshots
 3. **Comprehensive coverage**: Tests UI, reactivity, data processing, and ggplot2 rendering
 4. **Integration testing**: Validates entire block pipeline, not just individual functions
 5. **Debug efficiency**: Quickly identifies which blocks need attention
@@ -334,7 +324,7 @@ source("inst/scripts/generate_screenshots.R")
 
 - **Missing `allow_empty_state`**: Blocks won't evaluate due to empty optional fields
 - **Malformed ggplot2 expressions**: Syntax errors preventing plot rendering
-- **Broken reactive flows**: Field validation failures blocking data flow  
+- **Broken reactive flows**: Field validation failures blocking data flow
 - **Column filtering problems**: Empty choice lists due to type filtering
 - **Naming mismatches**: Old vs new field patterns causing UI/server disconnects
 - **State management issues**: Missing or incorrect state list configurations
@@ -342,7 +332,7 @@ source("inst/scripts/generate_screenshots.R")
 #### **Development Workflow Integration**
 
 1. **Block Creation**: Generate screenshot after implementing new block
-2. **Refactoring**: Validate changes don't break rendering  
+2. **Refactoring**: Validate changes don't break rendering
 3. **Debugging**: First diagnostic step when blocks misbehave
 4. **CI/CD Integration**: Automated visual regression testing potential
 5. **Code Review**: Visual proof that blocks work end-to-end
@@ -370,7 +360,7 @@ The screenshot generation uses webshot2 to capture live Shiny apps:
 
 **Results Achieved**:
 - ✅ **Fixed pie chart**: Now shows beautiful pie chart with data (was UI-only)
-- ✅ **Fixed histogram**: Modernized patterns, now shows histogram + UI  
+- ✅ **Fixed histogram**: Modernized patterns, now shows histogram + UI
 - ✅ **Eliminated dplyr dependency**: Pie chart was only usage, removed entirely
 - ✅ **10/10 blocks working**: Complete package validation via screenshots
 - ✅ **Cleaner architecture**: Pure ggplot2 package, no complex data transformations
@@ -447,18 +437,18 @@ All tests must pass before considering a block complete. Tests serve as both qua
 **✅ SOLUTION DISCOVERED:** Use `allow_empty_state` parameter for ALL optional fields!
 
 **✅ Root cause identified:**
-- blockr.core blocks evaluation when ANY state field is empty/invalid  
+- blockr.core blocks evaluation when ANY state field is empty/invalid
 - Optional fields (using "(none)" pattern) can start empty, blocking evaluation
 - The `allow_empty_state` parameter tells blockr.core which fields can be empty
 
 **✅ CRITICAL PATTERN: List ALL optional fields in allow_empty_state:**
 
 ```r
-new_my_block <- function(x = character(), y = character(), 
+new_my_block <- function(x = character(), y = character(),
                         color = character(), fill = character(), ...) {
   new_ggplot_block(
     # ... server and UI with "(none)" pattern for optional fields ...
-    class = "my_block", 
+    class = "my_block",
     # List ALL fields that use "(none)" pattern:
     allow_empty_state = c("color", "fill"),  # All optional aesthetics!
     ...
@@ -470,7 +460,7 @@ new_my_block <- function(x = character(), y = character(),
 
 **✅ Verified solution works:**
 - Tested with comprehensive scatter plot block with title
-- Block renders perfectly with empty or filled titles  
+- Block renders perfectly with empty or filled titles
 - No more mysterious rendering failures
 - Solution is simple and elegant
 
