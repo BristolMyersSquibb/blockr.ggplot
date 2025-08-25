@@ -218,87 +218,28 @@ new_scatter_plot_block <- function(x = character(), y = character(),
     },
     function(id) {
       div(
-        class = "scatter-responsive-container",
+        class = "block-container",
 
-        # Add CSS for container-based responsive design
-        tags$style(HTML(
-          "
-          .scatter-responsive-container {
-            width: 100%;
-            padding: 15px;
-          }
-
-          /* One shared grid across the whole form */
-          .scatter-form-grid {
-            display: grid;
-            gap: 15px;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-          }
-
-          /* Flatten wrappers so all controls share the same tracks */
-          .scatter-section,
-          .scatter-section-grid {
-            display: contents;
-          }
-
-          /* Headings/help span full width */
-          .scatter-section h4,
-          .scatter-help-text {
-            grid-column: 1 / -1;
-          }
-
-          .scatter-section h4 {
-            margin-top: 0;
-            margin-bottom: 10px;
-            font-size: 1.1rem;
-            font-weight: 600;
-            color: #333;
-          }
-
-          .scatter-section:not(:first-child) {
-            margin-top: 20px;
-          }
-
-          .scatter-input-wrapper {
-            width: 100%;
-          }
-
-          .scatter-input-wrapper .form-group {
-            margin-bottom: 10px;
-          }
-
-          .scatter-help-text {
-            margin-top: 5px;
-            font-size: 0.875rem;
-            color: #666;
-          }
-        "
-        )),
+        # Add responsive CSS
+        block_responsive_css(),
 
         # Set container query context
-        tags$script(HTML(
-          "
-          // Set up container queries if supported
-          if ('container' in document.documentElement.style) {
-            document.querySelector('.scatter-responsive-container').style.containerType = 'inline-size';
-          }
-        "
-        )),
+        block_container_script(),
 
         h4("Scatter Plot Configuration"),
 
         # Shared grid for all controls (consistent columns across sections)
         div(
-          class = "scatter-form-grid",
+          class = "block-form-grid",
 
           # Axes Section
           div(
-            class = "scatter-section",
+            class = "block-section",
             tags$h4("Axes"),
             div(
-              class = "scatter-section-grid",
+              class = "block-section-grid",
               div(
-                class = "scatter-input-wrapper",
+                class = "block-input-wrapper",
                 selectInput(
                   inputId = NS(id, "x"),
                   label = "X-axis",
@@ -308,7 +249,7 @@ new_scatter_plot_block <- function(x = character(), y = character(),
                 )
               ),
               div(
-                class = "scatter-input-wrapper",
+                class = "block-input-wrapper",
                 selectInput(
                   inputId = NS(id, "y"),
                   label = "Y-axis",
@@ -318,7 +259,7 @@ new_scatter_plot_block <- function(x = character(), y = character(),
                 )
               ),
               div(
-                class = "scatter-help-text",
+                class = "block-help-text",
                 helpText("Both X and Y axes are required for scatter plots")
               )
             )
@@ -326,12 +267,12 @@ new_scatter_plot_block <- function(x = character(), y = character(),
 
           # Aesthetics Section
           div(
-            class = "scatter-section",
+            class = "block-section",
             tags$h4("Aesthetics"),
             div(
-              class = "scatter-section-grid",
+              class = "block-section-grid",
               div(
-                class = "scatter-input-wrapper",
+                class = "block-input-wrapper",
                 selectInput(
                   inputId = NS(id, "color"),
                   label = "Color By",
@@ -341,7 +282,7 @@ new_scatter_plot_block <- function(x = character(), y = character(),
                 )
               ),
               div(
-                class = "scatter-input-wrapper",
+                class = "block-input-wrapper",
                 selectInput(
                   inputId = NS(id, "shape"),
                   label = "Shape By",
@@ -351,7 +292,7 @@ new_scatter_plot_block <- function(x = character(), y = character(),
                 )
               ),
               div(
-                class = "scatter-input-wrapper",
+                class = "block-input-wrapper",
                 selectInput(
                   inputId = NS(id, "size"),
                   label = "Size By",
@@ -365,12 +306,12 @@ new_scatter_plot_block <- function(x = character(), y = character(),
 
           # Options Section
           div(
-            class = "scatter-section",
+            class = "block-section",
             tags$h4("Options"),
             div(
-              class = "scatter-section-grid",
+              class = "block-section-grid",
               div(
-                class = "scatter-input-wrapper",
+                class = "block-input-wrapper",
                 sliderInput(
                   inputId = NS(id, "alpha"),
                   label = "Point Transparency",
@@ -382,7 +323,7 @@ new_scatter_plot_block <- function(x = character(), y = character(),
                 )
               ),
               div(
-                class = "scatter-input-wrapper",
+                class = "block-input-wrapper",
                 checkboxInput(
                   inputId = NS(id, "add_smooth"),
                   label = "Add Trendline",
