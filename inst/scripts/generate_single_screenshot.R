@@ -13,17 +13,16 @@ if (!requireNamespace("webshot2", quietly = TRUE)) {
   stop("Please install webshot2: install.packages('webshot2')")
 }
 
-if (!requireNamespace("blockr.ggplot", quietly = TRUE)) {
-  stop("blockr.ggplot package must be installed and loaded")
-}
-
 if (!requireNamespace("blockr.core", quietly = TRUE)) {
   stop("blockr.core package must be installed")
 }
 
 library(webshot2)
-library(blockr.ggplot)
 library(blockr.core)
+
+# Load the development version of blockr.ggplot from current directory
+# This ensures we test the current code without needing to install the package
+devtools::load_all()
 
 # Increase timeout for Shiny app launching
 options(webshot.app.timeout = 120)
@@ -59,8 +58,10 @@ create_screenshot <- function(block, filename, data = list(data = mtcars)) {
     
     # Create minimal app.R file
     app_content <- sprintf('
-library(blockr.ggplot)
 library(blockr.core)
+
+# Load the development version of blockr.ggplot
+devtools::load_all("%s")
 
 # Load data
 data <- readRDS("data.rds")
@@ -70,7 +71,7 @@ blockr.core::serve(
   %s,
   data = data
 )
-    ', deparse(substitute(block), width.cutoff = 500))
+    ', normalizePath("."), deparse(substitute(block), width.cutoff = 500))
     
     writeLines(app_content, file.path(temp_dir, "app.R"))
     

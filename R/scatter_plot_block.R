@@ -218,65 +218,195 @@ new_scatter_plot_block <- function(x = character(), y = character(),
     },
     function(id) {
       div(
-        class = "m-3",
+        class = "scatter-responsive-container",
+
+        # Add CSS for container-based responsive design
+        tags$style(HTML(
+          "
+          .scatter-responsive-container {
+            width: 100%;
+            padding: 15px;
+          }
+          
+          .scatter-grid {
+            display: grid;
+            gap: 15px;
+            margin-bottom: 20px;
+          }
+          
+          .scatter-section-grid {
+            display: grid;
+            gap: 10px;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+          }
+          
+          /* Responsive behavior based on container width */
+          @container (min-width: 600px) {
+            .scatter-section-grid {
+              grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            }
+          }
+          
+          @container (min-width: 900px) {
+            .scatter-section-grid {
+              grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            }
+          }
+          
+          /* Fallback for browsers without container query support */
+          @supports not (container-type: inline-size) {
+            .scatter-section-grid {
+              display: grid;
+              grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+              gap: 10px;
+            }
+            
+            @media (min-width: 768px) {
+              .scatter-section-grid {
+                grid-template-columns: repeat(2, 1fr);
+              }
+            }
+            
+            @media (min-width: 1200px) {
+              .scatter-section-grid {
+                grid-template-columns: repeat(3, 1fr);
+              }
+            }
+          }
+          
+          .scatter-section h4 {
+            margin-top: 0;
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #333;
+          }
+          
+          .scatter-section:not(:first-child) {
+            margin-top: 20px;
+          }
+          
+          .scatter-input-wrapper {
+            width: 100%;
+          }
+          
+          .scatter-input-wrapper .form-group {
+            margin-bottom: 10px;
+          }
+          
+          .scatter-help-text {
+            grid-column: 1 / -1;
+            margin-top: 5px;
+            font-size: 0.875rem;
+            color: #666;
+          }
+        "
+        )),
+
+        # Set container query context
+        tags$script(HTML(
+          "
+          // Set up container queries if supported
+          if ('container' in document.documentElement.style) {
+            document.querySelector('.scatter-responsive-container').style.containerType = 'inline-size';
+          }
+        "
+        )),
+
         h4("Scatter Plot Configuration"),
+
+        # Axes Section
         div(
-          class = "row",
+          class = "scatter-section",
+          tags$h4("Axes"),
           div(
-            class = "col-md-6",
-            selectInput(
-              inputId = NS(id, "x"),
-              label = "X-axis",
-              choices = x,
-              selected = x
+            class = "scatter-section-grid",
+            div(
+              class = "scatter-input-wrapper",
+              selectInput(
+                inputId = NS(id, "x"),
+                label = "X-axis",
+                choices = x,
+                selected = x,
+                width = "100%"
+              )
             ),
-            selectInput(
-              inputId = NS(id, "y"),
-              label = "Y-axis",
-              choices = y,
-              selected = y
+            div(
+              class = "scatter-input-wrapper",
+              selectInput(
+                inputId = NS(id, "y"),
+                label = "Y-axis",
+                choices = y,
+                selected = y,
+                width = "100%"
+              )
             ),
-            helpText("Both X and Y axes are required for scatter plots")
-          ),
-          div(
-            class = "col-md-6",
-            selectInput(
-              inputId = NS(id, "color"),
-              label = "Color By",
-              choices = c("(none)", color),
-              selected = if (length(color) == 0) "(none)" else color
-            ),
-            selectInput(
-              inputId = NS(id, "shape"),
-              label = "Shape By",
-              choices = c("(none)", shape),
-              selected = if (length(shape) == 0) "(none)" else shape
-            ),
-            selectInput(
-              inputId = NS(id, "size"),
-              label = "Size By",
-              choices = c("(none)", size),
-              selected = if (length(size) == 0) "(none)" else size
+            div(
+              class = "scatter-help-text",
+              helpText("Both X and Y axes are required for scatter plots")
             )
           )
         ),
+
+        # Aesthetics Section
         div(
-          class = "row",
+          class = "scatter-section",
+          tags$h4("Aesthetics"),
           div(
-            class = "col-md-6",
-            sliderInput(
-              inputId = NS(id, "alpha"),
-              label = "Point Transparency",
-              min = 0.1,
-              max = 1.0,
-              value = alpha,
-              step = 0.1
-            )
-          ),
-          div(
-            class = "col-md-6",
+            class = "scatter-section-grid",
             div(
-              style = "margin-top: 25px;", # Align with slider
+              class = "scatter-input-wrapper",
+              selectInput(
+                inputId = NS(id, "color"),
+                label = "Color By",
+                choices = c("(none)", color),
+                selected = if (length(color) == 0) "(none)" else color,
+                width = "100%"
+              )
+            ),
+            div(
+              class = "scatter-input-wrapper",
+              selectInput(
+                inputId = NS(id, "shape"),
+                label = "Shape By",
+                choices = c("(none)", shape),
+                selected = if (length(shape) == 0) "(none)" else shape,
+                width = "100%"
+              )
+            ),
+            div(
+              class = "scatter-input-wrapper",
+              selectInput(
+                inputId = NS(id, "size"),
+                label = "Size By",
+                choices = c("(none)", size),
+                selected = if (length(size) == 0) "(none)" else size,
+                width = "100%"
+              )
+            )
+          )
+        ),
+
+        # Options Section
+        div(
+          class = "scatter-section",
+          tags$h4("Options"),
+          div(
+            class = "scatter-section-grid",
+            div(
+              class = "scatter-input-wrapper",
+              sliderInput(
+                inputId = NS(id, "alpha"),
+                label = "Point Transparency",
+                min = 0.1,
+                max = 1.0,
+                value = alpha,
+                step = 0.1,
+                width = "100%"
+              )
+            ),
+            div(
+              class = "scatter-input-wrapper",
               checkboxInput(
                 inputId = NS(id, "add_smooth"),
                 label = "Add Trendline",
