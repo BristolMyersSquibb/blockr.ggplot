@@ -126,54 +126,92 @@ new_heatmap_block <- function(x = character(), y = character(),
     },
     function(id) {
       div(
-        class = "m-3",
-        h4("Heatmap Configuration"),
+        class = "block-container",
+
+        # Add responsive CSS
+        block_responsive_css(),
+
+        # Set container query context
+        block_container_script(),
+
+        # Shared grid for all controls
         div(
-          class = "row",
+          class = "block-form-grid",
+
+          # Data Section
           div(
-            class = "col-md-6",
-            selectInput(
-              inputId = NS(id, "x"),
-              label = "X-axis",
-              choices = x,
-              selected = x
-            ),
-            selectInput(
-              inputId = NS(id, "y"),
-              label = "Y-axis",
-              choices = y,
-              selected = y
-            ),
-            selectInput(
-              inputId = NS(id, "fill"),
-              label = "Fill Values",
-              choices = fill,
-              selected = fill
-            ),
-            helpText(
-              "All three fields (X, Y, Fill) are required for heatmaps"
+            class = "block-section",
+            tags$h4("Data"),
+            div(
+              class = "block-section-grid",
+              div(
+                class = "block-input-wrapper",
+                selectInput(
+                  inputId = NS(id, "x"),
+                  label = "X-axis",
+                  choices = x,
+                  selected = x,
+                  width = "100%"
+                )
+              ),
+              div(
+                class = "block-input-wrapper",
+                selectInput(
+                  inputId = NS(id, "y"),
+                  label = "Y-axis",
+                  choices = y,
+                  selected = y,
+                  width = "100%"
+                )
+              ),
+              div(
+                class = "block-input-wrapper",
+                selectInput(
+                  inputId = NS(id, "fill"),
+                  label = "Fill Values",
+                  choices = fill,
+                  selected = fill,
+                  width = "100%"
+                )
+              ),
+              div(
+                class = "block-help-text",
+                helpText(
+                  "All three fields (X, Y, Fill) are required for heatmaps"
+                )
+              )
             )
           ),
+
+          # Options Section
           div(
-            class = "col-md-6",
-            selectInput(
-              inputId = NS(id, "color_palette"),
-              label = "Color Palette",
-              choices = list(
-                "Viridis" = "viridis",
-                "Plasma" = "plasma",
-                "Inferno" = "inferno",
-                "Magma" = "magma",
-                "Blues" = "blues"
-              ),
-              selected = color_palette
-            ),
+            class = "block-section",
+            tags$h4("Options"),
             div(
-              style = "margin-top: 25px;",
-              checkboxInput(
-                inputId = NS(id, "show_values"),
-                label = "Show Values on Tiles",
-                value = show_values
+              class = "block-section-grid",
+              div(
+                class = "block-input-wrapper",
+                selectInput(
+                  inputId = NS(id, "color_palette"),
+                  label = "Color Palette",
+                  choices = list(
+                    "Viridis" = "viridis",
+                    "Plasma" = "plasma",
+                    "Inferno" = "inferno",
+                    "Magma" = "magma",
+                    "Blues" = "blues"
+                  ),
+                  selected = color_palette,
+                  width = "100%"
+                )
+              ),
+              div(
+                class = "block-input-wrapper",
+                checkboxInput(
+                  inputId = NS(id, "show_values"),
+                  label = "Show Values on Tiles",
+                  value = show_values
+                )
               )
             )
           )

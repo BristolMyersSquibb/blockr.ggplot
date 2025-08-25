@@ -129,64 +129,119 @@ new_violin_plot_block <- function(x = character(), y = character(),
     },
     function(id) {
       div(
-        class = "m-3",
-        h4("Violin Plot Configuration"),
+        class = "block-container",
+
+        # Add responsive CSS
+        block_responsive_css(),
+
+        # Set container query context
+        block_container_script(),
+
+        # Shared grid for all controls
         div(
-          class = "row",
+          class = "block-form-grid",
+
+          # Axes Section
           div(
-            class = "col-md-6",
-            selectInput(
-              inputId = NS(id, "x"),
-              label = "X-axis",
-              choices = x,
-              selected = x
-            ),
-            selectInput(
-              inputId = NS(id, "y"),
-              label = "Y-axis",
-              choices = y,
-              selected = y
-            ),
-            helpText("Both X and Y axes are required for violin plots")
-          ),
-          div(
-            class = "col-md-6",
-            selectInput(
-              inputId = NS(id, "fill"),
-              label = "Fill By",
-              choices = c("(none)", fill),
-              selected = if (length(fill) == 0) "(none)" else fill
-            ),
-            selectInput(
-              inputId = NS(id, "color"),
-              label = "Color By",
-              choices = c("(none)", color),
-              selected = if (length(color) == 0) "(none)" else color
-            ),
-            selectInput(
-              inputId = NS(id, "scale"),
-              label = "Scaling Method",
-              choices = list(
-                "Equal Area" = "area",
-                "Count-based" = "count",
-                "Equal Width" = "width"
-              ),
-              selected = scale
-            ),
-            sliderInput(
-              inputId = NS(id, "alpha"),
-              label = "Transparency",
-              min = 0.1,
-              max = 1.0,
-              value = alpha,
-              step = 0.1
-            ),
+            class = "block-section",
+            tags$h4("Axes"),
             div(
-              style = "margin-top: 10px;",
-              checkboxInput(
-                inputId = NS(id, "trim"),
-                label = "Trim Tails",
-                value = trim
+              class = "block-section-grid",
+              div(
+                class = "block-input-wrapper",
+                selectInput(
+                  inputId = NS(id, "x"),
+                  label = "X-axis",
+                  choices = x,
+                  selected = x,
+                  width = "100%"
+                )
+              ),
+              div(
+                class = "block-input-wrapper",
+                selectInput(
+                  inputId = NS(id, "y"),
+                  label = "Y-axis",
+                  choices = y,
+                  selected = y,
+                  width = "100%"
+                )
+              ),
+              div(
+                class = "block-help-text",
+                helpText("Both X and Y axes are required for violin plots")
+              )
+            )
+          ),
+
+          # Aesthetics Section
+          div(
+            class = "block-section",
+            tags$h4("Aesthetics"),
+            div(
+              class = "block-section-grid",
+              div(
+                class = "block-input-wrapper",
+                selectInput(
+                  inputId = NS(id, "fill"),
+                  label = "Fill By",
+                  choices = c("(none)", fill),
+                  selected = if (length(fill) == 0) "(none)" else fill,
+                  width = "100%"
+                )
+              ),
+              div(
+                class = "block-input-wrapper",
+                selectInput(
+                  inputId = NS(id, "color"),
+                  label = "Color By",
+                  choices = c("(none)", color),
+                  selected = if (length(color) == 0) "(none)" else color,
+                  width = "100%"
+                )
+              )
+            )
+          ),
+
+          # Options Section
+          div(
+            class = "block-section",
+            tags$h4("Options"),
+            div(
+              class = "block-section-grid",
+              div(
+                class = "block-input-wrapper",
+                selectInput(
+                  inputId = NS(id, "scale"),
+                  label = "Scaling Method",
+                  choices = list(
+                    "Equal Area" = "area",
+                    "Count-based" = "count",
+                    "Equal Width" = "width"
+                  ),
+                  selected = scale,
+                  width = "100%"
+                )
+              ),
+              div(
+                class = "block-input-wrapper",
+                sliderInput(
+                  inputId = NS(id, "alpha"),
+                  label = "Transparency",
+                  min = 0.1,
+                  max = 1.0,
+                  value = alpha,
+                  step = 0.1,
+                  width = "100%"
+                )
+              ),
+              div(
+                class = "block-input-wrapper",
+                checkboxInput(
+                  inputId = NS(id, "trim"),
+                  label = "Trim Tails",
+                  value = trim
+                )
               )
             )
           )

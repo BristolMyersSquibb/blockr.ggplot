@@ -258,7 +258,7 @@ new_scatter_plot_block <- function(x = character(), y = character(),
               ),
               div(
                 class = "block-help-text",
-                helpText("Both X and Y axes are required for scatter plots")
+                p("Both X and Y axes are required for scatter plots")
               )
             )
           ),

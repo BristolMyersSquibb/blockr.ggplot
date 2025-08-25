@@ -135,48 +135,94 @@ new_pie_chart_block <- function(x = character(), y = character(),
     },
     function(id) {
       div(
-        class = "m-3",
-        h4("Pie Chart Configuration"),
+        class = "block-container",
+
+        # Add responsive CSS
+        block_responsive_css(),
+
+        # Set container query context
+        block_container_script(),
+
+        # Shared grid for all controls
         div(
-          class = "row",
+          class = "block-form-grid",
+
+          # Data Section
           div(
-            class = "col-md-6",
-            selectInput(
-              inputId = NS(id, "x"),
-              label = "Categories",
-              choices = x,
-              selected = x
-            ),
-            selectInput(
-              inputId = NS(id, "y"),
-              label = "Values",
-              choices = c("(none)", y),
-              selected = if (length(y) == 0) "(none)" else y
-            ),
-            helpText(
-              "Categories is required. If Values is '(none)', ",
-              "will count occurrences."
+            class = "block-section",
+            tags$h4("Data"),
+            div(
+              class = "block-section-grid",
+              div(
+                class = "block-input-wrapper",
+                selectInput(
+                  inputId = NS(id, "x"),
+                  label = "Categories",
+                  choices = x,
+                  selected = x,
+                  width = "100%"
+                )
+              ),
+              div(
+                class = "block-input-wrapper",
+                selectInput(
+                  inputId = NS(id, "y"),
+                  label = "Values",
+                  choices = c("(none)", y),
+                  selected = if (length(y) == 0) "(none)" else y,
+                  width = "100%"
+                )
+              ),
+              div(
+                class = "block-help-text",
+                helpText(
+                  "Categories is required. If Values is '(none)', ",
+                  "will count occurrences."
+                )
+              )
             )
           ),
+
+          # Aesthetics Section
           div(
-            class = "col-md-6",
-            selectInput(
-              inputId = NS(id, "fill"),
-              label = "Color By",
-              choices = c("(none)", fill),
-              selected = if (length(fill) == 0) "(none)" else fill
-            ),
+            class = "block-section",
+            tags$h4("Aesthetics"),
             div(
-              style = "margin-top: 25px;",
-              checkboxInput(
-                inputId = NS(id, "donut"),
-                label = "Donut Chart Style",
-                value = donut
+              class = "block-section-grid",
+              div(
+                class = "block-input-wrapper",
+                selectInput(
+                  inputId = NS(id, "fill"),
+                  label = "Color By",
+                  choices = c("(none)", fill),
+                  selected = if (length(fill) == 0) "(none)" else fill,
+                  width = "100%"
+                )
+              )
+            )
+          ),
+
+          # Options Section
+          div(
+            class = "block-section",
+            tags$h4("Options"),
+            div(
+              class = "block-section-grid",
+              div(
+                class = "block-input-wrapper",
+                checkboxInput(
+                  inputId = NS(id, "donut"),
+                  label = "Donut Chart Style",
+                  value = donut
+                )
               ),
-              checkboxInput(
-                inputId = NS(id, "show_labels"),
-                label = "Show Percentage Labels",
-                value = show_labels
+              div(
+                class = "block-input-wrapper",
+                checkboxInput(
+                  inputId = NS(id, "show_labels"),
+                  label = "Show Percentage Labels",
+                  value = show_labels
+                )
               )
             )
           )
