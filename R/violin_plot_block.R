@@ -15,17 +15,21 @@
 #' @param ... Forwarded to [blockr.core::new_block()]
 #'
 #' @export
-new_violin_plot_block <- function(x = character(), y = character(),
-                                  fill = character(),
-                                  color = character(),
-                                  alpha = 1.0, trim = TRUE,
-                                  scale = "area", ...) {
+new_violin_plot_block <- function(
+  x = character(),
+  y = character(),
+  fill = character(),
+  color = character(),
+  alpha = 1.0,
+  trim = TRUE,
+  scale = "area",
+  ...
+) {
   new_ggplot_block(
     function(id, data) {
       moduleServer(
         id,
         function(input, output, session) {
-
           cols <- reactive(colnames(data()))
 
           r_x <- reactiveVal(x)
@@ -78,9 +82,16 @@ new_violin_plot_block <- function(x = character(), y = character(),
           list(
             expr = reactive({
               # Validate required fields
-              if (!isTruthy(r_x()) || length(r_x()) == 0 ||
-                  !isTruthy(r_y()) || length(r_y()) == 0) {
-                return(quote(ggplot2::ggplot() + ggplot2::geom_blank()))
+              if (
+                !isTruthy(r_x()) ||
+                  length(r_x()) == 0 ||
+                  !isTruthy(r_y()) ||
+                  length(r_y()) == 0
+              ) {
+                return(quote(
+                  ggplot2::ggplot() +
+                    ggplot2::geom_blank()
+                ))
               }
 
               # Build aesthetics
@@ -249,7 +260,7 @@ new_violin_plot_block <- function(x = character(), y = character(),
       )
     },
     class = "violin_plot_block",
-    allow_empty_state = c("fill", "color"),  # Both fill and color are optional
+    allow_empty_state = c("fill", "color"), # Both fill and color are optional
     ...
   )
 }

@@ -14,15 +14,20 @@
 #' @param ... Forwarded to [blockr.core::new_block()]
 #'
 #' @export
-new_boxplot_block <- function(x = character(), y = character(),
-                              color = character(), fill = character(),
-                              alpha = 1.0, show_outliers = TRUE, ...) {
+new_boxplot_block <- function(
+  x = character(),
+  y = character(),
+  color = character(),
+  fill = character(),
+  alpha = 1.0,
+  show_outliers = TRUE,
+  ...
+) {
   new_ggplot_block(
     function(id, data) {
       moduleServer(
         id,
         function(input, output, session) {
-
           cols <- reactive(colnames(data()))
 
           r_x <- reactiveVal(if (length(x) == 0) "(none)" else x)
@@ -50,9 +55,11 @@ new_boxplot_block <- function(x = character(), y = character(),
                 session,
                 inputId = "x",
                 choices = c("(none)", cols()),
-                selected = if (
-                  r_x() %in% c("(none)", cols())
-                ) r_x() else "(none)"
+                selected = if (r_x() %in% c("(none)", cols())) {
+                  r_x()
+                } else {
+                  "(none)"
+                }
               )
               updateSelectInput(
                 session,
@@ -79,7 +86,10 @@ new_boxplot_block <- function(x = character(), y = character(),
             expr = reactive({
               # Validate required field
               if (!isTruthy(r_y()) || length(r_y()) == 0) {
-                return(quote(ggplot2::ggplot() + ggplot2::geom_blank()))
+                return(quote(
+                  ggplot2::ggplot() +
+                    ggplot2::geom_blank()
+                ))
               }
 
               # Build aesthetics
@@ -179,7 +189,9 @@ new_boxplot_block <- function(x = character(), y = character(),
               ),
               div(
                 class = "block-help-text",
-                helpText("Group By is optional - leave as '(none)' for single boxplot")
+                helpText(
+                  "Group By is optional - leave as '(none)' for single boxplot"
+                )
               )
             )
           ),

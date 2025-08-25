@@ -12,15 +12,19 @@
 #' @param ... Forwarded to [blockr.core::new_block()]
 #'
 #' @export
-new_pie_chart_block <- function(x = character(), y = character(),
-                               fill = character(), donut = FALSE,
-                               show_labels = TRUE, ...) {
+new_pie_chart_block <- function(
+  x = character(),
+  y = character(),
+  fill = character(),
+  donut = FALSE,
+  show_labels = TRUE,
+  ...
+) {
   new_ggplot_block(
     function(id, data) {
       moduleServer(
         id,
         function(input, output, session) {
-
           cols <- reactive(colnames(data()))
 
           r_x <- reactiveVal(x)
@@ -64,7 +68,10 @@ new_pie_chart_block <- function(x = character(), y = character(),
             expr = reactive({
               # Validate required field
               if (!isTruthy(r_x())) {
-                return(quote(ggplot2::ggplot() + ggplot2::geom_blank()))
+                return(quote(
+                  ggplot2::ggplot() +
+                    ggplot2::geom_blank()
+                ))
               }
 
               # Build aesthetics - use bar chart pattern

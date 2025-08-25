@@ -11,15 +11,19 @@
 #' @param ... Forwarded to [blockr.core::new_block()]
 #'
 #' @export
-new_density_plot_block <- function(x = character(), fill = character(),
-                                   color = character(), alpha = 0.5,
-                                   adjust = 1, ...) {
+new_density_plot_block <- function(
+  x = character(),
+  fill = character(),
+  color = character(),
+  alpha = 0.5,
+  adjust = 1,
+  ...
+) {
   new_ggplot_block(
     function(id, data) {
       moduleServer(
         id,
         function(input, output, session) {
-
           cols <- reactive(colnames(data()))
 
           r_x <- reactiveVal(x)
@@ -63,7 +67,10 @@ new_density_plot_block <- function(x = character(), fill = character(),
             expr = reactive({
               # Validate required field
               if (!isTruthy(r_x()) || length(r_x()) == 0) {
-                return(quote(ggplot2::ggplot() + ggplot2::geom_blank()))
+                return(quote(
+                  ggplot2::ggplot() +
+                    ggplot2::geom_blank()
+                ))
               }
 
               # Build aesthetics

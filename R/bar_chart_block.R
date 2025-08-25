@@ -15,19 +15,24 @@
 #' @param ... Forwarded to [blockr.core::new_block()]
 #'
 #' @export
-new_bar_chart_block <- function(x = character(), y = character(),
-                                fill = character(), color = character(),
-                                position = "stack",
-                                alpha = 1.0, flip_coords = FALSE, ...) {
+new_bar_chart_block <- function(
+  x = character(),
+  y = character(),
+  fill = character(),
+  color = character(),
+  position = "stack",
+  alpha = 1.0,
+  flip_coords = FALSE,
+  ...
+) {
   new_ggplot_block(
     function(id, data) {
       moduleServer(
         id,
         function(input, output, session) {
-
           cols <- reactive(colnames(data()))
 
-          r_x <- reactiveVal(x)  # Required field
+          r_x <- reactiveVal(x) # Required field
           # Optional: "(none)" means count
           r_y <- reactiveVal(if (length(y) == 0) "(none)" else y)
           r_fill <- reactiveVal(if (length(fill) == 0) "(none)" else fill)
@@ -50,7 +55,7 @@ new_bar_chart_block <- function(x = character(), y = character(),
               updateSelectInput(
                 session,
                 inputId = "x",
-                choices = cols(),  # Any column can be used as categorical
+                choices = cols(), # Any column can be used as categorical
                 selected = r_x()
               )
               updateSelectInput(
@@ -175,7 +180,9 @@ new_bar_chart_block <- function(x = character(), y = character(),
               ),
               div(
                 class = "block-help-text",
-                helpText("If Y-axis is empty, will count occurrences of X values")
+                helpText(
+                  "If Y-axis is empty, will count occurrences of X values"
+                )
               )
             )
           ),

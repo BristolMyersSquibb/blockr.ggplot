@@ -12,16 +12,20 @@
 #' @param ... Forwarded to [blockr.core::new_block()]
 #'
 #' @export
-new_area_chart_block <- function(x = character(), y = character(),
-                                 fill = character(), color = character(),
-                                 position = "stack",
-                                 alpha = 0.7, ...) {
+new_area_chart_block <- function(
+  x = character(),
+  y = character(),
+  fill = character(),
+  color = character(),
+  position = "stack",
+  alpha = 0.7,
+  ...
+) {
   new_ggplot_block(
     function(id, data) {
       moduleServer(
         id,
         function(input, output, session) {
-
           cols <- reactive(colnames(data()))
 
           r_x <- reactiveVal(x)
@@ -72,9 +76,16 @@ new_area_chart_block <- function(x = character(), y = character(),
           list(
             expr = reactive({
               # Validate required fields
-              if (!isTruthy(r_x()) || length(r_x()) == 0 ||
-                    !isTruthy(r_y()) || length(r_y()) == 0) {
-                return(quote(ggplot2::ggplot() + ggplot2::geom_blank()))
+              if (
+                !isTruthy(r_x()) ||
+                  length(r_x()) == 0 ||
+                  !isTruthy(r_y()) ||
+                  length(r_y()) == 0
+              ) {
+                return(quote(
+                  ggplot2::ggplot() +
+                    ggplot2::geom_blank()
+                ))
               }
 
               # Build aesthetics
@@ -234,7 +245,7 @@ new_area_chart_block <- function(x = character(), y = character(),
       )
     },
     class = "area_chart_block",
-    allow_empty_state = c("fill", "color"),  # fill and color are optional
+    allow_empty_state = c("fill", "color"), # fill and color are optional
     ...
   )
 }

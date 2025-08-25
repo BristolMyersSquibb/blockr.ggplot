@@ -73,7 +73,8 @@ block_container_script <- function() {
     "
     // Set up container queries if supported
     if ('container' in document.documentElement.style) {
-      document.querySelector('.block-container').style.containerType = 'inline-size';
+      var container = document.querySelector('.block-container');
+      if (container) container.style.containerType = 'inline-size';
     }
     "
   ))

@@ -13,18 +13,21 @@
 #' @param ... Forwarded to [new_plot_block()]
 #'
 #' @export
-new_scatter_plot_block <- function(x = character(), y = character(),
-                                    color = character(),
-                                    shape = character(),
-                                    size = character(),
-                                    alpha = 0.7,
-                                    add_smooth = FALSE, ...) {
+new_scatter_plot_block <- function(
+  x = character(),
+  y = character(),
+  color = character(),
+  shape = character(),
+  size = character(),
+  alpha = 0.7,
+  add_smooth = FALSE,
+  ...
+) {
   new_ggplot_block(
     function(id, data) {
       moduleServer(
         id,
         function(input, output, session) {
-
           cols <- reactive(colnames(data()))
 
           r_x <- reactiveVal(x)
@@ -87,90 +90,123 @@ new_scatter_plot_block <- function(x = character(), y = character(),
           )
 
           # Simple observer for trendline message
-          observeEvent(r_add_smooth(), {
-            if (r_add_smooth()) {
-              rv_cond$message <- "Trendline added to plot"
-            } else {
-              rv_cond$message <- character()
-            }
-          }, ignoreNULL = FALSE)
+          observeEvent(
+            r_add_smooth(),
+            {
+              if (r_add_smooth()) {
+                rv_cond$message <- "Trendline added to plot"
+              } else {
+                rv_cond$message <- character()
+              }
+            },
+            ignoreNULL = FALSE
+          )
 
           # Capture ggplot2 messages during plot evaluation
-          observeEvent({
-            # Create dependency on plot inputs
-            list(
-              r_x(), r_y(), r_color(), r_shape(),
-              r_size(), r_alpha(), r_add_smooth()
-            )
-          }, {
-            # Only run if we have valid x and y
-            if (isTruthy(r_x()) && isTruthy(r_y()) &&
-                length(r_x()) > 0 && length(r_y()) > 0) {
-              tryCatch({
-                # Build the same expression as the main reactive
-                aes_parts <- c(
-                  glue::glue("x = {r_x()}"),
-                  glue::glue("y = {r_y()}")
-                )
+          observeEvent(
+            {
+              # Create dependency on plot inputs
+              list(
+                r_x(),
+                r_y(),
+                r_color(),
+                r_shape(),
+                r_size(),
+                r_alpha(),
+                r_add_smooth()
+              )
+            },
+            {
+              # Only run if we have valid x and y
+              if (
+                isTruthy(r_x()) &&
+                  isTruthy(r_y()) &&
+                  length(r_x()) > 0 &&
+                  length(r_y()) > 0
+              ) {
+                tryCatch(
+                  {
+                    # Build the same expression as the main reactive
+                    aes_parts <- c(
+                      glue::glue("x = {r_x()}"),
+                      glue::glue("y = {r_y()}")
+                    )
 
-                if (r_color() != "(none)") {
-                  aes_parts <- c(aes_parts, glue::glue("colour = {r_color()}"))
-                }
-                if (r_shape() != "(none)") {
-                  aes_parts <- c(aes_parts, glue::glue("shape = {r_shape()}"))
-                }
-                if (r_size() != "(none)") {
-                  aes_parts <- c(aes_parts, glue::glue("size = {r_size()}"))
-                }
+                    if (r_color() != "(none)") {
+                      aes_parts <- c(
+                        aes_parts,
+                        glue::glue("colour = {r_color()}")
+                      )
+                    }
+                    if (r_shape() != "(none)") {
+                      aes_parts <- c(
+                        aes_parts,
+                        glue::glue("shape = {r_shape()}")
+                      )
+                    }
+                    if (r_size() != "(none)") {
+                      aes_parts <- c(aes_parts, glue::glue("size = {r_size()}"))
+                    }
 
-                aes_text <- paste(aes_parts, collapse = ", ")
-                text <- glue::glue(
-                  "ggplot2::ggplot(data, ggplot2::aes({aes_text})) + ",
-                  "ggplot2::geom_point(alpha = {r_alpha()})"
-                )
+                    aes_text <- paste(aes_parts, collapse = ", ")
+                    text <- glue::glue(
+                      "ggplot2::ggplot(data, ggplot2::aes({aes_text})) + ",
+                      "ggplot2::geom_point(alpha = {r_alpha()})"
+                    )
 
-                if (r_add_smooth()) {
-                  text <- glue::glue("({text}) + ggplot2::geom_smooth()")
-                }
+                    if (r_add_smooth()) {
+                      text <- glue::glue("({text}) + ggplot2::geom_smooth()")
+                    }
 
-                # Evaluate with message capture
-                captured_messages <- character()
-                withCallingHandlers(
-                  eval(parse(text = text)[[1]], list(data = data())),
-                  message = function(m) {
-                    captured_messages <<- c(captured_messages, m$message)
-                    invokeRestart("muffleMessage")
+                    # Evaluate with message capture
+                    captured_messages <- character()
+                    withCallingHandlers(
+                      eval(parse(text = text)[[1]], list(data = data())),
+                      message = function(m) {
+                        captured_messages <<- c(captured_messages, m$message)
+                        invokeRestart("muffleMessage")
+                      }
+                    )
+
+                    # Update conditions with captured messages
+                    if (length(captured_messages) > 0) {
+                      # Clean up messages (remove newlines, etc.)
+                      clean_messages <- gsub("\n$", "", captured_messages)
+                      rv_cond$message <- c(
+                        rv_cond$message[
+                          rv_cond$message != "Trendline added to plot"
+                        ],
+                        clean_messages
+                      )
+                    } else {
+                      # Keep only non-ggplot messages if no ggplot messages
+                      rv_cond$message <- rv_cond$message[
+                        rv_cond$message == "Trendline added to plot"
+                      ]
+                    }
+                  },
+                  error = function(e) {
+                    # Don't let ggplot errors break the observer
                   }
                 )
-
-                # Update conditions with captured messages
-                if (length(captured_messages) > 0) {
-                  # Clean up messages (remove newlines, etc.)
-                  clean_messages <- gsub("\n$", "", captured_messages)
-                  rv_cond$message <- c(
-                    rv_cond$message[
-                      rv_cond$message != "Trendline added to plot"
-                    ],
-                    clean_messages
-                  )
-                } else {
-                  # Keep only non-ggplot messages if no ggplot messages
-                  rv_cond$message <- rv_cond$message[
-                    rv_cond$message == "Trendline added to plot"
-                  ]
-                }
-              }, error = function(e) {
-                # Don't let ggplot errors break the observer
-              })
-            }
-          }, ignoreInit = TRUE)
+              }
+            },
+            ignoreInit = TRUE
+          )
 
           list(
             expr = reactive({
               # Validate required fields
-              if (!isTruthy(r_x()) || length(r_x()) == 0 ||
-                  !isTruthy(r_y()) || length(r_y()) == 0) {
-                return(quote(ggplot2::ggplot() + ggplot2::geom_blank()))
+              if (
+                !isTruthy(r_x()) ||
+                  length(r_x()) == 0 ||
+                  !isTruthy(r_y()) ||
+                  length(r_y()) == 0
+              ) {
+                return(quote(
+                  ggplot2::ggplot() +
+                    ggplot2::geom_blank()
+                ))
               }
 
               # Build aesthetics dynamically
@@ -208,8 +244,13 @@ new_scatter_plot_block <- function(x = character(), y = character(),
               parse(text = text)[[1]]
             }),
             state = list(
-              x = r_x, y = r_y, color = r_color, shape = r_shape,
-              size = r_size, alpha = r_alpha, add_smooth = r_add_smooth
+              x = r_x,
+              y = r_y,
+              color = r_color,
+              shape = r_shape,
+              size = r_size,
+              alpha = r_alpha,
+              add_smooth = r_add_smooth
             ),
             cond = rv_cond
           )
@@ -337,7 +378,7 @@ new_scatter_plot_block <- function(x = character(), y = character(),
       stopifnot(is.data.frame(data) || is.matrix(data))
     },
     class = "scatter_plot_block",
-    allow_empty_state = c("color", "shape", "size"),  # All optional aesthetics
+    allow_empty_state = c("color", "shape", "size"), # All optional aesthetics
     ...
   )
 }

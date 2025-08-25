@@ -12,15 +12,19 @@
 #' @param ... Forwarded to [blockr.core::new_block()]
 #'
 #' @export
-new_heatmap_block <- function(x = character(), y = character(),
-                              fill = character(), show_values = FALSE,
-                              color_palette = "viridis", ...) {
+new_heatmap_block <- function(
+  x = character(),
+  y = character(),
+  fill = character(),
+  show_values = FALSE,
+  color_palette = "viridis",
+  ...
+) {
   new_ggplot_block(
     function(id, data) {
       moduleServer(
         id,
         function(input, output, session) {
-
           cols <- reactive(colnames(data()))
 
           r_x <- reactiveVal(x)
@@ -66,10 +70,18 @@ new_heatmap_block <- function(x = character(), y = character(),
           list(
             expr = reactive({
               # Validate required fields
-              if (!isTruthy(r_x()) || length(r_x()) == 0 ||
-                  !isTruthy(r_y()) || length(r_y()) == 0 ||
-                  !isTruthy(r_fill()) || length(r_fill()) == 0) {
-                return(quote(ggplot2::ggplot() + ggplot2::geom_blank()))
+              if (
+                !isTruthy(r_x()) ||
+                  length(r_x()) == 0 ||
+                  !isTruthy(r_y()) ||
+                  length(r_y()) == 0 ||
+                  !isTruthy(r_fill()) ||
+                  length(r_fill()) == 0
+              ) {
+                return(quote(
+                  ggplot2::ggplot() +
+                    ggplot2::geom_blank()
+                ))
               }
 
               # Build aesthetics
@@ -88,7 +100,8 @@ new_heatmap_block <- function(x = character(), y = character(),
               )
 
               # Add color scale based on palette choice
-              color_scale <- switch(r_color_palette(),
+              color_scale <- switch(
+                r_color_palette(),
                 "viridis" = "ggplot2::scale_fill_viridis_c()",
                 "plasma" = 'ggplot2::scale_fill_viridis_c(option = "plasma")',
                 "inferno" = 'ggplot2::scale_fill_viridis_c(option = "inferno")',
@@ -97,7 +110,7 @@ new_heatmap_block <- function(x = character(), y = character(),
                   "ggplot2::scale_fill_gradient(",
                   "low = 'white', high = 'steelblue')"
                 ),
-                "ggplot2::scale_fill_viridis_c()"  # default
+                "ggplot2::scale_fill_viridis_c()" # default
               )
 
               plot_text <- glue::glue("({plot_text}) + {color_scale}")

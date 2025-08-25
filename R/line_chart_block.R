@@ -14,17 +14,21 @@
 #' @param ... Forwarded to [blockr.core::new_block()]
 #'
 #' @export
-new_line_chart_block <- function(x = character(), y = character(),
-                                 color = character(),
-                                 linetype = character(),
-                                 linewidth = 1, alpha = 1.0,
-                                 show_points = TRUE, ...) {
+new_line_chart_block <- function(
+  x = character(),
+  y = character(),
+  color = character(),
+  linetype = character(),
+  linewidth = 1,
+  alpha = 1.0,
+  show_points = TRUE,
+  ...
+) {
   new_ggplot_block(
     function(id, data) {
       moduleServer(
         id,
         function(input, output, session) {
-
           cols <- reactive(colnames(data()))
 
           r_x <- reactiveVal(x)
@@ -79,9 +83,16 @@ new_line_chart_block <- function(x = character(), y = character(),
           list(
             expr = reactive({
               # Validate required fields
-              if (!isTruthy(r_x()) || length(r_x()) == 0 ||
-                  !isTruthy(r_y()) || length(r_y()) == 0) {
-                return(quote(ggplot2::ggplot() + ggplot2::geom_blank()))
+              if (
+                !isTruthy(r_x()) ||
+                  length(r_x()) == 0 ||
+                  !isTruthy(r_y()) ||
+                  length(r_y()) == 0
+              ) {
+                return(quote(
+                  ggplot2::ggplot() +
+                    ggplot2::geom_blank()
+                ))
               }
 
               # Build aesthetics

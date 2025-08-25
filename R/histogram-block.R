@@ -12,15 +12,19 @@
 #' @param ... Forwarded to [blockr.core::new_block()]
 #'
 #' @export
-new_histogram_block <- function(x = character(), fill = character(),
-                                color = character(), bins = 30,
-                                alpha = 0.7, ...) {
+new_histogram_block <- function(
+  x = character(),
+  fill = character(),
+  color = character(),
+  bins = 30,
+  alpha = 0.7,
+  ...
+) {
   new_ggplot_block(
     function(id, data) {
       moduleServer(
         id,
         function(input, output, session) {
-
           cols <- reactive(colnames(data()))
 
           r_x <- reactiveVal(x)
@@ -64,7 +68,10 @@ new_histogram_block <- function(x = character(), fill = character(),
             expr = reactive({
               # Validate required field
               if (!isTruthy(r_x())) {
-                return(quote(ggplot2::ggplot() + ggplot2::geom_blank()))
+                return(quote(
+                  ggplot2::ggplot() +
+                    ggplot2::geom_blank()
+                ))
               }
 
               # Build aesthetics
@@ -203,7 +210,7 @@ new_histogram_block <- function(x = character(), fill = character(),
       )
     },
     class = "histogram_block",
-    allow_empty_state = c("fill", "color"),  # Optional aesthetics
+    allow_empty_state = c("fill", "color"), # Optional aesthetics
     ...
   )
 }
