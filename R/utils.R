@@ -9,7 +9,9 @@ block_responsive_css <- function() {
     "
     .block-container {
       width: 100%;
-      padding: 15px;
+      margin: 0px;
+      padding: 0px;
+      padding-bottom: 15px;
     }
 
     /* One shared grid across the whole form */
@@ -32,8 +34,8 @@ block_responsive_css <- function() {
     }
 
     .block-section h4 {
-      margin-top: 0;
-      margin-bottom: 10px;
+      margin-top: 5px;
+      margin-bottom: 0px;
       font-size: 1.1rem;
       font-weight: 600;
       color: #333;

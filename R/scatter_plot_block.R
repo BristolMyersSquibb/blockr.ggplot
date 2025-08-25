@@ -226,8 +226,6 @@ new_scatter_plot_block <- function(x = character(), y = character(),
         # Set container query context
         block_container_script(),
 
-        h4("Scatter Plot Configuration"),
-
         # Shared grid for all controls (consistent columns across sections)
         div(
           class = "block-form-grid",

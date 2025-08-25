@@ -147,8 +147,6 @@ new_boxplot_block <- function(x = character(), y = character(),
         # Set container query context
         block_container_script(),
 
-        h4("Boxplot Configuration"),
-
         # Shared grid for all controls
         div(
           class = "block-form-grid",
