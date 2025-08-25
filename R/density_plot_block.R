@@ -11,15 +11,19 @@
 #' @param ... Forwarded to [blockr.core::new_block()]
 #'
 #' @export
-new_density_plot_block <- function(x = character(), fill = character(),
-                                   color = character(), alpha = 0.5,
-                                   adjust = 1, ...) {
+new_density_plot_block <- function(
+  x = character(),
+  fill = character(),
+  color = character(),
+  alpha = 0.5,
+  adjust = 1,
+  ...
+) {
   new_ggplot_block(
     function(id, data) {
       moduleServer(
         id,
         function(input, output, session) {
-
           cols <- reactive(colnames(data()))
 
           r_x <- reactiveVal(x)
@@ -63,7 +67,10 @@ new_density_plot_block <- function(x = character(), fill = character(),
             expr = reactive({
               # Validate required field
               if (!isTruthy(r_x()) || length(r_x()) == 0) {
-                return(quote(ggplot2::ggplot() + ggplot2::geom_blank()))
+                return(quote(
+                  ggplot2::ggplot() +
+                    ggplot2::geom_blank()
+                ))
               }
 
               # Build aesthetics
@@ -106,51 +113,105 @@ new_density_plot_block <- function(x = character(), fill = character(),
     },
     function(id) {
       div(
-        class = "m-3",
-        h4("Density Plot Configuration"),
+        class = "block-container",
+
+        # Add responsive CSS
+        block_responsive_css(),
+
+        # Set container query context
+        block_container_script(),
+
+        # Shared grid for all controls
         div(
-          class = "row",
+          class = "block-form-grid",
+
+          # Data Section
           div(
-            class = "col-md-6",
-            selectInput(
-              inputId = NS(id, "x"),
-              label = "X-axis",
-              choices = x,
-              selected = x
-            ),
-            selectInput(
-              inputId = NS(id, "fill"),
-              label = "Fill By",
-              choices = c("(none)", fill),
-              selected = if (length(fill) == 0) "(none)" else fill
-            ),
-            selectInput(
-              inputId = NS(id, "color"),
-              label = "Color By",
-              choices = c("(none)", color),
-              selected = if (length(color) == 0) "(none)" else color
-            ),
-            helpText("X-axis is required for density plots")
+            class = "block-section",
+            tags$h4("Data"),
+            div(
+              class = "block-section-grid",
+              div(
+                class = "block-input-wrapper",
+                selectInput(
+                  inputId = NS(id, "x"),
+                  label = "X-axis",
+                  choices = x,
+                  selected = x,
+                  width = "100%"
+                )
+              ),
+              div(
+                class = "block-help-text",
+                helpText("X-axis is required for density plots")
+              )
+            )
           ),
+
+          # Aesthetics Section
           div(
-            class = "col-md-6",
-            sliderInput(
-              inputId = NS(id, "alpha"),
-              label = "Transparency",
-              value = alpha,
-              min = 0.1,
-              max = 1.0,
-              step = 0.1
-            ),
-            sliderInput(
-              inputId = NS(id, "adjust"),
-              label = "Bandwidth Adjustment",
-              value = adjust,
-              min = 0.1,
-              max = 3.0,
-              step = 0.1
-            ),
-            helpText("Higher values = smoother curves")
+            class = "block-section",
+            tags$h4("Aesthetics"),
+            div(
+              class = "block-section-grid",
+              div(
+                class = "block-input-wrapper",
+                selectInput(
+                  inputId = NS(id, "fill"),
+                  label = "Fill By",
+                  choices = c("(none)", fill),
+                  selected = if (length(fill) == 0) "(none)" else fill,
+                  width = "100%"
+                )
+              ),
+              div(
+                class = "block-input-wrapper",
+                selectInput(
+                  inputId = NS(id, "color"),
+                  label = "Color By",
+                  choices = c("(none)", color),
+                  selected = if (length(color) == 0) "(none)" else color,
+                  width = "100%"
+                )
+              )
+            )
+          ),
+
+          # Options Section
+          div(
+            class = "block-section",
+            tags$h4("Options"),
+            div(
+              class = "block-section-grid",
+              div(
+                class = "block-input-wrapper",
+                sliderInput(
+                  inputId = NS(id, "alpha"),
+                  label = "Transparency",
+                  value = alpha,
+                  min = 0.1,
+                  max = 1.0,
+                  step = 0.1,
+                  width = "100%"
+                )
+              ),
+              div(
+                class = "block-input-wrapper",
+                sliderInput(
+                  inputId = NS(id, "adjust"),
+                  label = "Bandwidth Adjustment",
+                  value = adjust,
+                  min = 0.1,
+                  max = 3.0,
+                  step = 0.1,
+                  width = "100%"
+                )
+              ),
+              div(
+                class = "block-help-text",
+                helpText("Higher values = smoother curves")
+              )
+            )
           )
         )
       )

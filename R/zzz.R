@@ -1,4 +1,5 @@
-register_ggplot_blocks <- function() { # nocov start
+register_ggplot_blocks <- function() {
+  # nocov start
   register_blocks(
     c(
       "new_area_chart_block",
@@ -50,7 +51,6 @@ register_ggplot_blocks <- function() { # nocov start
 }
 
 .onLoad <- function(libname, pkgname) {
-
   register_ggplot_blocks()
 
   invisible(NULL)

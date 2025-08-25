@@ -12,15 +12,19 @@
 #' @param ... Forwarded to [blockr.core::new_block()]
 #'
 #' @export
-new_heatmap_block <- function(x = character(), y = character(),
-                              fill = character(), show_values = FALSE,
-                              color_palette = "viridis", ...) {
+new_heatmap_block <- function(
+  x = character(),
+  y = character(),
+  fill = character(),
+  show_values = FALSE,
+  color_palette = "viridis",
+  ...
+) {
   new_ggplot_block(
     function(id, data) {
       moduleServer(
         id,
         function(input, output, session) {
-
           cols <- reactive(colnames(data()))
 
           r_x <- reactiveVal(x)
@@ -66,10 +70,18 @@ new_heatmap_block <- function(x = character(), y = character(),
           list(
             expr = reactive({
               # Validate required fields
-              if (!isTruthy(r_x()) || length(r_x()) == 0 ||
-                  !isTruthy(r_y()) || length(r_y()) == 0 ||
-                  !isTruthy(r_fill()) || length(r_fill()) == 0) {
-                return(quote(ggplot2::ggplot() + ggplot2::geom_blank()))
+              if (
+                !isTruthy(r_x()) ||
+                  length(r_x()) == 0 ||
+                  !isTruthy(r_y()) ||
+                  length(r_y()) == 0 ||
+                  !isTruthy(r_fill()) ||
+                  length(r_fill()) == 0
+              ) {
+                return(quote(
+                  ggplot2::ggplot() +
+                    ggplot2::geom_blank()
+                ))
               }
 
               # Build aesthetics
@@ -88,7 +100,8 @@ new_heatmap_block <- function(x = character(), y = character(),
               )
 
               # Add color scale based on palette choice
-              color_scale <- switch(r_color_palette(),
+              color_scale <- switch(
+                r_color_palette(),
                 "viridis" = "ggplot2::scale_fill_viridis_c()",
                 "plasma" = 'ggplot2::scale_fill_viridis_c(option = "plasma")',
                 "inferno" = 'ggplot2::scale_fill_viridis_c(option = "inferno")',
@@ -97,7 +110,7 @@ new_heatmap_block <- function(x = character(), y = character(),
                   "ggplot2::scale_fill_gradient(",
                   "low = 'white', high = 'steelblue')"
                 ),
-                "ggplot2::scale_fill_viridis_c()"  # default
+                "ggplot2::scale_fill_viridis_c()" # default
               )
 
               plot_text <- glue::glue("({plot_text}) + {color_scale}")
@@ -126,54 +139,92 @@ new_heatmap_block <- function(x = character(), y = character(),
     },
     function(id) {
       div(
-        class = "m-3",
-        h4("Heatmap Configuration"),
+        class = "block-container",
+
+        # Add responsive CSS
+        block_responsive_css(),
+
+        # Set container query context
+        block_container_script(),
+
+        # Shared grid for all controls
         div(
-          class = "row",
+          class = "block-form-grid",
+
+          # Data Section
           div(
-            class = "col-md-6",
-            selectInput(
-              inputId = NS(id, "x"),
-              label = "X-axis",
-              choices = x,
-              selected = x
-            ),
-            selectInput(
-              inputId = NS(id, "y"),
-              label = "Y-axis",
-              choices = y,
-              selected = y
-            ),
-            selectInput(
-              inputId = NS(id, "fill"),
-              label = "Fill Values",
-              choices = fill,
-              selected = fill
-            ),
-            helpText(
-              "All three fields (X, Y, Fill) are required for heatmaps"
+            class = "block-section",
+            tags$h4("Data"),
+            div(
+              class = "block-section-grid",
+              div(
+                class = "block-input-wrapper",
+                selectInput(
+                  inputId = NS(id, "x"),
+                  label = "X-axis",
+                  choices = x,
+                  selected = x,
+                  width = "100%"
+                )
+              ),
+              div(
+                class = "block-input-wrapper",
+                selectInput(
+                  inputId = NS(id, "y"),
+                  label = "Y-axis",
+                  choices = y,
+                  selected = y,
+                  width = "100%"
+                )
+              ),
+              div(
+                class = "block-input-wrapper",
+                selectInput(
+                  inputId = NS(id, "fill"),
+                  label = "Fill Values",
+                  choices = fill,
+                  selected = fill,
+                  width = "100%"
+                )
+              ),
+              div(
+                class = "block-help-text",
+                helpText(
+                  "All three fields (X, Y, Fill) are required for heatmaps"
+                )
+              )
             )
           ),
+
+          # Options Section
           div(
-            class = "col-md-6",
-            selectInput(
-              inputId = NS(id, "color_palette"),
-              label = "Color Palette",
-              choices = list(
-                "Viridis" = "viridis",
-                "Plasma" = "plasma",
-                "Inferno" = "inferno",
-                "Magma" = "magma",
-                "Blues" = "blues"
-              ),
-              selected = color_palette
-            ),
+            class = "block-section",
+            tags$h4("Options"),
             div(
-              style = "margin-top: 25px;",
-              checkboxInput(
-                inputId = NS(id, "show_values"),
-                label = "Show Values on Tiles",
-                value = show_values
+              class = "block-section-grid",
+              div(
+                class = "block-input-wrapper",
+                selectInput(
+                  inputId = NS(id, "color_palette"),
+                  label = "Color Palette",
+                  choices = list(
+                    "Viridis" = "viridis",
+                    "Plasma" = "plasma",
+                    "Inferno" = "inferno",
+                    "Magma" = "magma",
+                    "Blues" = "blues"
+                  ),
+                  selected = color_palette,
+                  width = "100%"
+                )
+              ),
+              div(
+                class = "block-input-wrapper",
+                checkboxInput(
+                  inputId = NS(id, "show_values"),
+                  label = "Show Values on Tiles",
+                  value = show_values
+                )
               )
             )
           )

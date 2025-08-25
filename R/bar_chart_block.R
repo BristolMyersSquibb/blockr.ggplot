@@ -15,19 +15,24 @@
 #' @param ... Forwarded to [blockr.core::new_block()]
 #'
 #' @export
-new_bar_chart_block <- function(x = character(), y = character(),
-                                fill = character(), color = character(),
-                                position = "stack",
-                                alpha = 1.0, flip_coords = FALSE, ...) {
+new_bar_chart_block <- function(
+  x = character(),
+  y = character(),
+  fill = character(),
+  color = character(),
+  position = "stack",
+  alpha = 1.0,
+  flip_coords = FALSE,
+  ...
+) {
   new_ggplot_block(
     function(id, data) {
       moduleServer(
         id,
         function(input, output, session) {
-
           cols <- reactive(colnames(data()))
 
-          r_x <- reactiveVal(x)  # Required field
+          r_x <- reactiveVal(x) # Required field
           # Optional: "(none)" means count
           r_y <- reactiveVal(if (length(y) == 0) "(none)" else y)
           r_fill <- reactiveVal(if (length(fill) == 0) "(none)" else fill)
@@ -50,7 +55,7 @@ new_bar_chart_block <- function(x = character(), y = character(),
               updateSelectInput(
                 session,
                 inputId = "x",
-                choices = cols(),  # Any column can be used as categorical
+                choices = cols(), # Any column can be used as categorical
                 selected = r_x()
               )
               updateSelectInput(
@@ -135,75 +140,121 @@ new_bar_chart_block <- function(x = character(), y = character(),
     },
     function(id) {
       div(
-        class = "m-3",
-        h4("Bar Chart Configuration"),
+        class = "block-container",
+
+        # Add responsive CSS
+        block_responsive_css(),
+
+        # Set container query context
+        block_container_script(),
+
+        # Shared grid for all controls
         div(
-          class = "row",
+          class = "block-form-grid",
+
+          # Data Section
           div(
-            class = "col-md-6",
-            selectInput(
-              inputId = NS(id, "x"),
-              label = "X-axis",
-              choices = x,
-              selected = x
-            ),
-            selectInput(
-              inputId = NS(id, "y"),
-              label = "Y-axis (optional)",
-              choices = c("(none)", y),
-              selected = if (length(y) == 0) "(none)" else y
-            ),
-            helpText(
-              "If Y-axis is empty, will count occurrences of X values"
-            )
-          ),
-          div(
-            class = "col-md-6",
-            selectInput(
-              inputId = NS(id, "fill"),
-              label = "Group/Stack By",
-              choices = c("(none)", fill),
-              selected = if (length(fill) == 0) "(none)" else fill
-            ),
-            selectInput(
-              inputId = NS(id, "color"),
-              label = "Outline Color By",
-              choices = c("(none)", color),
-              selected = if (length(color) == 0) "(none)" else color
-            ),
-            selectInput(
-              inputId = NS(id, "position"),
-              label = "Bar Position",
-              choices = list(
-                "Stacked" = "stack",
-                "Grouped (Side-by-side)" = "dodge",
-                "Filled (100%)" = "fill"
-              ),
-              selected = position
-            )
-          )
-        ),
-        div(
-          class = "row",
-          div(
-            class = "col-md-6",
-            sliderInput(
-              inputId = NS(id, "alpha"),
-              label = "Transparency",
-              min = 0.1,
-              max = 1.0,
-              value = alpha,
-              step = 0.1
-            )
-          ),
-          div(
-            class = "col-md-6",
+            class = "block-section",
+            tags$h4("Data"),
             div(
-              style = "margin-top: 25px;",
-              checkboxInput(
-                inputId = NS(id, "flip_coords"),
-                label = "Horizontal Bars",
-                value = flip_coords
+              class = "block-section-grid",
+              div(
+                class = "block-input-wrapper",
+                selectInput(
+                  inputId = NS(id, "x"),
+                  label = "X-axis",
+                  choices = x,
+                  selected = x,
+                  width = "100%"
+                )
+              ),
+              div(
+                class = "block-input-wrapper",
+                selectInput(
+                  inputId = NS(id, "y"),
+                  label = "Y-axis (optional)",
+                  choices = c("(none)", y),
+                  selected = if (length(y) == 0) "(none)" else y,
+                  width = "100%"
+                )
+              ),
+              div(
+                class = "block-help-text",
+                helpText(
+                  "If Y-axis is empty, will count occurrences of X values"
+                )
+              )
+            )
+          ),
+
+          # Aesthetics Section
+          div(
+            class = "block-section",
+            tags$h4("Aesthetics"),
+            div(
+              class = "block-section-grid",
+              div(
+                class = "block-input-wrapper",
+                selectInput(
+                  inputId = NS(id, "fill"),
+                  label = "Group/Stack By",
+                  choices = c("(none)", fill),
+                  selected = if (length(fill) == 0) "(none)" else fill,
+                  width = "100%"
+                )
+              ),
+              div(
+                class = "block-input-wrapper",
+                selectInput(
+                  inputId = NS(id, "color"),
+                  label = "Outline Color By",
+                  choices = c("(none)", color),
+                  selected = if (length(color) == 0) "(none)" else color,
+                  width = "100%"
+                )
+              )
+            )
+          ),
+
+          # Options Section
+          div(
+            class = "block-section",
+            tags$h4("Options"),
+            div(
+              class = "block-section-grid",
+              div(
+                class = "block-input-wrapper",
+                selectInput(
+                  inputId = NS(id, "position"),
+                  label = "Bar Position",
+                  choices = list(
+                    "Stacked" = "stack",
+                    "Grouped (Side-by-side)" = "dodge",
+                    "Filled (100%)" = "fill"
+                  ),
+                  selected = position,
+                  width = "100%"
+                )
+              ),
+              div(
+                class = "block-input-wrapper",
+                sliderInput(
+                  inputId = NS(id, "alpha"),
+                  label = "Transparency",
+                  min = 0.1,
+                  max = 1.0,
+                  value = alpha,
+                  step = 0.1,
+                  width = "100%"
+                )
+              ),
+              div(
+                class = "block-input-wrapper",
+                checkboxInput(
+                  inputId = NS(id, "flip_coords"),
+                  label = "Horizontal Bars",
+                  value = flip_coords
+                )
               )
             )
           )

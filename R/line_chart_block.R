@@ -14,17 +14,21 @@
 #' @param ... Forwarded to [blockr.core::new_block()]
 #'
 #' @export
-new_line_chart_block <- function(x = character(), y = character(),
-                                 color = character(),
-                                 linetype = character(),
-                                 linewidth = 1, alpha = 1.0,
-                                 show_points = TRUE, ...) {
+new_line_chart_block <- function(
+  x = character(),
+  y = character(),
+  color = character(),
+  linetype = character(),
+  linewidth = 1,
+  alpha = 1.0,
+  show_points = TRUE,
+  ...
+) {
   new_ggplot_block(
     function(id, data) {
       moduleServer(
         id,
         function(input, output, session) {
-
           cols <- reactive(colnames(data()))
 
           r_x <- reactiveVal(x)
@@ -79,9 +83,16 @@ new_line_chart_block <- function(x = character(), y = character(),
           list(
             expr = reactive({
               # Validate required fields
-              if (!isTruthy(r_x()) || length(r_x()) == 0 ||
-                  !isTruthy(r_y()) || length(r_y()) == 0) {
-                return(quote(ggplot2::ggplot() + ggplot2::geom_blank()))
+              if (
+                !isTruthy(r_x()) ||
+                  length(r_x()) == 0 ||
+                  !isTruthy(r_y()) ||
+                  length(r_y()) == 0
+              ) {
+                return(quote(
+                  ggplot2::ggplot() +
+                    ggplot2::geom_blank()
+                ))
               }
 
               # Build aesthetics
@@ -132,76 +143,119 @@ new_line_chart_block <- function(x = character(), y = character(),
     },
     function(id) {
       div(
-        class = "m-3",
-        h4("Line Chart Configuration"),
+        class = "block-container",
+
+        # Add responsive CSS
+        block_responsive_css(),
+
+        # Set container query context
+        block_container_script(),
+
+        # Shared grid for all controls
         div(
-          class = "row",
+          class = "block-form-grid",
+
+          # Axes Section
           div(
-            class = "col-md-6",
-            selectInput(
-              inputId = NS(id, "x"),
-              label = "X-axis (Time/Numeric)",
-              choices = x,
-              selected = x
-            ),
-            selectInput(
-              inputId = NS(id, "y"),
-              label = "Y-axis (Numeric)",
-              choices = y,
-              selected = y
-            ),
-            helpText(
-              "Line charts work best with time series or sequential data"
-            )
-          ),
-          div(
-            class = "col-md-6",
-            selectInput(
-              inputId = NS(id, "color"),
-              label = "Color By (Multiple Lines)",
-              choices = c("(none)", color),
-              selected = if (length(color) == 0) "(none)" else color
-            ),
-            selectInput(
-              inputId = NS(id, "linetype"),
-              label = "Line Type By",
-              choices = c("(none)", linetype),
-              selected = if (length(linetype) == 0) "(none)" else linetype
-            )
-          )
-        ),
-        div(
-          class = "row",
-          div(
-            class = "col-md-4",
-            sliderInput(
-              inputId = NS(id, "linewidth"),
-              label = "Line Width",
-              min = 0.1,
-              max = 3.0,
-              value = linewidth,
-              step = 0.1
-            )
-          ),
-          div(
-            class = "col-md-4",
-            sliderInput(
-              inputId = NS(id, "alpha"),
-              label = "Transparency",
-              min = 0.1,
-              max = 1.0,
-              value = alpha,
-              step = 0.1
-            )
-          ),
-          div(
-            class = "col-md-4",
+            class = "block-section",
+            tags$h4("Axes"),
             div(
-              style = "margin-top: 25px;",
-              checkboxInput(
-                inputId = NS(id, "show_points"),
-                label = "Show Points on Lines",
-                value = show_points
+              class = "block-section-grid",
+              div(
+                class = "block-input-wrapper",
+                selectInput(
+                  inputId = NS(id, "x"),
+                  label = "X-axis (Time/Numeric)",
+                  choices = x,
+                  selected = x,
+                  width = "100%"
+                )
+              ),
+              div(
+                class = "block-input-wrapper",
+                selectInput(
+                  inputId = NS(id, "y"),
+                  label = "Y-axis (Numeric)",
+                  choices = y,
+                  selected = y,
+                  width = "100%"
+                )
+              ),
+              div(
+                class = "block-help-text",
+                helpText(
+                  "Line charts work best with time series or sequential data"
+                )
+              )
+            )
+          ),
+
+          # Aesthetics Section
+          div(
+            class = "block-section",
+            tags$h4("Aesthetics"),
+            div(
+              class = "block-section-grid",
+              div(
+                class = "block-input-wrapper",
+                selectInput(
+                  inputId = NS(id, "color"),
+                  label = "Color By (Multiple Lines)",
+                  choices = c("(none)", color),
+                  selected = if (length(color) == 0) "(none)" else color,
+                  width = "100%"
+                )
+              ),
+              div(
+                class = "block-input-wrapper",
+                selectInput(
+                  inputId = NS(id, "linetype"),
+                  label = "Line Type By",
+                  choices = c("(none)", linetype),
+                  selected = if (length(linetype) == 0) "(none)" else linetype,
+                  width = "100%"
+                )
+              )
+            )
+          ),
+
+          # Options Section
+          div(
+            class = "block-section",
+            tags$h4("Options"),
+            div(
+              class = "block-section-grid",
+              div(
+                class = "block-input-wrapper",
+                sliderInput(
+                  inputId = NS(id, "linewidth"),
+                  label = "Line Width",
+                  min = 0.1,
+                  max = 3.0,
+                  value = linewidth,
+                  step = 0.1,
+                  width = "100%"
+                )
+              ),
+              div(
+                class = "block-input-wrapper",
+                sliderInput(
+                  inputId = NS(id, "alpha"),
+                  label = "Transparency",
+                  min = 0.1,
+                  max = 1.0,
+                  value = alpha,
+                  step = 0.1,
+                  width = "100%"
+                )
+              ),
+              div(
+                class = "block-input-wrapper",
+                checkboxInput(
+                  inputId = NS(id, "show_points"),
+                  label = "Show Points on Lines",
+                  value = show_points
+                )
               )
             )
           )

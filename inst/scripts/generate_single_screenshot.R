@@ -13,17 +13,16 @@ if (!requireNamespace("webshot2", quietly = TRUE)) {
   stop("Please install webshot2: install.packages('webshot2')")
 }
 
-if (!requireNamespace("blockr.ggplot", quietly = TRUE)) {
-  stop("blockr.ggplot package must be installed and loaded")
-}
-
 if (!requireNamespace("blockr.core", quietly = TRUE)) {
   stop("blockr.core package must be installed")
 }
 
 library(webshot2)
-library(blockr.ggplot)
 library(blockr.core)
+
+# Load the development version of blockr.ggplot from current directory
+# This ensures we test the current code without needing to install the package
+devtools::load_all()
 
 # Increase timeout for Shiny app launching
 options(webshot.app.timeout = 120)
@@ -48,19 +47,23 @@ cat(sprintf("Generating screenshot for: %s\n", block_type))
 # Helper function to create temporary app and take screenshot
 create_screenshot <- function(block, filename, data = list(data = mtcars)) {
   cat(sprintf("Generating %s...\n", filename))
-  
-  tryCatch({
-    # Create temporary directory for the app
-    temp_dir <- tempfile("blockr_app")
-    dir.create(temp_dir)
-    
-    # Save data to RDS file
-    saveRDS(data, file.path(temp_dir, "data.rds"))
-    
-    # Create minimal app.R file
-    app_content <- sprintf('
-library(blockr.ggplot)
+
+  tryCatch(
+    {
+      # Create temporary directory for the app
+      temp_dir <- tempfile("blockr_app")
+      dir.create(temp_dir)
+
+      # Save data to RDS file
+      saveRDS(data, file.path(temp_dir, "data.rds"))
+
+      # Create minimal app.R file
+      app_content <- sprintf(
+        '
 library(blockr.core)
+
+# Load the development version of blockr.ggplot
+devtools::load_all("%s")
 
 # Load data
 data <- readRDS("data.rds")
@@ -70,51 +73,56 @@ blockr.core::serve(
   %s,
   data = data
 )
-    ', deparse(substitute(block), width.cutoff = 500))
-    
-    writeLines(app_content, file.path(temp_dir, "app.R"))
-    
-    # Take screenshot
-    webshot2::appshot(
-      app = temp_dir,
-      file = file.path(OUTPUT_DIR, filename),
-      vwidth = SCREENSHOT_WIDTH,
-      vheight = SCREENSHOT_HEIGHT,
-      delay = 5  # Wait for app to load
-    )
-    
-    # Cleanup
-    unlink(temp_dir, recursive = TRUE)
-    
-    cat(sprintf("✓ %s created\n", filename))
-    
-  }, error = function(e) {
-    cat(sprintf("✗ Failed to create %s: %s\n", filename, e$message))
-  })
+    ',
+        normalizePath("."),
+        deparse(substitute(block), width.cutoff = 500)
+      )
+
+      writeLines(app_content, file.path(temp_dir, "app.R"))
+
+      # Take screenshot
+      webshot2::appshot(
+        app = temp_dir,
+        file = file.path(OUTPUT_DIR, filename),
+        vwidth = SCREENSHOT_WIDTH,
+        vheight = SCREENSHOT_HEIGHT,
+        delay = 5 # Wait for app to load
+      )
+
+      # Cleanup
+      unlink(temp_dir, recursive = TRUE)
+
+      cat(sprintf("✓ %s created\n", filename))
+    },
+    error = function(e) {
+      cat(sprintf("✗ Failed to create %s: %s\n", filename, e$message))
+    }
+  )
 }
 
 # Generate screenshot based on block_type
-switch(block_type,
+switch(
+  block_type,
   "scatter" = create_screenshot(
     new_scatter_plot_block(
       x = "wt",
       y = "mpg",
       color = "cyl",
-      size = "hp", 
+      size = "hp",
       add_smooth = TRUE
     ),
     "scatter-plot.png"
   ),
-  
+
   "bar" = create_screenshot(
     new_bar_chart_block(
-      x = "cyl", 
+      x = "cyl",
       fill = "gear",
       position = "dodge"
     ),
     "bar-chart.png"
   ),
-  
+
   "line" = create_screenshot(
     new_line_chart_block(
       x = "Time",
@@ -123,7 +131,7 @@ switch(block_type,
     "line-chart.png",
     data = list(data = BOD)
   ),
-  
+
   "pie" = create_screenshot(
     new_pie_chart_block(
       x = "Species",
@@ -132,7 +140,7 @@ switch(block_type,
     "pie-chart.png",
     data = list(data = iris)
   ),
-  
+
   "boxplot" = create_screenshot(
     new_boxplot_block(
       x = "cyl",
@@ -141,7 +149,7 @@ switch(block_type,
     ),
     "boxplot.png"
   ),
-  
+
   "histogram" = create_screenshot(
     new_histogram_block(
       x = "mpg",
@@ -150,7 +158,7 @@ switch(block_type,
     ),
     "histogram.png"
   ),
-  
+
   "area" = create_screenshot(
     new_area_chart_block(
       x = "Time",
@@ -159,7 +167,7 @@ switch(block_type,
     "area-chart.png",
     data = list(data = BOD)
   ),
-  
+
   "density" = create_screenshot(
     new_density_plot_block(
       x = "mpg",
@@ -167,7 +175,7 @@ switch(block_type,
     ),
     "density-plot.png"
   ),
-  
+
   "violin" = create_screenshot(
     new_violin_plot_block(
       x = "cyl",
@@ -176,7 +184,7 @@ switch(block_type,
     ),
     "violin-plot.png"
   ),
-  
+
   "heatmap" = {
     ucb_data <- as.data.frame(UCBAdmissions)
     create_screenshot(
@@ -190,8 +198,11 @@ switch(block_type,
       data = list(data = ucb_data)
     )
   },
-  
-  stop(sprintf("Unknown block_type: %s. Valid options: scatter, bar, line, pie, boxplot, histogram, area, density, violin, heatmap", block_type))
+
+  stop(sprintf(
+    "Unknown block_type: %s. Valid options: scatter, bar, line, pie, boxplot, histogram, area, density, violin, heatmap",
+    block_type
+  ))
 )
 
 cat(sprintf("Screenshot generation complete for %s!\n", block_type))
