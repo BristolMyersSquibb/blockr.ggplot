@@ -776,10 +776,43 @@ new_chart_block <- function(
                     width = "100%"
                   )
                 ),
-                # Theme selector
+                div(
+                  id = NS(id, "position"),
+                  class = "block-input-wrapper",
+                  selectInput(
+                    inputId = NS(id, "position"),
+                    label = "Position",
+                    choices = c("stack", "dodge", "fill"),
+                    selected = position,
+                    width = "100%"
+                  )
+                ),
+                div(
+                  id = NS(id, "bins"),
+                  class = "block-input-wrapper",
+                  numericInput(
+                    inputId = NS(id, "bins"),
+                    label = "Number of Bins",
+                    value = bins,
+                    min = 1,
+                    max = 100,
+                    width = "100%"
+                  )
+                ),
+                div(
+                  id = NS(id, "donut"),
+                  class = "block-input-wrapper",
+                  checkboxInput(
+                    inputId = NS(id, "donut"),
+                    label = "Donut Chart Style",
+                    value = donut
+                  )
+                ),
+                # Theme selector - moved to end but kept in grid
                 div(
                   class = "block-input-wrapper theme-selector",
-                  style = "grid-column: 1 / -1; margin-bottom: 15px;", # Span full width with proper bottom margin
+                  # Span full width but stay in grid
+                  style = "grid-column: 1 / -1; margin-top: 10px;",
                   tags$label(
                     "Theme",
                     class = "control-label",
@@ -814,38 +847,6 @@ new_chart_block <- function(
                       ),
                       no = tags$i(style = "display: none;")
                     )
-                  )
-                ),
-                div(
-                  id = NS(id, "position"),
-                  class = "block-input-wrapper",
-                  selectInput(
-                    inputId = NS(id, "position"),
-                    label = "Position",
-                    choices = c("stack", "dodge", "fill"),
-                    selected = position,
-                    width = "100%"
-                  )
-                ),
-                div(
-                  id = NS(id, "bins"),
-                  class = "block-input-wrapper",
-                  numericInput(
-                    inputId = NS(id, "bins"),
-                    label = "Number of Bins",
-                    value = bins,
-                    min = 1,
-                    max = 100,
-                    width = "100%"
-                  )
-                ),
-                div(
-                  id = NS(id, "donut"),
-                  class = "block-input-wrapper",
-                  checkboxInput(
-                    inputId = NS(id, "donut"),
-                    label = "Donut Chart Style",
-                    value = donut
                   )
                 )
               )

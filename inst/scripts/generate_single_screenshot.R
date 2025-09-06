@@ -104,18 +104,19 @@ blockr.core::serve(
 switch(
   block_type,
   "scatter" = create_screenshot(
-    new_scatter_plot_block(
+    new_chart_block(
+      type = "point",
       x = "wt",
       y = "mpg",
       color = "cyl",
-      size = "hp",
-      add_smooth = TRUE
+      size = "hp"
     ),
     "scatter-plot.png"
   ),
 
   "bar" = create_screenshot(
-    new_bar_chart_block(
+    new_chart_block(
+      type = "bar",
       x = "cyl",
       fill = "gear",
       position = "dodge"
@@ -124,7 +125,8 @@ switch(
   ),
 
   "line" = create_screenshot(
-    new_line_chart_block(
+    new_chart_block(
+      type = "line",
       x = "Time",
       y = "demand"
     ),
@@ -133,16 +135,17 @@ switch(
   ),
 
   "pie" = create_screenshot(
-    new_pie_chart_block(
-      x = "Species",
-      show_labels = TRUE
+    new_chart_block(
+      type = "pie",
+      x = "Species"
     ),
     "pie-chart.png",
     data = list(data = iris)
   ),
 
   "boxplot" = create_screenshot(
-    new_boxplot_block(
+    new_chart_block(
+      type = "boxplot",
       x = "cyl",
       y = "mpg",
       fill = "gear"
@@ -151,7 +154,8 @@ switch(
   ),
 
   "histogram" = create_screenshot(
-    new_histogram_block(
+    new_chart_block(
+      type = "histogram",
       x = "mpg",
       bins = 15,
       fill = "cyl"
@@ -160,7 +164,8 @@ switch(
   ),
 
   "area" = create_screenshot(
-    new_area_chart_block(
+    new_chart_block(
+      type = "area",
       x = "Time",
       y = "demand"
     ),
@@ -169,7 +174,8 @@ switch(
   ),
 
   "density" = create_screenshot(
-    new_density_plot_block(
+    new_chart_block(
+      type = "density",
       x = "mpg",
       fill = "cyl"
     ),
@@ -177,12 +183,96 @@ switch(
   ),
 
   "violin" = create_screenshot(
-    new_violin_plot_block(
+    new_chart_block(
+      type = "violin",
       x = "cyl",
       y = "mpg",
       fill = "cyl"
     ),
     "violin-plot.png"
+  ),
+
+  # Individual blocks for reference (prefixed with individual-)
+  "individual-scatter" = create_screenshot(
+    new_scatter_plot_block(
+      x = "wt",
+      y = "mpg",
+      color = "cyl",
+      size = "hp",
+      add_smooth = TRUE
+    ),
+    "individual-scatter-plot.png"
+  ),
+
+  "individual-bar" = create_screenshot(
+    new_bar_chart_block(
+      x = "cyl",
+      fill = "gear",
+      position = "dodge"
+    ),
+    "individual-bar-chart.png"
+  ),
+
+  "individual-line" = create_screenshot(
+    new_line_chart_block(
+      x = "Time",
+      y = "demand"
+    ),
+    "individual-line-chart.png",
+    data = list(data = BOD)
+  ),
+
+  "individual-pie" = create_screenshot(
+    new_pie_chart_block(
+      x = "Species",
+      show_labels = TRUE
+    ),
+    "individual-pie-chart.png",
+    data = list(data = iris)
+  ),
+
+  "individual-boxplot" = create_screenshot(
+    new_boxplot_block(
+      x = "cyl",
+      y = "mpg",
+      fill = "gear"
+    ),
+    "individual-boxplot.png"
+  ),
+
+  "individual-histogram" = create_screenshot(
+    new_histogram_block(
+      x = "mpg",
+      bins = 15,
+      fill = "cyl"
+    ),
+    "individual-histogram.png"
+  ),
+
+  "individual-area" = create_screenshot(
+    new_area_chart_block(
+      x = "Time",
+      y = "demand"
+    ),
+    "individual-area-chart.png",
+    data = list(data = BOD)
+  ),
+
+  "individual-density" = create_screenshot(
+    new_density_plot_block(
+      x = "mpg",
+      fill = "cyl"
+    ),
+    "individual-density-plot.png"
+  ),
+
+  "individual-violin" = create_screenshot(
+    new_violin_plot_block(
+      x = "cyl",
+      y = "mpg",
+      fill = "cyl"
+    ),
+    "individual-violin-plot.png"
   ),
 
   "heatmap" = {
@@ -262,7 +352,7 @@ switch(
   ),
 
   stop(sprintf(
-    "Unknown block_type: %s. Valid options: scatter, bar, line, pie, boxplot, histogram, area, density, violin, heatmap, chart, chart-pie, chart-donut, chart-bar, chart-line, chart-histogram",
+    "Unknown block_type: %s. Valid options: scatter, bar, line, pie, boxplot, histogram, area, density, violin, heatmap, chart, chart-pie, chart-donut, chart-bar, chart-line, chart-histogram, individual-scatter, individual-bar, individual-line, individual-pie, individual-boxplot, individual-histogram, individual-area, individual-density, individual-violin",
     block_type
   ))
 )
