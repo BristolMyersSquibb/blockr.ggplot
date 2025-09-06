@@ -3,6 +3,7 @@
 export(new_area_chart_block)
 export(new_bar_chart_block)
 export(new_boxplot_block)
+export(new_chart_block)
 export(new_density_plot_block)
 export(new_heatmap_block)
 export(new_histogram_block)

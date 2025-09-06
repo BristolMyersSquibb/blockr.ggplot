@@ -66,18 +66,17 @@ new_pie_chart_block <- function(
 
           list(
             expr = reactive({
-              # Validate required field
-              if (!isTruthy(r_x())) {
-                return(quote(
-                  ggplot2::ggplot() +
-                    ggplot2::geom_blank()
-                ))
+              # SIMPLIFIED: Copy bar chart logic with pie chart modifications
+
+              # PIE CHART: x aesthetic depends on donut setting
+              if (r_donut()) {
+                x_aes <- "x = 2" # Numeric for donut (allows xlim)
+              } else {
+                x_aes <- 'x = ""' # Empty string for regular pie
               }
 
-              # Build aesthetics - use bar chart pattern
-              aes_parts <- c(glue::glue("x = {r_x()}"))
+              aes_parts <- c(x_aes)
 
-              # Choose geom based on y variable (like bar chart)
               if (r_y() != "(none)") {
                 aes_parts <- c(aes_parts, glue::glue("y = {r_y()}"))
                 geom_func <- "geom_col"
@@ -85,13 +84,13 @@ new_pie_chart_block <- function(
                 geom_func <- "geom_bar"
               }
 
-              # Use fill if specified, otherwise use x
+              # Use fill - pie chart needs fill aesthetic
               fill_var <- if (r_fill() != "(none)") r_fill() else r_x()
               aes_parts <- c(aes_parts, glue::glue("fill = {fill_var}"))
 
               aes_text <- paste(aes_parts, collapse = ", ")
 
-              # Build basic plot with pie transformation
+              # Build basic plot - PIE CHART: add coord_polar
               plot_text <- glue::glue(
                 "ggplot2::ggplot(data, ggplot2::aes({aes_text})) + ",
                 "ggplot2::{geom_func}(width = 1) + ",
@@ -102,30 +101,33 @@ new_pie_chart_block <- function(
               # Add donut hole if requested
               if (r_donut()) {
                 plot_text <- glue::glue(
-                  "({plot_text}) + ggplot2::xlim(c(-1, 1.5))"
+                  "({plot_text}) + ggplot2::xlim(c(0.2, 2.5))"
                 )
               }
 
-              # Add labels if requested
-              if (r_show_labels()) {
-                if (r_y() != "(none)") {
-                  # Custom y values
-                  label_text <- glue::glue(
-                    "paste0(round({r_y()} / sum({r_y()}) * 100, 1), '%')"
-                  )
-                } else {
-                  # Use ..count.. for automatic counting
-                  label_text <- paste0(
-                    "paste0(round(..count.. / sum(..count..) * 100, 1), '%')"
-                  )
-                }
-                plot_text <- glue::glue(
-                  "({plot_text}) + ggplot2::geom_text(",
-                  "ggplot2::aes(label = {label_text}), ",
-                  "stat = 'count', ",
-                  "position = ggplot2::position_stack(vjust = 0.5))"
-                )
-              }
+              # TODO: Labels disabled for now - they work manually but cause
+              # issues in blockr context
+              # This ensures the core pie chart functionality works reliably
+              # Labels can be re-enabled later after further testing
+
+              # if (r_show_labels()) {
+              #   if (r_y() != "(none)") {
+              #     plot_text <- glue::glue(
+              #       "({plot_text}) + ggplot2::geom_text(",
+              #       "ggplot2::aes(label = paste0(",
+              #       "round({r_y()} / sum({r_y()}) * 100, 1), '%')), ",
+              #       "position = ggplot2::position_stack(vjust = 0.5))"
+              #     )
+              #   } else {
+              #     plot_text <- glue::glue(
+              #       "({plot_text}) + ggplot2::geom_text(",
+              #       "ggplot2::aes(label = after_stat(",
+              #       "paste0(round(count/sum(count)*100, 1), '%'))), ",
+              #       "stat = 'count', ",
+              #       "position = ggplot2::position_stack(vjust = 0.5))"
+              #     )
+              #   }
+              # }
 
               parse(text = plot_text)[[1]]
             }),
