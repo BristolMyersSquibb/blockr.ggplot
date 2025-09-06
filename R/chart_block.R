@@ -16,6 +16,8 @@
 #' @param alpha Transparency level (0-1, default 0.7)
 #' @param position Position adjustment for certain geoms
 #' @param bins Number of bins for histogram
+#' @param theme ggplot2 theme to apply (default "minimal"). Options: "minimal", 
+#'   "classic", "dark", "light", "gray"
 #' @param ... Forwarded to [new_plot_block()]
 #'
 #' @export
@@ -32,6 +34,7 @@ new_chart_block <- function(
   alpha = 0.7,
   position = "stack",
   bins = 30,
+  theme = "minimal",
   ...
 ) {
   # Define which aesthetics are valid for each chart type
@@ -98,6 +101,7 @@ new_chart_block <- function(
           r_alpha <- reactiveVal(alpha)
           r_position <- reactiveVal(position)
           r_bins <- reactiveVal(bins)
+          r_theme <- reactiveVal(theme)
           
           # Observe input changes
           observeEvent(input$type, r_type(input$type))
@@ -112,6 +116,7 @@ new_chart_block <- function(
           observeEvent(input$alpha, r_alpha(input$alpha))
           observeEvent(input$position, r_position(input$position))
           observeEvent(input$bins, r_bins(input$bins))
+          observeEvent(input$theme, r_theme(input$theme))
           
           # Update column-dependent inputs
           observeEvent(
@@ -283,6 +288,20 @@ new_chart_block <- function(
               }
               
               text <- glue::glue("ggplot2::ggplot(data, ggplot2::aes({aes_text})) + {geom_call}")
+              
+              # Add theme based on selection
+              if (r_theme() == "minimal") {
+                text <- glue::glue("({text}) + ggplot2::theme_minimal()")
+              } else if (r_theme() == "classic") {
+                text <- glue::glue("({text}) + ggplot2::theme_classic()")
+              } else if (r_theme() == "dark") {
+                text <- glue::glue("({text}) + ggplot2::theme_dark()")
+              } else if (r_theme() == "light") {
+                text <- glue::glue("({text}) + ggplot2::theme_light()")
+              } else if (r_theme() == "gray") {
+                text <- glue::glue("({text}) + ggplot2::theme_gray()")
+              }
+              
               parse(text = text)[[1]]
             }),
             state = list(
@@ -297,7 +316,8 @@ new_chart_block <- function(
               group = r_group,
               alpha = r_alpha,
               position = r_position,
-              bins = r_bins
+              bins = r_bins,
+              theme = r_theme
             )
           )
         }
@@ -313,7 +333,7 @@ new_chart_block <- function(
           # Add responsive CSS
           block_responsive_css(),
           
-          # Add custom CSS for chart type selector
+          # Add custom CSS for chart type and theme selectors
           tags$style(HTML("
             .chart-type-selector .btn-group-toggle {
               display: flex;
@@ -333,6 +353,25 @@ new_chart_block <- function(
             }
             .chart-type-selector .btn span {
               font-size: 0.85em;
+            }
+            .theme-selector .btn-group-toggle {
+              display: flex;
+              flex-wrap: wrap;
+              gap: 5px;
+            }
+            .theme-selector .btn {
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              padding: 6px 10px;
+              min-width: 65px;
+            }
+            .theme-selector .btn i {
+              font-size: 1.1em;
+              margin-bottom: 3px;
+            }
+            .theme-selector .btn span {
+              font-size: 0.8em;
             }
           ")),
           
@@ -504,6 +543,33 @@ new_chart_block <- function(
                     value = alpha,
                     step = 0.1,
                     width = "100%"
+                  )
+                ),
+                # Theme selector
+                div(
+                  class = "block-input-wrapper theme-selector",
+                  style = "grid-column: 1 / -1;", # Span full width
+                  tags$h5("Theme", style = "margin-bottom: 8px; font-size: 0.9em; font-weight: 500;"),
+                  shinyWidgets::radioGroupButtons(
+                    inputId = NS(id, "theme"),
+                    label = NULL,
+                    choiceNames = list(
+                      tags$div(icon("minus"), tags$span("Minimal")),
+                      tags$div(icon("columns"), tags$span("Classic")),
+                      tags$div(icon("moon"), tags$span("Dark")),
+                      tags$div(icon("sun"), tags$span("Light")),
+                      tags$div(icon("palette"), tags$span("Gray"))
+                    ),
+                    choiceValues = c("minimal", "classic", "dark", "light", "gray"),
+                    selected = theme,
+                    status = "primary",
+                    size = "sm",
+                    justified = FALSE,
+                    individual = FALSE,
+                    checkIcon = list(
+                      yes = tags$i(class = "fa fa-check", style = "display: none;"),
+                      no = tags$i(style = "display: none;")
+                    )
                   )
                 ),
                 div(
