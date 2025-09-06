@@ -34,6 +34,31 @@ This launches an interactive web interface where you can:
 - See real-time preview as you modify settings
 - Customize titles, colors, and styling options
 
+## Universal Chart Block - All Chart Types in One
+
+The new `chart_block` provides a single interface for all visualization types with dynamic aesthetic controls.
+
+<img src="man/figures/chart-block.png" alt="Universal Chart Block" width="50%">
+
+**Features:**
+- **Dynamic chart type selection**: Switch between scatter, bar, line, boxplot, violin, density, area, and histogram
+- **Smart aesthetic controls**: UI automatically shows/hides relevant aesthetics based on selected chart type
+- **Unified interface**: Explore different visualizations without switching blocks
+
+**Simple usage:**
+```r
+library(blockr.ggplot)
+blockr.core::serve(
+  new_chart_block(
+    type = "point",  # Can be: point, bar, line, boxplot, violin, density, area, histogram
+    x = "wt",
+    y = "mpg", 
+    color = "cyl"
+  ),
+  data = list(data = mtcars)
+)
+```
+
 ## Individual Blocks
 
 ### Bar Chart Block - Column/Bar Charts
