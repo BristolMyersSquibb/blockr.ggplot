@@ -14,15 +14,17 @@ new_chart_block(
   shape = character(),
   linetype = character(),
   group = character(),
-  alpha = 0.7,
+  alpha = 1,
   position = "stack",
   bins = 30,
+  theme = "minimal",
+  donut = FALSE,
   ...
 )
 }
 \arguments{
 \item{type}{Initial chart type (default "point"). Options: "point", "bar",
-"line", "boxplot", "violin", "density", "area", "histogram"}
+"line", "boxplot", "violin", "density", "area", "histogram", "pie"}
 
 \item{x}{Column for x-axis}
 
@@ -40,11 +42,16 @@ new_chart_block(
 
 \item{group}{Column for group aesthetic}
 
-\item{alpha}{Transparency level (0-1, default 0.7)}
+\item{alpha}{Transparency level (0-1, default 1.0)}
 
 \item{position}{Position adjustment for certain geoms}
 
 \item{bins}{Number of bins for histogram}
+
+\item{theme}{ggplot2 theme to apply (default "minimal"). Options: "minimal",
+"classic", "dark", "light", "gray"}
+
+\item{donut}{Whether to create donut chart when type is "pie" (default FALSE)}
 
 \item{...}{Forwarded to \code{\link[=new_plot_block]{new_plot_block()}}}
 }
