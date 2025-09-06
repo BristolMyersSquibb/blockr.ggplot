@@ -458,10 +458,6 @@ new_chart_block <- function(
                   text <- glue::glue("({text}) + ggplot2::theme_minimal()")
                 } else if (r_theme() == "classic") {
                   text <- glue::glue("({text}) + ggplot2::theme_classic()")
-                } else if (r_theme() == "dark") {
-                  text <- glue::glue("({text}) + ggplot2::theme_dark()")
-                } else if (r_theme() == "light") {
-                  text <- glue::glue("({text}) + ggplot2::theme_light()")
                 } else if (r_theme() == "gray") {
                   text <- glue::glue("({text}) + ggplot2::theme_gray()")
                 }
@@ -481,10 +477,6 @@ new_chart_block <- function(
                   text <- glue::glue("({text}) + ggplot2::theme_minimal()")
                 } else if (r_theme() == "classic") {
                   text <- glue::glue("({text}) + ggplot2::theme_classic()")
-                } else if (r_theme() == "dark") {
-                  text <- glue::glue("({text}) + ggplot2::theme_dark()")
-                } else if (r_theme() == "light") {
-                  text <- glue::glue("({text}) + ggplot2::theme_light()")
                 } else if (r_theme() == "gray") {
                   text <- glue::glue("({text}) + ggplot2::theme_gray()")
                 }
@@ -808,11 +800,9 @@ new_chart_block <- function(
                     value = donut
                   )
                 ),
-                # Theme selector - moved to end but kept in grid
+                # Theme selector - allow natural grid positioning
                 div(
                   class = "block-input-wrapper theme-selector",
-                  # Span full width but stay in grid
-                  style = "grid-column: 1 / -1; margin-top: 10px;",
                   tags$label(
                     "Theme",
                     class = "control-label",
@@ -824,15 +814,11 @@ new_chart_block <- function(
                     choiceNames = list(
                       tags$div(icon("minus"), tags$span("Minimal")),
                       tags$div(icon("columns"), tags$span("Classic")),
-                      tags$div(icon("moon"), tags$span("Dark")),
-                      tags$div(icon("sun"), tags$span("Light")),
                       tags$div(icon("palette"), tags$span("Gray"))
                     ),
                     choiceValues = c(
                       "minimal",
                       "classic",
-                      "dark",
-                      "light",
                       "gray"
                     ),
                     selected = theme,
