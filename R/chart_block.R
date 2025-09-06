@@ -685,10 +685,11 @@ new_chart_block <- function(
                 # Theme selector
                 div(
                   class = "block-input-wrapper theme-selector",
-                  style = "grid-column: 1 / -1;", # Span full width
-                  tags$h5(
+                  style = "grid-column: 1 / -1; margin-bottom: 15px;", # Span full width with proper bottom margin
+                  tags$label(
                     "Theme",
-                    style = "margin-bottom: 8px; font-size: 0.9em; font-weight: 500;"
+                    class = "control-label",
+                    style = "margin-bottom: 8px;"
                   ),
                   shinyWidgets::radioGroupButtons(
                     inputId = NS(id, "theme"),
