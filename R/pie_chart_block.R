@@ -105,7 +105,8 @@ new_pie_chart_block <- function(
                 )
               }
 
-              # TODO: Labels disabled for now - they work manually but cause issues in blockr context
+              # TODO: Labels disabled for now - they work manually but cause
+              # issues in blockr context
               # This ensures the core pie chart functionality works reliably
               # Labels can be re-enabled later after further testing
 
@@ -113,14 +114,17 @@ new_pie_chart_block <- function(
               #   if (r_y() != "(none)") {
               #     plot_text <- glue::glue(
               #       "({plot_text}) + ggplot2::geom_text(",
-              #       "ggplot2::aes(label = paste0(round({r_y()} / sum({r_y()}) * 100, 1), '%')), ",
+              #       "ggplot2::aes(label = paste0(",
+              #       "round({r_y()} / sum({r_y()}) * 100, 1), '%')), ",
               #       "position = ggplot2::position_stack(vjust = 0.5))"
               #     )
               #   } else {
               #     plot_text <- glue::glue(
               #       "({plot_text}) + ggplot2::geom_text(",
-              #       "ggplot2::aes(label = after_stat(paste0(round(count/sum(count)*100, 1), '%'))), ",
-              #       "stat = 'count', position = ggplot2::position_stack(vjust = 0.5))"
+              #       "ggplot2::aes(label = after_stat(",
+              #       "paste0(round(count/sum(count)*100, 1), '%'))), ",
+              #       "stat = 'count', ",
+              #       "position = ggplot2::position_stack(vjust = 0.5))"
               #     )
               #   }
               # }

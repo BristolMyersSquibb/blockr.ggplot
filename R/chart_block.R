@@ -203,7 +203,8 @@ new_chart_block <- function(
                 chart_config$required,
                 chart_config$optional
               )
-              valid_aesthetics <- valid_aesthetics[valid_aesthetics != "x"] # x is always shown
+              # x is always shown
+              valid_aesthetics <- valid_aesthetics[valid_aesthetics != "x"]
 
               # Hide/show aesthetic inputs based on validity
               for (aes in all_aesthetics) {
@@ -378,11 +379,13 @@ new_chart_block <- function(
               if (current_type == "bar") {
                 if (r_y() == "(none)") {
                   geom_call <- glue::glue(
-                    "ggplot2::geom_bar(position = '{r_position()}', {geom_args})"
+                    "ggplot2::geom_bar(position = '{r_position()}', ",
+                    "{geom_args})"
                   )
                 } else {
                   geom_call <- glue::glue(
-                    "ggplot2::geom_col(position = '{r_position()}', {geom_args})"
+                    "ggplot2::geom_col(position = '{r_position()}', ",
+                    "{geom_args})"
                   )
                 }
               } else if (current_type == "histogram") {
@@ -406,9 +409,11 @@ new_chart_block <- function(
 
                 # Override x aesthetic: empty string for pie, numeric for donut
                 if (r_donut()) {
-                  aes_parts[1] <- "x = 2" # Numeric for donut (allows xlim)
+                  # Numeric for donut (allows xlim)
+                  aes_parts[1] <- "x = 2"
                 } else {
-                  aes_parts[1] <- 'x = ""' # Empty string for regular pie
+                  # Empty string for regular pie
+                  aes_parts[1] <- 'x = ""'
                 }
 
                 # Ensure fill aesthetic uses the category column (from x or fill)
@@ -443,7 +448,8 @@ new_chart_block <- function(
               }
 
               text <- glue::glue(
-                "ggplot2::ggplot(data, ggplot2::aes({aes_text})) + {geom_call}"
+                "ggplot2::ggplot(data, ggplot2::aes({aes_text})) + ",
+                "{geom_call}"
               )
 
               # Add theme based on selection
@@ -469,7 +475,10 @@ new_chart_block <- function(
 
                 # For better pie chart appearance, remove axis elements
                 text <- glue::glue(
-                  "({text}) + ggplot2::theme(axis.title = ggplot2::element_blank(), axis.text = ggplot2::element_blank(), axis.ticks = ggplot2::element_blank())"
+                  "({text}) + ggplot2::theme(",
+                  "axis.title = ggplot2::element_blank(), ",
+                  "axis.text = ggplot2::element_blank(), ",
+                  "axis.ticks = ggplot2::element_blank())"
                 )
               } else {
                 # Regular charts: apply selected theme
@@ -518,7 +527,7 @@ new_chart_block <- function(
             ))
           }
         }
-        return(name)
+        name
       }
 
       # Need shinyjs for dynamic UI
@@ -640,12 +649,18 @@ new_chart_block <- function(
             div(
               class = "block-section",
               tags$h4(
-                style = "display: flex; align-items: center; justify-content: space-between;",
+                style = paste(
+                  "display: flex; align-items: center;",
+                  "justify-content: space-between;"
+                ),
                 "Aesthetic Mapping",
                 tags$small(
                   tags$span("*", style = "color: #dc3545; font-weight: bold;"),
                   " Required field",
-                  style = "font-size: 0.7em; color: #6c757d; font-weight: normal;"
+                  style = paste(
+                    "font-size: 0.7em; color: #6c757d;",
+                    "font-weight: normal;"
+                  )
                 )
               ),
               div(
