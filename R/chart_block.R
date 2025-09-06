@@ -416,7 +416,8 @@ new_chart_block <- function(
                   aes_parts[1] <- 'x = ""'
                 }
 
-                # Ensure fill aesthetic uses the category column (from x or fill)
+                # Ensure fill aesthetic uses the category column
+                # (from x or fill)
                 fill_added <- FALSE
                 for (i in seq_along(aes_parts)) {
                   if (grepl("^fill = ", aes_parts[i])) {
@@ -454,7 +455,8 @@ new_chart_block <- function(
 
               # Add theme based on selection
               if (current_type == "pie") {
-                # Pie charts: add polar coordinates first, then apply selected theme
+                # Pie charts: add polar coordinates first, then apply
+                # selected theme
                 text <- glue::glue(
                   "({text}) + ggplot2::coord_polar('y', start = 0)"
                 )
