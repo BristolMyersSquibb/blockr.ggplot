@@ -2,6 +2,7 @@ register_ggplot_blocks <- function() {
   # nocov start
   register_blocks(
     c(
+      "new_chart_block",
       "new_area_chart_block",
       "new_bar_chart_block",
       "new_boxplot_block",
@@ -13,6 +14,7 @@ register_ggplot_blocks <- function() {
       "new_violin_plot_block"
     ),
     name = c(
+      "Universal chart block",
       "Area chart block",
       "Bar chart block",
       "Boxplot block",
@@ -24,6 +26,7 @@ register_ggplot_blocks <- function() {
       "Violin plot block"
     ),
     description = c(
+      "Create any chart type with visual selector using ggplot2",
       "Create an area chart using ggplot2",
       "Create a bar chart using ggplot2",
       "Create a boxplot using ggplot2",
@@ -35,6 +38,7 @@ register_ggplot_blocks <- function() {
       "Create a violin plot using ggplot2"
     ),
     category = c(
+      "plot",
       "plot",
       "plot",
       "plot",
