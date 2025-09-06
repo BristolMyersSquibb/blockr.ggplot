@@ -214,6 +214,78 @@ new_chart_block <- function(
                 }
               }
 
+              # Update labels to show required indicators dynamically
+              # X is always required for all chart types
+              updateSelectInput(
+                session,
+                inputId = "x",
+                label = if ("x" %in% chart_config$required) {
+                  tags$span(
+                    tags$strong("X-axis"),
+                    tags$span("*", style = "color: #dc3545; margin-left: 2px;")
+                  )
+                } else {
+                  "X-axis"
+                }
+              )
+
+              # Y label - check if required for this chart type
+              if ("y" %in% valid_aesthetics) {
+                updateSelectInput(
+                  session,
+                  inputId = "y",
+                  label = if ("y" %in% chart_config$required) {
+                    tags$span(
+                      tags$strong("Y-axis"),
+                      tags$span(
+                        "*",
+                        style = "color: #dc3545; margin-left: 2px;"
+                      )
+                    )
+                  } else {
+                    "Y-axis"
+                  }
+                )
+              }
+
+              # Update other aesthetic labels (all optional for current geoms)
+              for (aes_field in c(
+                "color",
+                "fill",
+                "size",
+                "shape",
+                "linetype",
+                "group"
+              )) {
+                if (aes_field %in% valid_aesthetics) {
+                  label_text <- switch(
+                    aes_field,
+                    color = "Color By",
+                    fill = "Fill By",
+                    size = "Size By",
+                    shape = "Shape By",
+                    linetype = "Line Type By",
+                    group = "Group By"
+                  )
+
+                  updateSelectInput(
+                    session,
+                    inputId = aes_field,
+                    label = if (aes_field %in% chart_config$required) {
+                      tags$span(
+                        tags$strong(label_text),
+                        tags$span(
+                          "*",
+                          style = "color: #dc3545; margin-left: 2px;"
+                        )
+                      )
+                    } else {
+                      label_text
+                    }
+                  )
+                }
+              }
+
               # Handle chart-specific options
               if ("position" %in% names(chart_config$specific)) {
                 shinyjs::show("position")
@@ -441,6 +513,22 @@ new_chart_block <- function(
       )
     },
     function(id) {
+      # Helper function to create aesthetic labels with required indicators
+      make_aesthetic_label <- function(name, field_id, chart_type) {
+        chart_config <- chart_aesthetics[[chart_type]]
+        if (!is.null(chart_config)) {
+          # Check if field is required for this chart type
+          is_required <- field_id %in% chart_config$required
+          if (is_required) {
+            return(tags$span(
+              tags$strong(name),
+              tags$span("*", style = "color: #dc3545; margin-left: 2px;")
+            ))
+          }
+        }
+        return(name)
+      }
+
       # Need shinyjs for dynamic UI
       tagList(
         shinyjs::useShinyjs(),
@@ -550,22 +638,32 @@ new_chart_block <- function(
                 ),
                 div(
                   class = "block-help-text",
+                  style = "margin-top: -8px;",
                   p("Click an icon to change the visualization type")
                 )
               )
             ),
 
-            # Axes Section
+            # Unified Aesthetic Mapping Section
             div(
               class = "block-section",
-              tags$h4("Axes"),
+              tags$h4(
+                style = "display: flex; align-items: center; justify-content: space-between;",
+                "Aesthetic Mapping",
+                tags$small(
+                  tags$span("*", style = "color: #dc3545; font-weight: bold;"),
+                  " Required field",
+                  style = "font-size: 0.7em; color: #6c757d; font-weight: normal;"
+                )
+              ),
               div(
                 class = "block-section-grid",
+                # Primary axes - X and Y
                 div(
                   class = "block-input-wrapper",
                   selectInput(
                     inputId = NS(id, "x"),
-                    label = "X-axis",
+                    label = make_aesthetic_label("X-axis", "x", type),
                     choices = x,
                     selected = x,
                     width = "100%"
@@ -576,27 +674,19 @@ new_chart_block <- function(
                   class = "block-input-wrapper",
                   selectInput(
                     inputId = NS(id, "y"),
-                    label = "Y-axis",
+                    label = make_aesthetic_label("Y-axis", "y", type),
                     choices = c("(none)", y),
                     selected = if (length(y) == 0) "(none)" else y,
                     width = "100%"
                   )
-                )
-              )
-            ),
-
-            # Aesthetics Section
-            div(
-              class = "block-section",
-              tags$h4("Aesthetics"),
-              div(
-                class = "block-section-grid",
+                ),
+                # Other aesthetic mappings
                 div(
                   id = NS(id, "color"),
                   class = "block-input-wrapper",
                   selectInput(
                     inputId = NS(id, "color"),
-                    label = "Color By",
+                    label = make_aesthetic_label("Color By", "color", type),
                     choices = c("(none)", color),
                     selected = if (length(color) == 0) "(none)" else color,
                     width = "100%"
@@ -607,7 +697,7 @@ new_chart_block <- function(
                   class = "block-input-wrapper",
                   selectInput(
                     inputId = NS(id, "fill"),
-                    label = "Fill By",
+                    label = make_aesthetic_label("Fill By", "fill", type),
                     choices = c("(none)", fill),
                     selected = if (length(fill) == 0) "(none)" else fill,
                     width = "100%"
@@ -618,7 +708,7 @@ new_chart_block <- function(
                   class = "block-input-wrapper",
                   selectInput(
                     inputId = NS(id, "size"),
-                    label = "Size By",
+                    label = make_aesthetic_label("Size By", "size", type),
                     choices = c("(none)", size),
                     selected = if (length(size) == 0) "(none)" else size,
                     width = "100%"
@@ -629,7 +719,7 @@ new_chart_block <- function(
                   class = "block-input-wrapper",
                   selectInput(
                     inputId = NS(id, "shape"),
-                    label = "Shape By",
+                    label = make_aesthetic_label("Shape By", "shape", type),
                     choices = c("(none)", shape),
                     selected = if (length(shape) == 0) "(none)" else shape,
                     width = "100%"
@@ -640,7 +730,11 @@ new_chart_block <- function(
                   class = "block-input-wrapper",
                   selectInput(
                     inputId = NS(id, "linetype"),
-                    label = "Line Type By",
+                    label = make_aesthetic_label(
+                      "Line Type By",
+                      "linetype",
+                      type
+                    ),
                     choices = c("(none)", linetype),
                     selected = if (length(linetype) == 0) {
                       "(none)"
@@ -655,7 +749,7 @@ new_chart_block <- function(
                   class = "block-input-wrapper",
                   selectInput(
                     inputId = NS(id, "group"),
-                    label = "Group By",
+                    label = make_aesthetic_label("Group By", "group", type),
                     choices = c("(none)", group),
                     selected = if (length(group) == 0) "(none)" else group,
                     width = "100%"

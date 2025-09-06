@@ -231,8 +231,38 @@ switch(
     data = list(data = iris)
   ),
 
+  "chart-bar" = create_screenshot(
+    new_chart_block(
+      type = "bar",
+      x = "cyl",
+      fill = "gear",
+      position = "dodge"
+    ),
+    "chart-bar.png"
+  ),
+
+  "chart-line" = create_screenshot(
+    new_chart_block(
+      type = "line",
+      x = "Time",
+      y = "demand"
+    ),
+    "chart-line.png",
+    data = list(data = BOD)
+  ),
+
+  "chart-histogram" = create_screenshot(
+    new_chart_block(
+      type = "histogram",
+      x = "mpg",
+      fill = "cyl",
+      bins = 15
+    ),
+    "chart-histogram.png"
+  ),
+
   stop(sprintf(
-    "Unknown block_type: %s. Valid options: scatter, bar, line, pie, boxplot, histogram, area, density, violin, heatmap, chart, chart-pie, chart-donut",
+    "Unknown block_type: %s. Valid options: scatter, bar, line, pie, boxplot, histogram, area, density, violin, heatmap, chart, chart-pie, chart-donut, chart-bar, chart-line, chart-histogram",
     block_type
   ))
 )
