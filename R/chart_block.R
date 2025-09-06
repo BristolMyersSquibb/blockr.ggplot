@@ -3,12 +3,12 @@
 #' A flexible block that allows users to select from various ggplot2 geoms
 #' and dynamically shows relevant aesthetics for the selected visualization.
 #'
-#' @param type Initial chart type (default "point"). Options: "point", "bar", 
+#' @param type Initial chart type (default "point"). Options: "point", "bar",
 #'   "line", "boxplot", "violin", "density", "area", "histogram", "pie"
 #' @param x Column for x-axis
 #' @param y Column for y-axis
 #' @param color Column for color aesthetic
-#' @param fill Column for fill aesthetic  
+#' @param fill Column for fill aesthetic
 #' @param size Column for size aesthetic
 #' @param shape Column for shape aesthetic
 #' @param linetype Column for linetype aesthetic
@@ -16,7 +16,7 @@
 #' @param alpha Transparency level (0-1, default 1.0)
 #' @param position Position adjustment for certain geoms
 #' @param bins Number of bins for histogram
-#' @param theme ggplot2 theme to apply (default "minimal"). Options: "minimal", 
+#' @param theme ggplot2 theme to apply (default "minimal"). Options: "minimal",
 #'   "classic", "dark", "light", "gray"
 #' @param donut Whether to create donut chart when type is "pie" (default FALSE)
 #' @param ... Forwarded to [new_plot_block()]
@@ -82,19 +82,19 @@ new_chart_block <- function(
       specific = list(bins = TRUE)
     ),
     pie = list(
-      required = c("x"),  # x is categories, but rendered as x = ""
+      required = c("x"), # x is categories, but rendered as x = ""
       optional = c("y", "fill", "alpha"),
-      specific = list()   # Could add donut = TRUE/FALSE later
+      specific = list() # Could add donut = TRUE/FALSE later
     )
   )
-  
+
   new_ggplot_block(
     function(id, data) {
       moduleServer(
         id,
         function(input, output, session) {
           cols <- reactive(colnames(data()))
-          
+
           # Initialize reactive values
           r_type <- reactiveVal(type)
           r_x <- reactiveVal(x)
@@ -103,14 +103,16 @@ new_chart_block <- function(
           r_fill <- reactiveVal(if (length(fill) == 0) "(none)" else fill)
           r_size <- reactiveVal(if (length(size) == 0) "(none)" else size)
           r_shape <- reactiveVal(if (length(shape) == 0) "(none)" else shape)
-          r_linetype <- reactiveVal(if (length(linetype) == 0) "(none)" else linetype)
+          r_linetype <- reactiveVal(
+            if (length(linetype) == 0) "(none)" else linetype
+          )
           r_group <- reactiveVal(if (length(group) == 0) "(none)" else group)
           r_alpha <- reactiveVal(alpha)
           r_position <- reactiveVal(position)
           r_bins <- reactiveVal(bins)
           r_theme <- reactiveVal(theme)
           r_donut <- reactiveVal(donut)
-          
+
           # Observe input changes
           observeEvent(input$type, r_type(input$type))
           observeEvent(input$x, r_x(input$x))
@@ -126,7 +128,7 @@ new_chart_block <- function(
           observeEvent(input$bins, r_bins(input$bins))
           observeEvent(input$theme, r_theme(input$theme))
           observeEvent(input$donut, r_donut(input$donut))
-          
+
           # Update column-dependent inputs
           observeEvent(
             cols(),
@@ -181,17 +183,28 @@ new_chart_block <- function(
               )
             }
           )
-          
+
           # Dynamic UI visibility based on chart type
           observe({
             current_type <- r_type()
             chart_config <- chart_aesthetics[[current_type]]
-            
+
             if (!is.null(chart_config)) {
-              all_aesthetics <- c("y", "color", "fill", "size", "shape", "linetype", "group")
-              valid_aesthetics <- c(chart_config$required, chart_config$optional)
+              all_aesthetics <- c(
+                "y",
+                "color",
+                "fill",
+                "size",
+                "shape",
+                "linetype",
+                "group"
+              )
+              valid_aesthetics <- c(
+                chart_config$required,
+                chart_config$optional
+              )
               valid_aesthetics <- valid_aesthetics[valid_aesthetics != "x"] # x is always shown
-              
+
               # Hide/show aesthetic inputs based on validity
               for (aes in all_aesthetics) {
                 if (aes %in% valid_aesthetics) {
@@ -200,7 +213,7 @@ new_chart_block <- function(
                   shinyjs::hide(aes)
                 }
               }
-              
+
               # Handle chart-specific options
               if ("position" %in% names(chart_config$specific)) {
                 shinyjs::show("position")
@@ -213,13 +226,13 @@ new_chart_block <- function(
               } else {
                 shinyjs::hide("position")
               }
-              
+
               if (isTRUE(chart_config$specific$bins)) {
                 shinyjs::show("bins")
               } else {
                 shinyjs::hide("bins")
               }
-              
+
               # Show donut checkbox only for pie charts
               if (current_type == "pie") {
                 shinyjs::show("donut")
@@ -228,31 +241,37 @@ new_chart_block <- function(
               }
             }
           })
-          
+
           list(
             expr = reactive({
               current_type <- r_type()
               chart_config <- chart_aesthetics[[current_type]]
-              
+
               # Validate required fields
               if (!isTruthy(r_x()) || length(r_x()) == 0) {
                 return(quote(ggplot2::ggplot() + ggplot2::geom_blank()))
               }
-              
+
               # Check if y is required and missing
-              if ("y" %in% chart_config$required && 
-                  (r_y() == "(none)" || !isTruthy(r_y()))) {
+              if (
+                "y" %in%
+                  chart_config$required &&
+                  (r_y() == "(none)" || !isTruthy(r_y()))
+              ) {
                 return(quote(ggplot2::ggplot() + ggplot2::geom_blank()))
               }
-              
+
               # Build aesthetics
               aes_parts <- c(glue::glue("x = {r_x()}"))
-              
+
               # Add y if not "(none)" and valid for this chart
-              if (r_y() != "(none)" && "y" %in% c(chart_config$required, chart_config$optional)) {
+              if (
+                r_y() != "(none)" &&
+                  "y" %in% c(chart_config$required, chart_config$optional)
+              ) {
                 aes_parts <- c(aes_parts, glue::glue("y = {r_y()}"))
               }
-              
+
               # Add optional aesthetics if valid and not "(none)"
               if (r_color() != "(none)" && "color" %in% chart_config$optional) {
                 aes_parts <- c(aes_parts, glue::glue("colour = {r_color()}"))
@@ -266,26 +285,38 @@ new_chart_block <- function(
               if (r_shape() != "(none)" && "shape" %in% chart_config$optional) {
                 aes_parts <- c(aes_parts, glue::glue("shape = {r_shape()}"))
               }
-              if (r_linetype() != "(none)" && "linetype" %in% chart_config$optional) {
-                aes_parts <- c(aes_parts, glue::glue("linetype = {r_linetype()}"))
+              if (
+                r_linetype() != "(none)" &&
+                  "linetype" %in% chart_config$optional
+              ) {
+                aes_parts <- c(
+                  aes_parts,
+                  glue::glue("linetype = {r_linetype()}")
+                )
               }
               if (r_group() != "(none)" && "group" %in% chart_config$optional) {
                 aes_parts <- c(aes_parts, glue::glue("group = {r_group()}"))
               }
-              
+
               aes_text <- paste(aes_parts, collapse = ", ")
-              
+
               # Build chart-specific call
               geom_args <- glue::glue("alpha = {r_alpha()}")
-              
+
               if (current_type == "bar") {
                 if (r_y() == "(none)") {
-                  geom_call <- glue::glue("ggplot2::geom_bar(position = '{r_position()}', {geom_args})")
+                  geom_call <- glue::glue(
+                    "ggplot2::geom_bar(position = '{r_position()}', {geom_args})"
+                  )
                 } else {
-                  geom_call <- glue::glue("ggplot2::geom_col(position = '{r_position()}', {geom_args})")
+                  geom_call <- glue::glue(
+                    "ggplot2::geom_col(position = '{r_position()}', {geom_args})"
+                  )
                 }
               } else if (current_type == "histogram") {
-                geom_call <- glue::glue("ggplot2::geom_histogram(bins = {r_bins()}, {geom_args})")
+                geom_call <- glue::glue(
+                  "ggplot2::geom_histogram(bins = {r_bins()}, {geom_args})"
+                )
               } else if (current_type == "point") {
                 geom_call <- glue::glue("ggplot2::geom_point({geom_args})")
               } else if (current_type == "line") {
@@ -300,14 +331,14 @@ new_chart_block <- function(
                 geom_call <- glue::glue("ggplot2::geom_area({geom_args})")
               } else if (current_type == "pie") {
                 # PIE CHART: Special handling required
-                
+
                 # Override x aesthetic: empty string for pie, numeric for donut
                 if (r_donut()) {
-                  aes_parts[1] <- "x = 2"  # Numeric for donut (allows xlim)
+                  aes_parts[1] <- "x = 2" # Numeric for donut (allows xlim)
                 } else {
-                  aes_parts[1] <- 'x = ""'  # Empty string for regular pie
+                  aes_parts[1] <- 'x = ""' # Empty string for regular pie
                 }
-                
+
                 # Ensure fill aesthetic uses the category column (from x or fill)
                 fill_added <- FALSE
                 for (i in seq_along(aes_parts)) {
@@ -320,28 +351,36 @@ new_chart_block <- function(
                   # Use x column for fill if no fill aesthetic specified
                   aes_parts <- c(aes_parts, glue::glue("fill = {r_x()}"))
                 }
-                
+
                 # Rebuild aes_text with modified parts
                 aes_text <- paste(aes_parts, collapse = ", ")
-                
+
                 # Choose geom based on y
                 if (r_y() != "(none)") {
-                  geom_call <- glue::glue("ggplot2::geom_col(width = 1, {geom_args})")
+                  geom_call <- glue::glue(
+                    "ggplot2::geom_col(width = 1, {geom_args})"
+                  )
                 } else {
-                  geom_call <- glue::glue("ggplot2::geom_bar(width = 1, {geom_args})")
+                  geom_call <- glue::glue(
+                    "ggplot2::geom_bar(width = 1, {geom_args})"
+                  )
                 }
               } else {
                 # Fallback
                 geom_call <- glue::glue("ggplot2::geom_point({geom_args})")
               }
-              
-              text <- glue::glue("ggplot2::ggplot(data, ggplot2::aes({aes_text})) + {geom_call}")
-              
+
+              text <- glue::glue(
+                "ggplot2::ggplot(data, ggplot2::aes({aes_text})) + {geom_call}"
+              )
+
               # Add theme based on selection
               if (current_type == "pie") {
                 # Pie charts: add polar coordinates first, then apply selected theme
-                text <- glue::glue("({text}) + ggplot2::coord_polar('y', start = 0)")
-                
+                text <- glue::glue(
+                  "({text}) + ggplot2::coord_polar('y', start = 0)"
+                )
+
                 # Apply selected theme (pie charts can use any theme)
                 if (r_theme() == "minimal") {
                   text <- glue::glue("({text}) + ggplot2::theme_minimal()")
@@ -354,14 +393,16 @@ new_chart_block <- function(
                 } else if (r_theme() == "gray") {
                   text <- glue::glue("({text}) + ggplot2::theme_gray()")
                 }
-                
+
                 # Add donut hole if requested
                 if (r_donut()) {
                   text <- glue::glue("({text}) + ggplot2::xlim(c(0.2, 2.5))")
                 }
-                
+
                 # For better pie chart appearance, remove axis elements
-                text <- glue::glue("({text}) + ggplot2::theme(axis.title = ggplot2::element_blank(), axis.text = ggplot2::element_blank(), axis.ticks = ggplot2::element_blank())")
+                text <- glue::glue(
+                  "({text}) + ggplot2::theme(axis.title = ggplot2::element_blank(), axis.text = ggplot2::element_blank(), axis.ticks = ggplot2::element_blank())"
+                )
               } else {
                 # Regular charts: apply selected theme
                 if (r_theme() == "minimal") {
@@ -376,7 +417,7 @@ new_chart_block <- function(
                   text <- glue::glue("({text}) + ggplot2::theme_gray()")
                 }
               }
-              
+
               parse(text = text)[[1]]
             }),
             state = list(
@@ -405,12 +446,13 @@ new_chart_block <- function(
         shinyjs::useShinyjs(),
         div(
           class = "block-container",
-          
+
           # Add responsive CSS
           block_responsive_css(),
-          
+
           # Add custom CSS for chart type and theme selectors
-          tags$style(HTML("
+          tags$style(HTML(
+            "
             .chart-type-selector .btn-group-toggle {
               display: flex;
               flex-wrap: wrap;
@@ -449,14 +491,15 @@ new_chart_block <- function(
             .theme-selector .btn span {
               font-size: 0.8em;
             }
-          ")),
-          
+          "
+          )),
+
           # Set container query context
           block_container_script(),
-          
+
           div(
             class = "block-form-grid",
-            
+
             # Chart Type Selection Section (always visible)
             div(
               class = "block-section",
@@ -480,14 +523,27 @@ new_chart_block <- function(
                       tags$div(icon("chart-bar"), tags$span("Histogram")),
                       tags$div(icon("chart-pie"), tags$span("Pie"))
                     ),
-                    choiceValues = c("point", "bar", "line", "boxplot", "violin", "density", "area", "histogram", "pie"),
+                    choiceValues = c(
+                      "point",
+                      "bar",
+                      "line",
+                      "boxplot",
+                      "violin",
+                      "density",
+                      "area",
+                      "histogram",
+                      "pie"
+                    ),
                     selected = type,
                     status = "primary",
                     size = "sm",
                     justified = FALSE,
                     individual = FALSE,
                     checkIcon = list(
-                      yes = tags$i(class = "fa fa-check", style = "display: none;"),
+                      yes = tags$i(
+                        class = "fa fa-check",
+                        style = "display: none;"
+                      ),
                       no = tags$i(style = "display: none;")
                     )
                   )
@@ -498,7 +554,7 @@ new_chart_block <- function(
                 )
               )
             ),
-            
+
             # Axes Section
             div(
               class = "block-section",
@@ -528,7 +584,7 @@ new_chart_block <- function(
                 )
               )
             ),
-            
+
             # Aesthetics Section
             div(
               class = "block-section",
@@ -586,7 +642,11 @@ new_chart_block <- function(
                     inputId = NS(id, "linetype"),
                     label = "Line Type By",
                     choices = c("(none)", linetype),
-                    selected = if (length(linetype) == 0) "(none)" else linetype,
+                    selected = if (length(linetype) == 0) {
+                      "(none)"
+                    } else {
+                      linetype
+                    },
                     width = "100%"
                   )
                 ),
@@ -603,7 +663,7 @@ new_chart_block <- function(
                 )
               )
             ),
-            
+
             # Options Section
             div(
               class = "block-section",
@@ -626,7 +686,10 @@ new_chart_block <- function(
                 div(
                   class = "block-input-wrapper theme-selector",
                   style = "grid-column: 1 / -1;", # Span full width
-                  tags$h5("Theme", style = "margin-bottom: 8px; font-size: 0.9em; font-weight: 500;"),
+                  tags$h5(
+                    "Theme",
+                    style = "margin-bottom: 8px; font-size: 0.9em; font-weight: 500;"
+                  ),
                   shinyWidgets::radioGroupButtons(
                     inputId = NS(id, "theme"),
                     label = NULL,
@@ -637,14 +700,23 @@ new_chart_block <- function(
                       tags$div(icon("sun"), tags$span("Light")),
                       tags$div(icon("palette"), tags$span("Gray"))
                     ),
-                    choiceValues = c("minimal", "classic", "dark", "light", "gray"),
+                    choiceValues = c(
+                      "minimal",
+                      "classic",
+                      "dark",
+                      "light",
+                      "gray"
+                    ),
                     selected = theme,
                     status = "primary",
                     size = "sm",
                     justified = FALSE,
                     individual = FALSE,
                     checkIcon = list(
-                      yes = tags$i(class = "fa fa-check", style = "display: none;"),
+                      yes = tags$i(
+                        class = "fa fa-check",
+                        style = "display: none;"
+                      ),
                       no = tags$i(style = "display: none;")
                     )
                   )
@@ -691,7 +763,15 @@ new_chart_block <- function(
       stopifnot(is.data.frame(data) || is.matrix(data))
     },
     class = "chart_block",
-    allow_empty_state = c("y", "color", "fill", "size", "shape", "linetype", "group"),
+    allow_empty_state = c(
+      "y",
+      "color",
+      "fill",
+      "size",
+      "shape",
+      "linetype",
+      "group"
+    ),
     ...
   )
 }

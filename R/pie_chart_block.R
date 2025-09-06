@@ -67,23 +67,23 @@ new_pie_chart_block <- function(
           list(
             expr = reactive({
               # SIMPLIFIED: Copy bar chart logic with pie chart modifications
-              
+
               # PIE CHART: x aesthetic depends on donut setting
               if (r_donut()) {
-                x_aes <- "x = 2"  # Numeric for donut (allows xlim)
+                x_aes <- "x = 2" # Numeric for donut (allows xlim)
               } else {
-                x_aes <- 'x = ""'  # Empty string for regular pie
+                x_aes <- 'x = ""' # Empty string for regular pie
               }
-              
+
               aes_parts <- c(x_aes)
-              
+
               if (r_y() != "(none)") {
                 aes_parts <- c(aes_parts, glue::glue("y = {r_y()}"))
                 geom_func <- "geom_col"
               } else {
                 geom_func <- "geom_bar"
               }
-              
+
               # Use fill - pie chart needs fill aesthetic
               fill_var <- if (r_fill() != "(none)") r_fill() else r_x()
               aes_parts <- c(aes_parts, glue::glue("fill = {fill_var}"))
@@ -100,13 +100,15 @@ new_pie_chart_block <- function(
 
               # Add donut hole if requested
               if (r_donut()) {
-                plot_text <- glue::glue("({plot_text}) + ggplot2::xlim(c(0.2, 2.5))")
+                plot_text <- glue::glue(
+                  "({plot_text}) + ggplot2::xlim(c(0.2, 2.5))"
+                )
               }
 
               # TODO: Labels disabled for now - they work manually but cause issues in blockr context
               # This ensures the core pie chart functionality works reliably
               # Labels can be re-enabled later after further testing
-              
+
               # if (r_show_labels()) {
               #   if (r_y() != "(none)") {
               #     plot_text <- glue::glue(
