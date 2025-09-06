@@ -220,8 +220,19 @@ switch(
     data = list(data = iris)
   ),
 
+  "chart-donut" = create_screenshot(
+    new_chart_block(
+      type = "pie",
+      x = "Species",
+      alpha = 1.0,
+      donut = TRUE
+    ),
+    "chart-donut.png",
+    data = list(data = iris)
+  ),
+
   stop(sprintf(
-    "Unknown block_type: %s. Valid options: scatter, bar, line, pie, boxplot, histogram, area, density, violin, heatmap, chart, chart-pie",
+    "Unknown block_type: %s. Valid options: scatter, bar, line, pie, boxplot, histogram, area, density, violin, heatmap, chart, chart-pie, chart-donut",
     block_type
   ))
 )

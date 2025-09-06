@@ -13,11 +13,12 @@
 #' @param shape Column for shape aesthetic
 #' @param linetype Column for linetype aesthetic
 #' @param group Column for group aesthetic
-#' @param alpha Transparency level (0-1, default 0.7)
+#' @param alpha Transparency level (0-1, default 1.0)
 #' @param position Position adjustment for certain geoms
 #' @param bins Number of bins for histogram
 #' @param theme ggplot2 theme to apply (default "minimal"). Options: "minimal", 
 #'   "classic", "dark", "light", "gray"
+#' @param donut Whether to create donut chart when type is "pie" (default FALSE)
 #' @param ... Forwarded to [new_plot_block()]
 #'
 #' @export
@@ -35,6 +36,7 @@ new_chart_block <- function(
   position = "stack",
   bins = 30,
   theme = "minimal",
+  donut = FALSE,
   ...
 ) {
   # Define which aesthetics are valid for each chart type
@@ -107,6 +109,7 @@ new_chart_block <- function(
           r_position <- reactiveVal(position)
           r_bins <- reactiveVal(bins)
           r_theme <- reactiveVal(theme)
+          r_donut <- reactiveVal(donut)
           
           # Observe input changes
           observeEvent(input$type, r_type(input$type))
@@ -122,6 +125,7 @@ new_chart_block <- function(
           observeEvent(input$position, r_position(input$position))
           observeEvent(input$bins, r_bins(input$bins))
           observeEvent(input$theme, r_theme(input$theme))
+          observeEvent(input$donut, r_donut(input$donut))
           
           # Update column-dependent inputs
           observeEvent(
@@ -215,6 +219,13 @@ new_chart_block <- function(
               } else {
                 shinyjs::hide("bins")
               }
+              
+              # Show donut checkbox only for pie charts
+              if (current_type == "pie") {
+                shinyjs::show("donut")
+              } else {
+                shinyjs::hide("donut")
+              }
             }
           })
           
@@ -290,8 +301,12 @@ new_chart_block <- function(
               } else if (current_type == "pie") {
                 # PIE CHART: Special handling required
                 
-                # Override x aesthetic to empty string for pie charts
-                aes_parts[1] <- 'x = ""'
+                # Override x aesthetic: empty string for pie, numeric for donut
+                if (r_donut()) {
+                  aes_parts[1] <- "x = 2"  # Numeric for donut (allows xlim)
+                } else {
+                  aes_parts[1] <- 'x = ""'  # Empty string for regular pie
+                }
                 
                 # Ensure fill aesthetic uses the category column (from x or fill)
                 fill_added <- FALSE
@@ -340,6 +355,11 @@ new_chart_block <- function(
                   text <- glue::glue("({text}) + ggplot2::theme_gray()")
                 }
                 
+                # Add donut hole if requested
+                if (r_donut()) {
+                  text <- glue::glue("({text}) + ggplot2::xlim(c(0.2, 2.5))")
+                }
+                
                 # For better pie chart appearance, remove axis elements
                 text <- glue::glue("({text}) + ggplot2::theme(axis.title = ggplot2::element_blank(), axis.text = ggplot2::element_blank(), axis.ticks = ggplot2::element_blank())")
               } else {
@@ -372,7 +392,8 @@ new_chart_block <- function(
               alpha = r_alpha,
               position = r_position,
               bins = r_bins,
-              theme = r_theme
+              theme = r_theme,
+              donut = r_donut
             )
           )
         }
@@ -649,6 +670,15 @@ new_chart_block <- function(
                     min = 1,
                     max = 100,
                     width = "100%"
+                  )
+                ),
+                div(
+                  id = NS(id, "donut"),
+                  class = "block-input-wrapper",
+                  checkboxInput(
+                    inputId = NS(id, "donut"),
+                    label = "Donut Chart Style",
+                    value = donut
                   )
                 )
               )
