@@ -199,8 +199,19 @@ switch(
     )
   },
 
+  "chart" = create_screenshot(
+    new_chart_block(
+      type = "point",
+      x = "wt",
+      y = "mpg",
+      color = "cyl",
+      size = "hp"
+    ),
+    "chart-block.png"
+  ),
+
   stop(sprintf(
-    "Unknown block_type: %s. Valid options: scatter, bar, line, pie, boxplot, histogram, area, density, violin, heatmap",
+    "Unknown block_type: %s. Valid options: scatter, bar, line, pie, boxplot, histogram, area, density, violin, heatmap, chart",
     block_type
   ))
 )

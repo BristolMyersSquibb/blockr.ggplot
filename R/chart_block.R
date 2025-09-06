@@ -313,6 +313,29 @@ new_chart_block <- function(
           # Add responsive CSS
           block_responsive_css(),
           
+          # Add custom CSS for chart type selector
+          tags$style(HTML("
+            .chart-type-selector .btn-group-toggle {
+              display: flex;
+              flex-wrap: wrap;
+              gap: 5px;
+            }
+            .chart-type-selector .btn {
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              padding: 8px 12px;
+              min-width: 80px;
+            }
+            .chart-type-selector .btn i {
+              font-size: 1.2em;
+              margin-bottom: 4px;
+            }
+            .chart-type-selector .btn span {
+              font-size: 0.85em;
+            }
+          ")),
+          
           # Set container query context
           block_container_script(),
           
@@ -326,27 +349,36 @@ new_chart_block <- function(
               div(
                 class = "block-section-grid",
                 div(
-                  class = "block-input-wrapper",
-                  selectInput(
+                  class = "block-input-wrapper chart-type-selector",
+                  style = "grid-column: 1 / -1;", # Span full width
+                  shinyWidgets::radioGroupButtons(
                     inputId = NS(id, "type"),
-                    label = "Select Chart Type",
-                    choices = c(
-                      "Scatter Plot" = "point",
-                      "Bar Chart" = "bar",
-                      "Line Chart" = "line",
-                      "Box Plot" = "boxplot",
-                      "Violin Plot" = "violin",
-                      "Density Plot" = "density",
-                      "Area Chart" = "area",
-                      "Histogram" = "histogram"
+                    label = NULL,
+                    choiceNames = list(
+                      tags$div(icon("braille"), tags$span("Scatter")),
+                      tags$div(icon("chart-bar"), tags$span("Bar")),
+                      tags$div(icon("chart-line"), tags$span("Line")),
+                      tags$div(icon("th-large"), tags$span("Box")),
+                      tags$div(icon("chart-area"), tags$span("Violin")),
+                      tags$div(icon("wave-square"), tags$span("Density")),
+                      tags$div(icon("chart-area"), tags$span("Area")),
+                      tags$div(icon("chart-bar"), tags$span("Histogram"))
                     ),
+                    choiceValues = c("point", "bar", "line", "boxplot", "violin", "density", "area", "histogram"),
                     selected = type,
-                    width = "100%"
+                    status = "primary",
+                    size = "sm",
+                    justified = FALSE,
+                    individual = FALSE,
+                    checkIcon = list(
+                      yes = tags$i(class = "fa fa-check", style = "display: none;"),
+                      no = tags$i(style = "display: none;")
+                    )
                   )
                 ),
                 div(
                   class = "block-help-text",
-                  p("Choose the type of visualization for your data")
+                  p("Click an icon to change the visualization type")
                 )
               )
             ),

@@ -22,7 +22,8 @@ Imports:
     shiny,
     blockr.core (>= 0.0.1),
     ggplot2,
-    glue
+    glue,
+    shinyWidgets
 Suggests:
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
