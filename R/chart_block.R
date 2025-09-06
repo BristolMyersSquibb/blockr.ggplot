@@ -4,7 +4,7 @@
 #' and dynamically shows relevant aesthetics for the selected visualization.
 #'
 #' @param type Initial chart type (default "point"). Options: "point", "bar", 
-#'   "line", "boxplot", "violin", "density", "area", "histogram"
+#'   "line", "boxplot", "violin", "density", "area", "histogram", "pie"
 #' @param x Column for x-axis
 #' @param y Column for y-axis
 #' @param color Column for color aesthetic
@@ -31,7 +31,7 @@ new_chart_block <- function(
   shape = character(),
   linetype = character(),
   group = character(),
-  alpha = 0.7,
+  alpha = 1.0,
   position = "stack",
   bins = 30,
   theme = "minimal",
@@ -78,6 +78,11 @@ new_chart_block <- function(
       required = c("x"),
       optional = c("fill", "color", "alpha"),
       specific = list(bins = TRUE)
+    ),
+    pie = list(
+      required = c("x"),  # x is categories, but rendered as x = ""
+      optional = c("y", "fill", "alpha"),
+      specific = list()   # Could add donut = TRUE/FALSE later
     )
   )
   
@@ -282,6 +287,34 @@ new_chart_block <- function(
                 geom_call <- glue::glue("ggplot2::geom_density({geom_args})")
               } else if (current_type == "area") {
                 geom_call <- glue::glue("ggplot2::geom_area({geom_args})")
+              } else if (current_type == "pie") {
+                # PIE CHART: Special handling required
+                
+                # Override x aesthetic to empty string for pie charts
+                aes_parts[1] <- 'x = ""'
+                
+                # Ensure fill aesthetic uses the category column (from x or fill)
+                fill_added <- FALSE
+                for (i in seq_along(aes_parts)) {
+                  if (grepl("^fill = ", aes_parts[i])) {
+                    fill_added <- TRUE
+                    break
+                  }
+                }
+                if (!fill_added) {
+                  # Use x column for fill if no fill aesthetic specified
+                  aes_parts <- c(aes_parts, glue::glue("fill = {r_x()}"))
+                }
+                
+                # Rebuild aes_text with modified parts
+                aes_text <- paste(aes_parts, collapse = ", ")
+                
+                # Choose geom based on y
+                if (r_y() != "(none)") {
+                  geom_call <- glue::glue("ggplot2::geom_col(width = 1, {geom_args})")
+                } else {
+                  geom_call <- glue::glue("ggplot2::geom_bar(width = 1, {geom_args})")
+                }
               } else {
                 # Fallback
                 geom_call <- glue::glue("ggplot2::geom_point({geom_args})")
@@ -290,16 +323,38 @@ new_chart_block <- function(
               text <- glue::glue("ggplot2::ggplot(data, ggplot2::aes({aes_text})) + {geom_call}")
               
               # Add theme based on selection
-              if (r_theme() == "minimal") {
-                text <- glue::glue("({text}) + ggplot2::theme_minimal()")
-              } else if (r_theme() == "classic") {
-                text <- glue::glue("({text}) + ggplot2::theme_classic()")
-              } else if (r_theme() == "dark") {
-                text <- glue::glue("({text}) + ggplot2::theme_dark()")
-              } else if (r_theme() == "light") {
-                text <- glue::glue("({text}) + ggplot2::theme_light()")
-              } else if (r_theme() == "gray") {
-                text <- glue::glue("({text}) + ggplot2::theme_gray()")
+              if (current_type == "pie") {
+                # Pie charts: add polar coordinates first, then apply selected theme
+                text <- glue::glue("({text}) + ggplot2::coord_polar('y', start = 0)")
+                
+                # Apply selected theme (pie charts can use any theme)
+                if (r_theme() == "minimal") {
+                  text <- glue::glue("({text}) + ggplot2::theme_minimal()")
+                } else if (r_theme() == "classic") {
+                  text <- glue::glue("({text}) + ggplot2::theme_classic()")
+                } else if (r_theme() == "dark") {
+                  text <- glue::glue("({text}) + ggplot2::theme_dark()")
+                } else if (r_theme() == "light") {
+                  text <- glue::glue("({text}) + ggplot2::theme_light()")
+                } else if (r_theme() == "gray") {
+                  text <- glue::glue("({text}) + ggplot2::theme_gray()")
+                }
+                
+                # For better pie chart appearance, remove axis elements
+                text <- glue::glue("({text}) + ggplot2::theme(axis.title = ggplot2::element_blank(), axis.text = ggplot2::element_blank(), axis.ticks = ggplot2::element_blank())")
+              } else {
+                # Regular charts: apply selected theme
+                if (r_theme() == "minimal") {
+                  text <- glue::glue("({text}) + ggplot2::theme_minimal()")
+                } else if (r_theme() == "classic") {
+                  text <- glue::glue("({text}) + ggplot2::theme_classic()")
+                } else if (r_theme() == "dark") {
+                  text <- glue::glue("({text}) + ggplot2::theme_dark()")
+                } else if (r_theme() == "light") {
+                  text <- glue::glue("({text}) + ggplot2::theme_light()")
+                } else if (r_theme() == "gray") {
+                  text <- glue::glue("({text}) + ggplot2::theme_gray()")
+                }
               }
               
               parse(text = text)[[1]]
@@ -401,9 +456,10 @@ new_chart_block <- function(
                       tags$div(icon("chart-area"), tags$span("Violin")),
                       tags$div(icon("wave-square"), tags$span("Density")),
                       tags$div(icon("chart-area"), tags$span("Area")),
-                      tags$div(icon("chart-bar"), tags$span("Histogram"))
+                      tags$div(icon("chart-bar"), tags$span("Histogram")),
+                      tags$div(icon("chart-pie"), tags$span("Pie"))
                     ),
-                    choiceValues = c("point", "bar", "line", "boxplot", "violin", "density", "area", "histogram"),
+                    choiceValues = c("point", "bar", "line", "boxplot", "violin", "density", "area", "histogram", "pie"),
                     selected = type,
                     status = "primary",
                     size = "sm",
