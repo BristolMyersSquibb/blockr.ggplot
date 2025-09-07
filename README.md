@@ -59,210 +59,36 @@ blockr.core::serve(
 )
 ```
 
-## Individual Blocks
+## Chart Types Gallery
 
-### Bar Chart Block - Column/Bar Charts
+The universal `chart_block` supports all major visualization types. Simply change the `type` parameter to switch between different charts:
 
-Create bar charts with support for grouping, stacking, and horizontal orientation.
+### Bar Charts
+<img src="man/figures/chart-bar.png" alt="Bar Chart" width="50%">
 
-<img src="man/figures/bar-chart.png" alt="Bar Chart" width="50%">
+### Histograms  
+<img src="man/figures/chart-histogram.png" alt="Histogram" width="50%">
 
-**Simple usage:**
-```r
-library(blockr.ggplot)
-blockr.core::serve(
-  new_bar_chart_block(x = "cyl", fill = "gear", position = "dodge"),
-  data = list(data = mtcars)
-)
-```
+### Line Charts
+<img src="man/figures/chart-line.png" alt="Line Chart" width="50%">
 
+### Pie & Donut Charts
+<img src="man/figures/chart-pie.png" alt="Pie Chart" width="50%">
+<img src="man/figures/chart-donut.png" alt="Donut Chart" width="50%">
 
-### Line Chart Block - Time Series & Trends
+### Density Plots
+<img src="man/figures/chart-density.png" alt="Density Plot" width="50%">
 
-Perfect for time series data and trend visualization with multiple line support.
-
-<img src="man/figures/line-chart.png" alt="Line Chart" width="50%">
-
-**Simple usage:**
-```r
-library(blockr.ggplot)
-blockr.core::serve(
-  new_line_chart_block(x = "Time", y = "demand"),
-  data = list(data = BOD)
-)
-```
-
-
-### Scatter Plot Block - XY Relationships
-
-Explore relationships between variables with full aesthetic mapping support.
-
-<img src="man/figures/scatter-plot.png" alt="Scatter Plot" width="50%">
-
-**Simple usage:**
-```r
-library(blockr.ggplot)
-blockr.core::serve(
-  new_scatter_plot_block(
-    x = "wt",
-    y = "mpg",
-    color = "cyl",
-    size = "hp",
-    add_smooth = TRUE
-  ),
-  data = list(data = mtcars)
-)
-```
-
-
-### Pie Chart Block - Categorical Proportions
-
-Visualize categorical data proportions with standard and donut chart styles.
-
-<img src="man/figures/pie-chart.png" alt="Pie Chart" width="50%">
-
-**Simple usage:**
-```r
-library(blockr.ggplot)
-blockr.core::serve(
-  new_pie_chart_block(
-    x = "Species",
-    y = "Sepal.Length",
-    show_labels = TRUE
-  ),
-  data = list(data = iris)
-)
-```
-
-
-### Boxplot Block - Distribution Analysis
-
-Enhanced boxplot visualization for exploring data distributions and outliers.
-
-<img src="man/figures/boxplot.png" alt="Boxplot" width="50%">
-
-**Simple usage:**
-```r
-library(blockr.ggplot)
-blockr.core::serve(
-  new_boxplot_block(
-    x = "cyl",
-    y = "mpg",
-    fill = "gear",
-    show_outliers = TRUE
-  ),
-  data = list(data = mtcars)
-)
-```
-
-
-### Histogram Block - Frequency Distributions
-
-Visualize data distributions with customizable binning and styling.
-
-<img src="man/figures/histogram.png" alt="Histogram" width="50%">
-
-**Simple usage:**
-```r
-library(blockr.ggplot)
-blockr.core::serve(
-  new_histogram_block(
-    x = "mpg",
-    bins = 15,
-    fill = "cyl",
-    alpha = 0.7
-  ),
-  data = list(data = mtcars)
-)
-```
-
-
-### Area Chart Block - Cumulative Visualization
-
-Show cumulative values over time with stacking support.
-
-<img src="man/figures/area-chart.png" alt="Area Chart" width="50%">
-
-**Simple usage:**
-```r
-library(blockr.ggplot)
-blockr.core::serve(
-  new_area_chart_block(
-    x = "Time",
-    y = "demand",
-    title = "BOD Demand Over Time"
-  ),
-  data = list(data = BOD)
-)
-```
-
-
-### Heatmap Block - 2D Data Visualization
-
-Visualize 2D categorical data or correlation matrices with color intensity.
-
-<img src="man/figures/heatmap.png" alt="Heatmap" width="50%">
-
-**Simple usage:**
-```r
-library(blockr.ggplot)
-
-# Use admissions contingency table from datasets and convert to data.frame
-ucb <- as.data.frame(UCBAdmissions)
-
-blockr.core::serve(
-  new_heatmap_block(
-    x = "Dept",
-    y = "Gender",
-    fill = "Freq",
-    color_palette = "viridis",
-    show_values = TRUE
-  ),
-  data = list(data = ucb)
-)
-```
-
-
-### Density Plot Block - Smooth Distributions
-
-Create smooth density curves for continuous variable distributions.
-
-<img src="man/figures/density-plot.png" alt="Density Plot" width="50%">
-
-**Simple usage:**
-```r
-library(blockr.ggplot)
-blockr.core::serve(
-  new_density_plot_block(
-    x = "mpg",
-    fill = "cyl",
-    alpha = 0.6,
-    adjust = 1.2
-  ),
-  data = list(data = mtcars)
-)
-```
-
-
-### Violin Plot Block - Distribution Shapes
-
-Show detailed distribution shapes combining density and boxplot concepts.
-
-<img src="man/figures/violin-plot.png" alt="Violin Plot" width="50%">
-
-**Simple usage:**
-```r
-library(blockr.ggplot)
-blockr.core::serve(
-  new_violin_plot_block(
-    x = "cyl",
-    y = "mpg",
-    fill = "cyl",
-    scale = "area"
-  ),
-  data = list(data = mtcars)
-)
-```
+**Available chart types:**
+- `"point"` - Scatter plots with multiple aesthetic mappings
+- `"bar"` - Bar/column charts with grouping and stacking
+- `"line"` - Line charts for time series and trends
+- `"boxplot"` - Box plots for distribution analysis
+- `"violin"` - Violin plots for distribution shapes
+- `"density"` - Density plots for smooth distributions
+- `"area"` - Area charts for cumulative visualization
+- `"histogram"` - Histograms for frequency distributions
+- `"pie"` - Pie and donut charts for proportions
 
 
 ## DAG Board Example

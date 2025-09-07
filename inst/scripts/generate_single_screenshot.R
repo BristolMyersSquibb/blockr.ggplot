@@ -158,7 +158,9 @@ switch(
       type = "histogram",
       x = "mpg",
       bins = 15,
-      fill = "cyl"
+      fill = "cyl",
+      position = "identity",
+      alpha = 0.5
     ),
     "histogram.png"
   ),

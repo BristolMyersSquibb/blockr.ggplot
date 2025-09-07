@@ -53,7 +53,7 @@ new_histogram_block <- function(
                 session,
                 inputId = "fill",
                 choices = c("(none)", cols()),
-                selected = r_fill()
+                selected = if (length(fill) == 0) "(none)" else fill
               )
               updateSelectInput(
                 session,
@@ -77,7 +77,11 @@ new_histogram_block <- function(
               # Build aesthetics
               aes_parts <- c(glue::glue("x = {r_x()}"))
               if (r_fill() != "(none)") {
-                aes_parts <- c(aes_parts, glue::glue("fill = {r_fill()}"))
+                # Convert to factor for discrete colors
+                aes_parts <- c(
+                  aes_parts,
+                  glue::glue("fill = as.factor({r_fill()})")
+                )
               }
               if (r_color() != "(none)") {
                 aes_parts <- c(aes_parts, glue::glue("colour = {r_color()}"))
@@ -90,6 +94,12 @@ new_histogram_block <- function(
                 glue::glue("bins = {r_bins()}"),
                 glue::glue("alpha = {r_alpha()}")
               )
+              
+              # Add position = "identity" when fill aesthetic is present
+              has_fill <- (r_fill() != "(none)") || (length(fill) > 0 && fill != "")
+              if (has_fill) {
+                geom_args <- c(geom_args, 'position = "identity"')
+              }
 
               geom_args_text <- paste(geom_args, collapse = ", ")
 
