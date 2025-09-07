@@ -94,9 +94,10 @@ new_histogram_block <- function(
                 glue::glue("bins = {r_bins()}"),
                 glue::glue("alpha = {r_alpha()}")
               )
-              
+
               # Add position = "identity" when fill aesthetic is present
-              has_fill <- (r_fill() != "(none)") || (length(fill) > 0 && fill != "")
+              has_fill <- (r_fill() != "(none)") ||
+                (length(fill) > 0 && fill != "")
               if (has_fill) {
                 geom_args <- c(geom_args, 'position = "identity"')
               }

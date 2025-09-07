@@ -354,7 +354,9 @@ new_chart_block <- function(
               }
               if (r_fill() != "(none)" && "fill" %in% chart_config$optional) {
                 # For histograms and bars, convert to factor for discrete colors
-                if (current_type %in% c("histogram", "bar", "boxplot", "violin")) {
+                if (
+                  current_type %in% c("histogram", "bar", "boxplot", "violin")
+                ) {
                   aes_parts <- c(
                     aes_parts,
                     glue::glue("fill = as.factor({r_fill()})")

@@ -22,9 +22,9 @@ devtools::install_github("BristolMyersSquibb/blockr.ggplot")
 ```r
 library(blockr.ggplot)
 
-# Create and serve a simple scatter plot
+# Create and serve a chart block
 blockr.core::serve(
-  new_scatter_plot_block(x = "wt", y = "mpg", color = "cyl"),
+  new_chart_block(type = "point", x = "wt", y = "mpg", color = "cyl"),
   data = list(data = mtcars)
 )
 ```
@@ -32,6 +32,7 @@ blockr.core::serve(
 This launches an interactive web interface where you can:
 - Configure plot aesthetics with visual controls
 - See real-time preview as you modify settings
+- Switch between different chart types dynamically
 - Customize titles, colors, and styling options
 
 ## Universal Chart Block - All Chart Types in One
@@ -62,6 +63,9 @@ blockr.core::serve(
 ## Chart Types Gallery
 
 The universal `chart_block` supports all major visualization types. Simply change the `type` parameter to switch between different charts:
+
+### Main Interface
+<img src="man/figures/chart-block.png" alt="Universal Chart Block Interface" width="70%">
 
 ### Bar Charts
 <img src="man/figures/chart-bar.png" alt="Bar Chart" width="50%">
@@ -104,7 +108,8 @@ library(blockr.ui)
 board <- blockr.ui::new_dag_board(
   blocks = c(
     data_block = new_dataset_block("iris", package = "datasets"),
-    scatter_plot = new_scatter_plot_block(
+    chart = new_chart_block(
+      type = "point",
       x = "Sepal.Length",
       y = "Petal.Length", 
       color = "Species",
@@ -112,7 +117,7 @@ board <- blockr.ui::new_dag_board(
     )
   ),
   links = c(
-    chart_link = new_link("data_block", "scatter_plot", "data")
+    chart_link = new_link("data_block", "chart", "data")
   )
 )
 

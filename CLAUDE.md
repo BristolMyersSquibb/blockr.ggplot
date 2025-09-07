@@ -272,102 +272,55 @@ Use this checklist when creating new blocks or updating existing ones to ensure 
 
 ## SCREENSHOT VALIDATION METHOD
 
-### 🔍 **Visual Block Diagnostics**
+### 🔍 **Visual Block Diagnostics with Validation Agent**
 
-The **Screenshot Validation Method** is a powerful diagnostic technique for validating blockr block implementations by generating screenshots of live Shiny apps. This method reveals both UI and rendering issues that traditional unit tests miss.
+**⚡ ALWAYS USE THE VALIDATION AGENT FOR BLOCK VALIDATION**
 
-**⭐ PROVEN EFFECTIVENESS**: This method was instrumental in fixing broken blocks during development. It instantly identified 2 broken blocks (pie chart, histogram) out of 10, guided the debugging process, and provided immediate visual confirmation when fixes worked. The method revealed the root cause was complex dplyr expressions in pie chart, leading to complete elimination of dplyr dependency from the package. **This is now the PRIMARY debugging tool for blockr blocks.**
+The blockr ecosystem includes a specialized `blockr-validate-blocks` agent that handles screenshot validation automatically. This agent is the ONLY recommended method for validating block implementations.
 
 #### **Core Principle**
 - **✅ Working Block**: Screenshot shows both configuration UI and rendered plot
 - **❌ Broken Block**: Screenshot shows only configuration UI, no plot
 
-#### **Diagnostic Patterns**
+#### **Using the Validation Agent**
 
-**Working Block Example (scatter-plot.png):**
-- Shows complete interface: configuration controls + scatter plot with data points
-- Indicates: Proper data flow, valid state management, correct ggplot2 expressions
+The validation agent automatically:
+- Uses the built-in `validate_block_screenshot()` and `validate_blocks_batch()` functions
+- Configures realistic test scenarios for each block type  
+- Generates screenshots with proper error handling and reporting
+- Provides immediate visual feedback on block health
+- Creates comprehensive validation reports
 
-**Broken Block Example (pie-chart.png, histogram.png):**
-- Shows only configuration panels without plots
-- Indicates: Validation errors, missing `allow_empty_state`, malformed expressions, or reactive flow issues
+#### **Key Benefits**
 
-#### **Implementation**
-
-**Single Block Testing:**
-```bash
-# Test individual block type
-R -e "block_type <- 'histogram'; source('inst/scripts/generate_single_screenshot.R')"
-```
-
-**Batch Testing:**
-```bash
-# Test all blocks at once
-source("inst/scripts/generate_screenshots.R")
-```
-
-**File Structure:**
-- `inst/scripts/generate_single_screenshot.R` - Individual block testing
-- `inst/scripts/generate_screenshots.R` - Batch testing all blocks
-- `man/figures/*.png` - Generated screenshots for validation/documentation
-
-#### **Advantages over Traditional Testing**
-
-1. **Real-world validation**: Tests in actual Shiny environment with real data flow
-2. **Visual feedback**: Immediately obvious success/failure from screenshots
-3. **Comprehensive coverage**: Tests UI, reactivity, data processing, and ggplot2 rendering
-4. **Integration testing**: Validates entire block pipeline, not just individual functions
-5. **Debug efficiency**: Quickly identifies which blocks need attention
-6. **Documentation bonus**: Screenshots serve as block gallery for README
+1. **Automated Configuration**: Agent knows how to configure each block type optimally
+2. **Comprehensive Testing**: Tests all block types systematically  
+3. **Error Analysis**: Provides detailed diagnosis when blocks fail
+4. **Consistent Results**: Standardized validation across all blockr packages
+5. **Expert Knowledge**: Agent incorporates best practices and lessons learned
 
 #### **Common Issues Revealed**
 
+The validation process identifies:
 - **Missing `allow_empty_state`**: Blocks won't evaluate due to empty optional fields
 - **Malformed ggplot2 expressions**: Syntax errors preventing plot rendering
 - **Broken reactive flows**: Field validation failures blocking data flow
-- **Column filtering problems**: Empty choice lists due to type filtering
-- **Naming mismatches**: Old vs new field patterns causing UI/server disconnects
+- **Column filtering problems**: Empty choice lists due to type filtering  
 - **State management issues**: Missing or incorrect state list configurations
 
-#### **Development Workflow Integration**
+#### **Development Workflow**
 
-1. **Block Creation**: Generate screenshot after implementing new block
+1. **Block Creation**: Use validation agent after implementing new block
 2. **Refactoring**: Validate changes don't break rendering
-3. **Debugging**: First diagnostic step when blocks misbehave
-4. **CI/CD Integration**: Automated visual regression testing potential
-5. **Code Review**: Visual proof that blocks work end-to-end
+3. **Debugging**: First diagnostic step when blocks misbehave  
+4. **Code Review**: Visual proof that blocks work end-to-end
 
-#### **Technical Implementation Details**
+#### **File Locations**
 
-The screenshot generation uses webshot2 to capture live Shiny apps:
-- Creates temporary Shiny app for each block
-- Saves data as RDS files to avoid deparse() width issues
-- Configures realistic block parameters with sample data
-- Captures full UI including both controls and plot output
-- 5-second delay ensures app fully loads before screenshot
+Generated screenshots are saved to:
+- `man/figures/*.png` - Screenshots for validation and documentation
 
-**Key Insight**: This method transforms screenshot generation from a documentation task into a powerful diagnostic tool, providing immediate visual feedback on block health and functionality.
-
-#### **🏆 Real-World Success Story**
-
-**Problem Discovered**: 2 out of 10 blocks (pie chart, histogram) showed UI-only screenshots instead of UI + plot.
-
-**Diagnosis Process**:
-1. **Visual Identification**: Screenshots immediately revealed which blocks were broken vs working
-2. **Pattern Analysis**: Compared broken vs working block code to identify differences
-3. **Root Cause**: Pie chart used complex `dplyr::count()` expressions that failed to parse
-4. **Solution**: Applied bar chart's proven `geom_bar`/`geom_col` pattern to pie chart
-
-**Results Achieved**:
-- ✅ **Fixed pie chart**: Now shows beautiful pie chart with data (was UI-only)
-- ✅ **Fixed histogram**: Modernized patterns, now shows histogram + UI
-- ✅ **Eliminated dplyr dependency**: Pie chart was only usage, removed entirely
-- ✅ **10/10 blocks working**: Complete package validation via screenshots
-- ✅ **Cleaner architecture**: Pure ggplot2 package, no complex data transformations
-
-**Time to Solution**: Issues identified and fixed in single session using this method.
-
-**Lesson**: Always use Screenshot Validation Method first when debugging blockr blocks. It provides faster, more accurate diagnosis than code inspection alone.
+**🎯 KEY RULE**: Always use the `blockr-validate-blocks` agent for screenshot validation. This is the primary debugging tool for blockr blocks.
 
 ## TESTING REQUIREMENTS
 
