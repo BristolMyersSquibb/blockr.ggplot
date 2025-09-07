@@ -74,7 +74,10 @@ my_block <- new_chart_block(
   bins = 20,
   fill = "cyl"
 )
-result <- validate_block_screenshot(my_block, filename = "test-histogram.png")
+result <- validate_block_screenshot(
+  my_block,
+  filename = "test-histogram.png"
+)
 }
 
 }

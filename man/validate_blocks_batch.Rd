@@ -14,7 +14,8 @@ validate_blocks_batch(
 \arguments{
 \item{blocks}{Named list of blocks to validate}
 
-\item{data}{Data to use for all blocks (can also be a named list matching block names)}
+\item{data}{Data to use for all blocks (can also be a named list
+matching block names)}
 
 \item{output_dir}{Directory to save screenshots (default: "man/figures")}
 
@@ -41,7 +42,11 @@ print(results)
 
 # With different data for each block
 blocks <- list(
-  iris_scatter = new_chart_block(type = "point", x = "Sepal.Length", y = "Sepal.Width"),
+  iris_scatter = new_chart_block(
+    type = "point",
+    x = "Sepal.Length",
+    y = "Sepal.Width"
+  ),
   mtcars_bar = new_chart_block(type = "bar", x = "cyl")
 )
 

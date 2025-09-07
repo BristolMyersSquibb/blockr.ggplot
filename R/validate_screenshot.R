@@ -47,7 +47,10 @@
 #'   bins = 20,
 #'   fill = "cyl"
 #' )
-#' result <- validate_block_screenshot(my_block, filename = "test-histogram.png")
+#' result <- validate_block_screenshot(
+#'   my_block,
+#'   filename = "test-histogram.png"
+#' )
 #' }
 #'
 #' @export
@@ -66,7 +69,10 @@ validate_block_screenshot <- function(
     return(list(
       success = FALSE,
       path = NULL,
-      error = "webshot2 package is required. Install with: install.packages('webshot2')",
+      error = paste(
+        "webshot2 package is required.",
+        "Install with: install.packages('webshot2')"
+      ),
       filename = filename
     ))
   }
@@ -222,7 +228,8 @@ blockr.core::serve(
 #' a summary report of which blocks work and which don't.
 #'
 #' @param blocks Named list of blocks to validate
-#' @param data Data to use for all blocks (can also be a named list matching block names)
+#' @param data Data to use for all blocks (can also be a named list
+#'   matching block names)
 #' @param output_dir Directory to save screenshots (default: "man/figures")
 #' @param verbose Print progress messages (default: TRUE)
 #'
@@ -242,7 +249,11 @@ blockr.core::serve(
 #'
 #' # With different data for each block
 #' blocks <- list(
-#'   iris_scatter = new_chart_block(type = "point", x = "Sepal.Length", y = "Sepal.Width"),
+#'   iris_scatter = new_chart_block(
+#'     type = "point",
+#'     x = "Sepal.Length",
+#'     y = "Sepal.Width"
+#'   ),
 #'   mtcars_bar = new_chart_block(type = "bar", x = "cyl")
 #' )
 #'
