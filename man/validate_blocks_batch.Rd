@@ -6,7 +6,7 @@
 \usage{
 validate_blocks_batch(
   blocks,
-  data = mtcars,
+  data = datasets::mtcars,
   output_dir = "man/figures",
   verbose = TRUE
 )
@@ -52,7 +52,7 @@ blocks <- list(
 
 data_list <- list(
   iris_scatter = iris,
-  mtcars_bar = mtcars
+  mtcars_bar = datasets::mtcars
 )
 
 results <- validate_blocks_batch(blocks, data = data_list)

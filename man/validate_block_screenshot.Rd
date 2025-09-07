@@ -6,7 +6,7 @@
 \usage{
 validate_block_screenshot(
   block,
-  data = mtcars,
+  data = datasets::mtcars,
   filename = NULL,
   output_dir = "man/figures",
   width = 800,

@@ -4,6 +4,7 @@
 #' takes a screenshot, and returns the result. It's designed to be a
 #' simple, direct way to test whether a block implementation works correctly.
 #'
+#' @importFrom stats setNames
 #' @param block A blockr block object (e.g., from new_chart_block())
 #' @param data Data to use for the block (default: mtcars)
 #' @param filename Name for the screenshot file (default: auto-generated)
@@ -56,7 +57,7 @@
 #' @export
 validate_block_screenshot <- function(
   block,
-  data = mtcars,
+  data = datasets::mtcars,
   filename = NULL,
   output_dir = "man/figures",
   width = 800,
@@ -182,7 +183,7 @@ blockr.core::serve(
       # Check if file was created
       if (file.exists(output_path)) {
         if (verbose) {
-          cat(sprintf("✓ Screenshot saved to: %s\n", output_path))
+          cat(sprintf("[SUCCESS] Screenshot saved to: %s\n", output_path))
         }
 
         list(
@@ -207,7 +208,7 @@ blockr.core::serve(
       }
 
       if (verbose) {
-        cat(sprintf("✗ Failed to create screenshot: %s\n", e$message))
+        cat(sprintf("[ERROR] Failed to create screenshot: %s\n", e$message))
       }
 
       list(
@@ -259,7 +260,7 @@ blockr.core::serve(
 #'
 #' data_list <- list(
 #'   iris_scatter = iris,
-#'   mtcars_bar = mtcars
+#'   mtcars_bar = datasets::mtcars
 #' )
 #'
 #' results <- validate_blocks_batch(blocks, data = data_list)
@@ -268,7 +269,7 @@ blockr.core::serve(
 #' @export
 validate_blocks_batch <- function(
   blocks,
-  data = mtcars,
+  data = datasets::mtcars,
   output_dir = "man/figures",
   verbose = TRUE
 ) {
