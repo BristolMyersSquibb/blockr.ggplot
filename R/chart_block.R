@@ -79,7 +79,10 @@ new_chart_block <- function(
     histogram = list(
       required = c("x"),
       optional = c("fill", "color", "alpha"),
-      specific = list(bins = TRUE)
+      specific = list(
+        bins = TRUE,
+        position = c("stack", "identity", "dodge")
+      )
     ),
     pie = list(
       required = c("x"), # x is categories, but rendered as x = ""
@@ -149,37 +152,37 @@ new_chart_block <- function(
                 session,
                 inputId = "color",
                 choices = c("(none)", cols()),
-                selected = r_color()
+                selected = if (length(color) == 0) "(none)" else color
               )
               updateSelectInput(
                 session,
                 inputId = "fill",
                 choices = c("(none)", cols()),
-                selected = r_fill()
+                selected = if (length(fill) == 0) "(none)" else fill
               )
               updateSelectInput(
                 session,
                 inputId = "size",
                 choices = c("(none)", cols()),
-                selected = r_size()
+                selected = if (length(size) == 0) "(none)" else size
               )
               updateSelectInput(
                 session,
                 inputId = "shape",
                 choices = c("(none)", cols()),
-                selected = r_shape()
+                selected = if (length(shape) == 0) "(none)" else shape
               )
               updateSelectInput(
                 session,
                 inputId = "linetype",
                 choices = c("(none)", cols()),
-                selected = r_linetype()
+                selected = if (length(linetype) == 0) "(none)" else linetype
               )
               updateSelectInput(
                 session,
                 inputId = "group",
                 choices = c("(none)", cols()),
-                selected = r_group()
+                selected = if (length(group) == 0) "(none)" else group
               )
             }
           )
@@ -350,13 +353,27 @@ new_chart_block <- function(
                 aes_parts <- c(aes_parts, glue::glue("colour = {r_color()}"))
               }
               if (r_fill() != "(none)" && "fill" %in% chart_config$optional) {
-                aes_parts <- c(aes_parts, glue::glue("fill = {r_fill()}"))
+                # For histograms and bars, convert to factor for discrete colors
+                if (
+                  current_type %in% c("histogram", "bar", "boxplot", "violin")
+                ) {
+                  aes_parts <- c(
+                    aes_parts,
+                    glue::glue("fill = as.factor({r_fill()})")
+                  )
+                } else {
+                  aes_parts <- c(aes_parts, glue::glue("fill = {r_fill()}"))
+                }
               }
               if (r_size() != "(none)" && "size" %in% chart_config$optional) {
                 aes_parts <- c(aes_parts, glue::glue("size = {r_size()}"))
               }
               if (r_shape() != "(none)" && "shape" %in% chart_config$optional) {
-                aes_parts <- c(aes_parts, glue::glue("shape = {r_shape()}"))
+                # Shape requires discrete/factor variables
+                aes_parts <- c(
+                  aes_parts,
+                  glue::glue("shape = as.factor({r_shape()})")
+                )
               }
               if (
                 r_linetype() != "(none)" &&
@@ -390,7 +407,8 @@ new_chart_block <- function(
                 }
               } else if (current_type == "histogram") {
                 geom_call <- glue::glue(
-                  "ggplot2::geom_histogram(bins = {r_bins()}, {geom_args})"
+                  "ggplot2::geom_histogram(bins = {r_bins()}, ",
+                  "position = '{r_position()}', {geom_args})"
                 )
               } else if (current_type == "point") {
                 geom_call <- glue::glue("ggplot2::geom_point({geom_args})")
@@ -857,9 +875,6 @@ new_chart_block <- function(
           )
         )
       )
-    },
-    dat_valid = function(data) {
-      stopifnot(is.data.frame(data) || is.matrix(data))
     },
     class = "chart_block",
     allow_empty_state = c(

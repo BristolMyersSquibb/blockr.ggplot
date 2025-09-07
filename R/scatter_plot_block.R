@@ -374,9 +374,6 @@ new_scatter_plot_block <- function(
         )
       )
     },
-    dat_valid = function(data) {
-      stopifnot(is.data.frame(data) || is.matrix(data))
-    },
     class = "scatter_plot_block",
     allow_empty_state = c("color", "shape", "size"), # All optional aesthetics
     ...
