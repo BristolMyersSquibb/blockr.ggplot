@@ -10,7 +10,7 @@
 #' @param size Column for size aesthetic (optional)
 #' @param alpha Transparency level (0-1, default 0.7)
 #' @param add_smooth Whether to add a trendline (default FALSE)
-#' @param ... Forwarded to [new_plot_block()]
+#' @param ... Forwarded to \code{\link[blockr.core]{new_plot_block}}
 #'
 #' @export
 new_scatter_plot_block <- function(

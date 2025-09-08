@@ -30,7 +30,7 @@ new_scatter_plot_block(
 
 \item{add_smooth}{Whether to add a trendline (default FALSE)}
 
-\item{...}{Forwarded to \code{\link[=new_plot_block]{new_plot_block()}}}
+\item{...}{Forwarded to \code{\link[blockr.core]{new_plot_block}}}
 }
 \description{
 This block creates scatter plots using \code{\link[ggplot2:geom_point]{ggplot2::geom_point()}}.

@@ -19,7 +19,7 @@
 #' @param theme ggplot2 theme to apply (default "minimal"). Options: "minimal",
 #'   "classic", "dark", "light", "gray"
 #' @param donut Whether to create donut chart when type is "pie" (default FALSE)
-#' @param ... Forwarded to [new_plot_block()]
+#' @param ... Forwarded to \code{\link[blockr.core]{new_plot_block}}
 #'
 #' @export
 new_chart_block <- function(

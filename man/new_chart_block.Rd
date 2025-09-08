@@ -53,7 +53,7 @@ new_chart_block(
 
 \item{donut}{Whether to create donut chart when type is "pie" (default FALSE)}
 
-\item{...}{Forwarded to \code{\link[=new_plot_block]{new_plot_block()}}}
+\item{...}{Forwarded to \code{\link[blockr.core]{new_plot_block}}}
 }
 \description{
 A flexible block that allows users to select from various ggplot2 geoms
