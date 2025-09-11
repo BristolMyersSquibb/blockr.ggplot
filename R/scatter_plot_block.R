@@ -1,3 +1,7 @@
+# DEPRECATED: This block is kept for demonstration purposes only
+# and will be removed in a future version.
+# Please use new_chart_block() instead for all chart types.
+
 #' Scatter plot block constructor
 #'
 #' This block creates scatter plots using [ggplot2::geom_point()].
@@ -23,6 +27,8 @@ new_scatter_plot_block <- function(
   add_smooth = FALSE,
   ...
 ) {
+  .Deprecated("new_chart_block")
+
   new_ggplot_block(
     function(id, data) {
       moduleServer(

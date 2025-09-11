@@ -1,3 +1,7 @@
+# DEPRECATED: This block is kept for demonstration purposes only
+# and will be removed in a future version.
+# Please use new_chart_block() instead for all chart types.
+
 #' Bar chart block constructor
 #'
 #' This block creates bar charts using [ggplot2::geom_col()] or
@@ -25,6 +29,8 @@ new_bar_chart_block <- function(
   flip_coords = FALSE,
   ...
 ) {
+  .Deprecated("new_chart_block")
+
   new_ggplot_block(
     function(id, data) {
       moduleServer(
