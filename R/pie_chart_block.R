@@ -1,3 +1,7 @@
+# DEPRECATED: This block is kept for demonstration purposes only
+# and will be removed in a future version.
+# Please use new_chart_block() instead for all chart types.
+
 #' Pie chart block constructor
 #'
 #' This block creates pie charts using [ggplot2::geom_col()] with
@@ -20,6 +24,8 @@ new_pie_chart_block <- function(
   show_labels = TRUE,
   ...
 ) {
+  .Deprecated("new_chart_block")
+
   new_ggplot_block(
     function(id, data) {
       moduleServer(

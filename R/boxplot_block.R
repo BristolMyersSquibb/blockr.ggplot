@@ -1,3 +1,7 @@
+# DEPRECATED: This block is kept for demonstration purposes only
+# and will be removed in a future version.
+# Please use new_chart_block() instead for all chart types.
+
 #' Boxplot block constructor
 #'
 #' This block draws a boxplot using [ggplot2::geom_boxplot()].
@@ -23,6 +27,8 @@ new_boxplot_block <- function(
   show_outliers = TRUE,
   ...
 ) {
+  .Deprecated("new_chart_block")
+
   new_ggplot_block(
     function(id, data) {
       moduleServer(

@@ -1,3 +1,7 @@
+# DEPRECATED: This block is kept for demonstration purposes only
+# and will be removed in a future version.
+# Please use new_chart_block() instead for all chart types.
+
 #' Area chart block constructor
 #'
 #' This block creates area charts using [ggplot2::geom_area()]. Perfect for
@@ -21,6 +25,8 @@ new_area_chart_block <- function(
   alpha = 0.7,
   ...
 ) {
+  .Deprecated("new_chart_block")
+
   new_ggplot_block(
     function(id, data) {
       moduleServer(

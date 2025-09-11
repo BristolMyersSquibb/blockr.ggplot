@@ -1,3 +1,7 @@
+# DEPRECATED: This block is kept for demonstration purposes only
+# and will be removed in a future version.
+# Please use new_chart_block() instead for all chart types.
+
 #' Violin plot block constructor
 #'
 #' This block creates violin plots using [ggplot2::geom_violin()].
@@ -25,6 +29,8 @@ new_violin_plot_block <- function(
   scale = "area",
   ...
 ) {
+  .Deprecated("new_chart_block")
+
   new_ggplot_block(
     function(id, data) {
       moduleServer(

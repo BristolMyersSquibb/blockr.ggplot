@@ -1,3 +1,7 @@
+# DEPRECATED: This block is kept for demonstration purposes only
+# and will be removed in a future version.
+# Please use new_chart_block() instead for all chart types.
+
 #' Line chart block constructor
 #'
 #' This block creates line charts using [ggplot2::geom_line()] and
@@ -24,6 +28,8 @@ new_line_chart_block <- function(
   show_points = TRUE,
   ...
 ) {
+  .Deprecated("new_chart_block")
+
   new_ggplot_block(
     function(id, data) {
       moduleServer(

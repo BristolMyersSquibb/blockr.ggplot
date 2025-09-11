@@ -1,3 +1,7 @@
+# DEPRECATED: This block is kept for demonstration purposes only
+# and will be removed in a future version.
+# Please use new_chart_block() instead for all chart types.
+
 #' Density plot block constructor
 #'
 #' This block creates density plots using [ggplot2::geom_density()]. Perfect for
@@ -19,6 +23,8 @@ new_density_plot_block <- function(
   adjust = 1,
   ...
 ) {
+  .Deprecated("new_chart_block")
+
   new_ggplot_block(
     function(id, data) {
       moduleServer(

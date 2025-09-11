@@ -1,3 +1,7 @@
+# DEPRECATED: This block is kept for demonstration purposes only
+# and will be removed in a future version.
+# Please use new_chart_block() instead for all chart types.
+
 #' Heatmap block constructor
 #'
 #' This block creates heatmaps using [ggplot2::geom_tile()]. Perfect for
@@ -20,6 +24,8 @@ new_heatmap_block <- function(
   color_palette = "viridis",
   ...
 ) {
+  .Deprecated("new_chart_block")
+
   new_ggplot_block(
     function(id, data) {
       moduleServer(
