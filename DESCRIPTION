@@ -24,7 +24,8 @@ Imports:
     ggplot2,
     glue,
     shinyWidgets,
-    shinyjs
+    shinyjs,
+    cowplot
 Suggests:
     testthat (>= 3.0.0),
     webshot2

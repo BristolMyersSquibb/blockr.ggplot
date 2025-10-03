@@ -165,6 +165,39 @@ This creates an interactive dashboard where you can:
 
 ## More Examples
 
+### Combining Multiple Plots with Plot Grid
+
+Create a dashboard that combines multiple charts side-by-side using `new_plot_grid_block()`:
+
+```r
+library(blockr.core)
+library(blockr.ggplot)
+library(blockr.ui)
+
+# Create a dashboard with two charts combined in a grid
+board <- blockr.ui::new_dag_board(
+  blocks = c(
+    data = new_dataset_block("mtcars", package = "datasets"),
+    scatter = new_chart_block(type = "point", x = "wt", y = "mpg", color = "cyl"),
+    boxplot = new_chart_block(type = "boxplot", x = "cyl", y = "mpg", fill = "cyl"),
+    grid = new_plot_grid_block()
+  ),
+  links = c(
+    new_link("data", "scatter", "data"),
+    new_link("data", "boxplot", "data"),
+    new_link("scatter", "grid", "1"),
+    new_link("boxplot", "grid", "2")
+  )
+)
+
+blockr.core::serve(board)
+```
+
+This creates a single combined visualization with:
+- A scatter plot showing weight vs. mpg
+- A boxplot showing mpg distribution by cylinder count
+- Both plots arranged side-by-side in a grid
+
 ### Exploring Different Chart Types with Same Data
 
 ```r
@@ -177,7 +210,7 @@ blockr.core::serve(
   data = list(data = mtcars)
 )
 
-# Relationship between variables  
+# Relationship between variables
 blockr.core::serve(
   new_chart_block(type = "point", x = "hp", y = "mpg", color = "cyl", size = "wt"),
   data = list(data = mtcars)
