@@ -17,7 +17,7 @@ Description: Provides comprehensive blocks for plotting with blockr using 'ggplo
 License: GPL (>= 3)
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.3.2
+RoxygenNote: 7.3.3
 Imports:
     shiny,
     blockr.core (>= 0.0.1),

@@ -29,7 +29,7 @@ new_scatter_plot_block <- function(
 ) {
   .Deprecated("new_chart_block")
 
-  new_ggplot_block(
+  new_ggplot_transform_block(
     function(id, data) {
       moduleServer(
         id,
