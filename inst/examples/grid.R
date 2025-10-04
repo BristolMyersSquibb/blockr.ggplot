@@ -6,19 +6,19 @@ devtools::load_all()
 board <- new_board(
   blocks = c(
     data = new_dataset_block("mtcars", package = "datasets"),
-    scatter = new_chart_block(
+    scatter = new_ggplot_block(
       type = "point",
       x = "wt",
       y = "mpg",
       color = "cyl"
     ),
-    boxplot = new_chart_block(
+    boxplot = new_ggplot_block(
       type = "boxplot",
       x = "cyl",
       y = "mpg",
       fill = "cyl"
     ),
-    histogram = new_chart_block(type = "histogram", x = "mpg", bins = 15),
+    histogram = new_ggplot_block(type = "histogram", x = "mpg", bins = 15),
     grid = new_plot_grid_block()
   ),
   links = c(

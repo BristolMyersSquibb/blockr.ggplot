@@ -6,7 +6,7 @@
 
 **One Block, All Chart Types - Universal Data Visualization for blockr.core**
 
-`blockr.ggplot` extends [blockr.core](https://github.com/BristolMyersSquibb/blockr.core) with a single, powerful universal chart block that provides all major visualization types through an intuitive interface. Simply select your chart type and watch the interface dynamically adapt to show relevant controls. Build visualization pipelines by connecting data transformation blocks to this flexible plotting block in an interactive drag-and-drop interface.
+`blockr.ggplot` extends [blockr.core](https://github.com/BristolMyersSquibb/blockr.core) with a single, powerful universal ggplot block that provides all major visualization types through an intuitive interface. Simply select your chart type and watch the interface dynamically adapt to show relevant controls. Build visualization pipelines by connecting data transformation blocks to this flexible plotting block in an interactive drag-and-drop interface.
 
 ## Installation
 
@@ -22,9 +22,9 @@ devtools::install_github("BristolMyersSquibb/blockr.ggplot")
 ```r
 library(blockr.ggplot)
 
-# Create and serve the universal chart block
+# Create and serve the universal ggplot block
 blockr.core::serve(
-  new_chart_block(type = "point", x = "wt", y = "mpg", color = "cyl"),
+  new_ggplot_block(type = "point", x = "wt", y = "mpg", color = "cyl"),
   data = list(data = mtcars)
 )
 ```
@@ -35,11 +35,11 @@ This launches an interactive web interface where you can:
 - **Real-time preview** - See your visualization update as you modify settings
 - **Rich customization** - Fine-tune aesthetics, themes, and styling options
 
-## The Universal Chart Block
+## The Universal ggplot Block
 
 `blockr.ggplot` provides a single, powerful block that handles all your visualization needs. No need to learn multiple blocks - just one interface that adapts to your chosen chart type.
 
-<img src="man/figures/chart-block.png" alt="Universal Chart Block" width="70%">
+<img src="man/figures/chart-block.png" alt="Universal ggplot Block" width="70%">
 
 ### Key Features
 
@@ -56,25 +56,25 @@ Simply change the `type` parameter to create different visualizations:
 ```r
 # Scatter plot
 blockr.core::serve(
-  new_chart_block(type = "point", x = "wt", y = "mpg", color = "cyl"),
+  new_ggplot_block(type = "point", x = "wt", y = "mpg", color = "cyl"),
   data = list(data = mtcars)
 )
 
 # Bar chart
 blockr.core::serve(
-  new_chart_block(type = "bar", x = "cyl", fill = "gear"),
+  new_ggplot_block(type = "bar", x = "cyl", fill = "gear"),
   data = list(data = mtcars)
 )
 
 # Line chart
 blockr.core::serve(
-  new_chart_block(type = "line", x = "wt", y = "mpg", color = "cyl"),
+  new_ggplot_block(type = "line", x = "wt", y = "mpg", color = "cyl"),
   data = list(data = mtcars)
 )
 
 # Box plot
 blockr.core::serve(
-  new_chart_block(type = "boxplot", x = "cyl", y = "mpg"),
+  new_ggplot_block(type = "boxplot", x = "cyl", y = "mpg"),
   data = list(data = mtcars)
 )
 
@@ -83,7 +83,7 @@ blockr.core::serve(
 
 ## Chart Types Gallery
 
-All visualizations below are created with the same `chart_block` - just by changing the `type` parameter. Each screenshot shows the universal block configured for that specific chart type.
+All visualizations below are created with the same `ggplot_block` - just by changing the `type` parameter. Each screenshot shows the universal block configured for that specific chart type.
 
 ### Distribution Visualizations
 
@@ -132,18 +132,18 @@ All visualizations below are created with the same `chart_block` - just by chang
 
 ## Example: Interactive Pipeline with DAG Board
 
-The universal chart block integrates seamlessly with blockr's pipeline system:
+The universal ggplot block integrates seamlessly with blockr's pipeline system:
 
 ```r
 library(blockr.core)
 library(blockr.ggplot)
 library(blockr.ui)
 
-# Create a visualization pipeline with the universal chart block
+# Create a visualization pipeline with the universal ggplot block
 board <- blockr.ui::new_dag_board(
   blocks = c(
     data_block = new_dataset_block("iris", package = "datasets"),
-    chart = new_chart_block(
+    chart = new_ggplot_block(
       type = "point",  # Start with scatter plot
       x = "Sepal.Length",
       y = "Petal.Length",
@@ -178,8 +178,8 @@ library(blockr.ui)
 board <- blockr.ui::new_dag_board(
   blocks = c(
     data = new_dataset_block("mtcars", package = "datasets"),
-    scatter = new_chart_block(type = "point", x = "wt", y = "mpg", color = "cyl"),
-    boxplot = new_chart_block(type = "boxplot", x = "cyl", y = "mpg", fill = "cyl"),
+    scatter = new_ggplot_block(type = "point", x = "wt", y = "mpg", color = "cyl"),
+    boxplot = new_ggplot_block(type = "boxplot", x = "cyl", y = "mpg", fill = "cyl"),
     grid = new_plot_grid_block()
   ),
   links = c(
@@ -207,25 +207,25 @@ library(blockr.ggplot)
 
 # Distribution of a single variable
 blockr.core::serve(
-  new_chart_block(type = "histogram", x = "mpg", bins = 20),
+  new_ggplot_block(type = "histogram", x = "mpg", bins = 20),
   data = list(data = mtcars)
 )
 
 # Relationship between variables
 blockr.core::serve(
-  new_chart_block(type = "point", x = "hp", y = "mpg", color = "cyl", size = "wt"),
+  new_ggplot_block(type = "point", x = "hp", y = "mpg", color = "cyl", size = "wt"),
   data = list(data = mtcars)
 )
 
 # Group comparisons
 blockr.core::serve(
-  new_chart_block(type = "violin", x = "cyl", y = "mpg", fill = "cyl"),
+  new_ggplot_block(type = "violin", x = "cyl", y = "mpg", fill = "cyl"),
   data = list(data = mtcars)
 )
 
 # Proportions
 blockr.core::serve(
-  new_chart_block(type = "pie", x = "cyl", donut = TRUE),
+  new_ggplot_block(type = "pie", x = "cyl", donut = TRUE),
   data = list(data = mtcars)
 )
 ```

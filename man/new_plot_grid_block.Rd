@@ -26,14 +26,17 @@ new_plot_grid_block(
 
 \item{caption}{Overall plot caption (default: "")}
 
-\item{tag_levels}{Auto-tagging style: 'A', 'a', '1', 'I', 'i', or NULL (default: NULL)}
+\item{tag_levels}{Auto-tagging style: 'A', 'a', '1', 'I', 'i', or NULL
+(default: NULL)}
 
-\item{guides}{Legend handling: 'auto', 'collect', or 'keep' (default: 'auto')}
+\item{guides}{Legend handling: 'auto', 'collect', or 'keep'
+(default: 'auto')}
 
 \item{...}{Forwarded to \code{\link[=new_ggplot_transform_block]{new_ggplot_transform_block()}}}
 }
 \description{
 Combines multiple ggplot objects using patchwork::wrap_plots().
-Variadic block that accepts 2 or more ggplot inputs with automatic alignment.
-Supports layout control (ncol, nrow) and annotations (title, subtitle, auto-tags).
+Variadic block that accepts 2 or more ggplot inputs with automatic
+alignment. Supports layout control (ncol, nrow) and annotations
+(title, subtitle, auto-tags).
 }
