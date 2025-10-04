@@ -29,5 +29,9 @@ Imports:
     colourpicker
 Suggests:
     testthat (>= 3.0.0),
-    webshot2
+    webshot2,
+    cowplot,
+    ggthemes,
+    hrbrthemes,
+    ggpubr
 Config/testthat/edition: 3

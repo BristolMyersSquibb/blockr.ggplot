@@ -262,10 +262,33 @@ new_theme_block <- function(
               # Start with base theme (overrides ggplot block's theme_minimal if different)
               base_theme_func <- switch(
                 r_base_theme(),
+                # Built-in ggplot2 themes
                 minimal = "ggplot2::theme_minimal()",
                 classic = "ggplot2::theme_classic()",
                 gray = "ggplot2::theme_gray()",
                 bw = "ggplot2::theme_bw()",
+                light = "ggplot2::theme_light()",
+                dark = "ggplot2::theme_dark()",
+                void = "ggplot2::theme_void()",
+                # cowplot themes
+                cowplot = "cowplot::theme_cowplot()",
+                minimal_grid = "cowplot::theme_minimal_grid()",
+                minimal_hgrid = "cowplot::theme_minimal_hgrid()",
+                minimal_vgrid = "cowplot::theme_minimal_vgrid()",
+                # ggthemes
+                economist = "ggthemes::theme_economist()",
+                fivethirtyeight = "ggthemes::theme_fivethirtyeight()",
+                tufte = "ggthemes::theme_tufte()",
+                wsj = "ggthemes::theme_wsj()",
+                # hrbrthemes
+                ipsum = "hrbrthemes::theme_ipsum()",
+                ipsum_rc = "hrbrthemes::theme_ipsum_rc()",
+                ipsum_ps = "hrbrthemes::theme_ipsum_ps()",
+                ft_rc = "hrbrthemes::theme_ft_rc()",
+                modern_rc = "hrbrthemes::theme_modern_rc()",
+                # ggpubr
+                pubr = "ggpubr::theme_pubr()",
+                pubclean = "ggpubr::theme_pubclean()",
                 "ggplot2::theme_minimal()"  # fallback
               )
 
@@ -318,6 +341,41 @@ new_theme_block <- function(
 
       tagList(
         shinyjs::useShinyjs(),
+
+        # CSS for collapsible section
+        tags$style(HTML(sprintf("
+          #%s-advanced-options {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+          }
+          #%s-advanced-options.expanded {
+            max-height: 2000px;
+            transition: max-height 0.5s ease-in;
+          }
+          .advanced-toggle {
+            cursor: pointer;
+            user-select: none;
+            padding: 12px 0;
+            color: #666;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+          }
+          .advanced-toggle:hover {
+            color: #333;
+          }
+          .advanced-toggle .chevron {
+            transition: transform 0.2s;
+            display: inline-block;
+            font-size: 12px;
+          }
+          .advanced-toggle .chevron.rotated {
+            transform: rotate(90deg);
+          }
+        ", id, id))),
+
         div(
           class = "block-container",
 
@@ -330,130 +388,54 @@ new_theme_block <- function(
           div(
             class = "block-form-grid",
 
-            # Section 1: Colors & Backgrounds
+            # Main Section: Always Visible
             div(
               class = "block-section",
-              tags$h4("Colors & Backgrounds"),
-              div(
-                class = "block-section-grid",
-                div(
-                  class = "block-input-wrapper",
-                  make_theme_color_input("panel_bg", "Panel Background", panel_bg, background_light_colors())
-                ),
-                div(
-                  class = "block-input-wrapper",
-                  make_theme_color_input("plot_bg", "Plot Background", plot_bg, plot_bg_colors())
-                ),
-                div(
-                  class = "block-input-wrapper",
-                  make_theme_color_input("grid_color", "Grid Color", grid_color, grid_colors())
-                )
-              )
-            ),
-
-            # Section 2: Typography
-            div(
-              class = "block-section",
-              tags$h4("Typography"),
               div(
                 class = "block-section-grid",
                 div(
                   class = "block-input-wrapper",
                   selectInput(
-                    inputId = NS(id, "base_size"),
-                    label = "Base Font Size",
-                    choices = c(
-                      "Auto (theme default)" = "auto",
-                      "8" = "8",
-                      "9" = "9",
-                      "10" = "10",
-                      "11" = "11",
-                      "12" = "12",
-                      "13" = "13",
-                      "14" = "14",
-                      "16" = "16",
-                      "18" = "18",
-                      "20" = "20"
+                    inputId = NS(id, "base_theme"),
+                    label = "Base Theme",
+                    choices = list(
+                      "ggplot2 (Built-in)" = list(
+                        "Minimal" = "minimal",
+                        "Classic" = "classic",
+                        "Gray" = "gray",
+                        "Black & White" = "bw",
+                        "Light" = "light",
+                        "Dark" = "dark",
+                        "Void" = "void"
+                      ),
+                      "cowplot (Publication)" = list(
+                        "Cowplot" = "cowplot",
+                        "Minimal Grid" = "minimal_grid",
+                        "Minimal H-Grid" = "minimal_hgrid",
+                        "Minimal V-Grid" = "minimal_vgrid"
+                      ),
+                      "ggthemes (Publications)" = list(
+                        "The Economist" = "economist",
+                        "FiveThirtyEight" = "fivethirtyeight",
+                        "Tufte" = "tufte",
+                        "Wall Street Journal" = "wsj"
+                      ),
+                      "hrbrthemes (Typography)" = list(
+                        "Ipsum" = "ipsum",
+                        "Ipsum RC" = "ipsum_rc",
+                        "Ipsum PS" = "ipsum_ps",
+                        "Financial Times" = "ft_rc",
+                        "Modern RC" = "modern_rc"
+                      ),
+                      "ggpubr (Scientific)" = list(
+                        "Publication Ready" = "pubr",
+                        "Publication Clean" = "pubclean"
+                      )
                     ),
-                    selected = if (is.na(base_size)) "auto" else as.character(base_size),
+                    selected = base_theme,
                     width = "100%"
                   )
                 ),
-                div(
-                  class = "block-input-wrapper",
-                  selectInput(
-                    inputId = NS(id, "base_family"),
-                    label = "Font Family",
-                    choices = c(
-                      "Auto (theme default)" = "",
-                      "Sans Serif" = "sans",
-                      "Serif" = "serif",
-                      "Monospace" = "mono"
-                    ),
-                    selected = base_family,
-                    width = "100%"
-                  )
-                )
-              )
-            ),
-
-            # Section 3: Elements
-            div(
-              class = "block-section",
-              tags$h4("Elements"),
-              div(
-                class = "block-section-grid",
-                div(
-                  class = "block-input-wrapper",
-                  selectInput(
-                    inputId = NS(id, "show_major_grid"),
-                    label = "Major Grid Lines",
-                    choices = c(
-                      "Auto (theme default)" = "auto",
-                      "Show" = "show",
-                      "Hide" = "hide"
-                    ),
-                    selected = show_major_grid,
-                    width = "100%"
-                  )
-                ),
-                div(
-                  class = "block-input-wrapper",
-                  selectInput(
-                    inputId = NS(id, "show_minor_grid"),
-                    label = "Minor Grid Lines",
-                    choices = c(
-                      "Auto (theme default)" = "auto",
-                      "Show" = "show",
-                      "Hide" = "hide"
-                    ),
-                    selected = show_minor_grid,
-                    width = "100%"
-                  )
-                ),
-                div(
-                  class = "block-input-wrapper",
-                  selectInput(
-                    inputId = NS(id, "show_panel_border"),
-                    label = "Panel Border",
-                    choices = c(
-                      "Auto (theme default)" = "auto",
-                      "Show" = "show",
-                      "Hide" = "hide"
-                    ),
-                    selected = show_panel_border,
-                    width = "100%"
-                  )
-                )
-              )
-            ),
-
-            # Section 4: Appearance
-            div(
-              class = "block-section",
-              tags$h4("Appearance"),
-              div(
-                class = "block-section-grid",
                 div(
                   class = "block-input-wrapper",
                   selectInput(
@@ -470,20 +452,142 @@ new_theme_block <- function(
                     selected = legend_position,
                     width = "100%"
                   )
-                ),
+                )
+              )
+            ),
+
+            # Advanced Options Toggle
+            div(
+              class = "advanced-toggle",
+              id = NS(id, "advanced-toggle"),
+              onclick = sprintf("
+                const section = document.getElementById('%s');
+                const chevron = document.querySelector('#%s .chevron');
+                section.classList.toggle('expanded');
+                chevron.classList.toggle('rotated');
+              ", NS(id, "advanced-options"), NS(id, "advanced-toggle")),
+              tags$span(class = "chevron", "\u25B6"),  # Right arrow
+              "Show advanced options"
+            ),
+
+            # Advanced Options Section (Collapsible)
+            div(
+              id = NS(id, "advanced-options"),
+
+              # Section 1: Colors & Backgrounds
+              div(
+                class = "block-section",
+                tags$h4("Colors & Backgrounds"),
                 div(
-                  class = "block-input-wrapper",
-                  selectInput(
-                    inputId = NS(id, "base_theme"),
-                    label = "Base Theme",
-                    choices = c(
-                      "Minimal" = "minimal",
-                      "Classic" = "classic",
-                      "Gray" = "gray",
-                      "Black & White" = "bw"
-                    ),
-                    selected = base_theme,
-                    width = "100%"
+                  class = "block-section-grid",
+                  div(
+                    class = "block-input-wrapper",
+                    make_theme_color_input("panel_bg", "Panel Background", panel_bg, background_light_colors())
+                  ),
+                  div(
+                    class = "block-input-wrapper",
+                    make_theme_color_input("plot_bg", "Plot Background", plot_bg, plot_bg_colors())
+                  ),
+                  div(
+                    class = "block-input-wrapper",
+                    make_theme_color_input("grid_color", "Grid Color", grid_color, grid_colors())
+                  )
+                )
+              ),
+
+              # Section 2: Typography
+              div(
+                class = "block-section",
+                tags$h4("Typography"),
+                div(
+                  class = "block-section-grid",
+                  div(
+                    class = "block-input-wrapper",
+                    selectInput(
+                      inputId = NS(id, "base_size"),
+                      label = "Base Font Size",
+                      choices = c(
+                        "Auto (theme default)" = "auto",
+                        "8" = "8",
+                        "9" = "9",
+                        "10" = "10",
+                        "11" = "11",
+                        "12" = "12",
+                        "13" = "13",
+                        "14" = "14",
+                        "16" = "16",
+                        "18" = "18",
+                        "20" = "20"
+                      ),
+                      selected = if (is.na(base_size)) "auto" else as.character(base_size),
+                      width = "100%"
+                    )
+                  ),
+                  div(
+                    class = "block-input-wrapper",
+                    selectInput(
+                      inputId = NS(id, "base_family"),
+                      label = "Font Family",
+                      choices = c(
+                        "Auto (theme default)" = "",
+                        "Sans Serif" = "sans",
+                        "Serif" = "serif",
+                        "Monospace" = "mono"
+                      ),
+                      selected = base_family,
+                      width = "100%"
+                    )
+                  )
+                )
+              ),
+
+              # Section 3: Grid & Borders
+              div(
+                class = "block-section",
+                tags$h4("Grid & Borders"),
+                div(
+                  class = "block-section-grid",
+                  div(
+                    class = "block-input-wrapper",
+                    selectInput(
+                      inputId = NS(id, "show_major_grid"),
+                      label = "Major Grid Lines",
+                      choices = c(
+                        "Auto (theme default)" = "auto",
+                        "Show" = "show",
+                        "Hide" = "hide"
+                      ),
+                      selected = show_major_grid,
+                      width = "100%"
+                    )
+                  ),
+                  div(
+                    class = "block-input-wrapper",
+                    selectInput(
+                      inputId = NS(id, "show_minor_grid"),
+                      label = "Minor Grid Lines",
+                      choices = c(
+                        "Auto (theme default)" = "auto",
+                        "Show" = "show",
+                        "Hide" = "hide"
+                      ),
+                      selected = show_minor_grid,
+                      width = "100%"
+                    )
+                  ),
+                  div(
+                    class = "block-input-wrapper",
+                    selectInput(
+                      inputId = NS(id, "show_panel_border"),
+                      label = "Panel Border",
+                      choices = c(
+                        "Auto (theme default)" = "auto",
+                        "Show" = "show",
+                        "Hide" = "hide"
+                      ),
+                      selected = show_panel_border,
+                      width = "100%"
+                    )
                   )
                 )
               )
