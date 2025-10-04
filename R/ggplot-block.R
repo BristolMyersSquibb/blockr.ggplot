@@ -536,6 +536,43 @@ new_ggplot_block <- function(
       # Need shinyjs for dynamic UI
       tagList(
         shinyjs::useShinyjs(),
+
+        # CSS for collapsible section
+        tags$style(HTML(sprintf("
+          #%s-advanced-options {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+            grid-column: 1 / -1;
+            display: grid;
+            grid-template-columns: subgrid;
+            gap: 15px;
+          }
+          #%s-advanced-options.expanded {
+            max-height: 2000px;
+            transition: max-height 0.5s ease-in;
+          }
+          .advanced-toggle {
+            cursor: pointer;
+            user-select: none;
+            padding: 8px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            grid-column: 1 / -1;
+            color: #6c757d;
+          }
+          .advanced-toggle .chevron {
+            transition: transform 0.2s;
+            display: inline-block;
+            font-size: 14px;
+            font-weight: bold;
+          }
+          .advanced-toggle .chevron.rotated {
+            transform: rotate(90deg);
+          }
+        ", id, id))),
+
         div(
           class = "block-container",
 
@@ -608,7 +645,6 @@ new_ggplot_block <- function(
                       "pie"
                     ),
                     selected = type,
-                    status = "primary",
                     size = "sm",
                     justified = FALSE,
                     individual = FALSE,
@@ -671,7 +707,7 @@ new_ggplot_block <- function(
                     width = "100%"
                   )
                 ),
-                # Other aesthetic mappings
+                # Core aesthetic mappings
                 div(
                   id = NS(id, "color"),
                   class = "block-input-wrapper",
@@ -704,98 +740,129 @@ new_ggplot_block <- function(
                     selected = if (length(size) == 0) "(none)" else size,
                     width = "100%"
                   )
-                ),
-                div(
-                  id = NS(id, "shape"),
-                  class = "block-input-wrapper",
-                  selectInput(
-                    inputId = NS(id, "shape"),
-                    label = make_aesthetic_label("Shape By", "shape", type),
-                    choices = c("(none)", shape),
-                    selected = if (length(shape) == 0) "(none)" else shape,
-                    width = "100%"
-                  )
-                ),
-                div(
-                  id = NS(id, "linetype"),
-                  class = "block-input-wrapper",
-                  selectInput(
-                    inputId = NS(id, "linetype"),
-                    label = make_aesthetic_label(
-                      "Line Type By",
-                      "linetype",
-                      type
-                    ),
-                    choices = c("(none)", linetype),
-                    selected = if (length(linetype) == 0) {
-                      "(none)"
-                    } else {
-                      linetype
-                    },
-                    width = "100%"
-                  )
-                ),
-                div(
-                  id = NS(id, "group"),
-                  class = "block-input-wrapper",
-                  selectInput(
-                    inputId = NS(id, "group"),
-                    label = make_aesthetic_label("Group By", "group", type),
-                    choices = c("(none)", group),
-                    selected = if (length(group) == 0) "(none)" else group,
-                    width = "100%"
-                  )
-                ),
-                div(
-                  id = NS(id, "alpha"),
-                  class = "block-input-wrapper",
-                  selectInput(
-                    inputId = NS(id, "alpha"),
-                    label = make_aesthetic_label("Alpha By", "alpha", type),
-                    choices = c("(none)", alpha),
-                    selected = if (length(alpha) == 0) "(none)" else alpha,
-                    width = "100%"
-                  )
                 )
               )
             ),
 
-            # Options Section
+            # Advanced Options Toggle
             div(
               class = "block-section",
-              tags$h4("Options"),
               div(
-                class = "block-section-grid",
+                class = "advanced-toggle text-muted",
+                id = NS(id, "advanced-toggle"),
+                onclick = sprintf("
+                  const section = document.getElementById('%s');
+                  const chevron = document.querySelector('#%s .chevron');
+                  section.classList.toggle('expanded');
+                  chevron.classList.toggle('rotated');
+                ", NS(id, "advanced-options"), NS(id, "advanced-toggle")),
+                tags$span(class = "chevron", "\u203A"),
+                "Show advanced options"
+              )
+            ),
+
+            # Advanced Options Section (Collapsible)
+            div(
+              id = NS(id, "advanced-options"),
+
+              # Advanced Aesthetics
+              div(
+                class = "block-section",
+                tags$h4("Advanced Aesthetics"),
                 div(
-                  id = NS(id, "position"),
-                  class = "block-input-wrapper",
-                  selectInput(
-                    inputId = NS(id, "position"),
-                    label = "Position",
-                    choices = c("stack", "dodge", "fill"),
-                    selected = position,
-                    width = "100%"
+                  class = "block-section-grid",
+                  div(
+                    id = NS(id, "shape"),
+                    class = "block-input-wrapper",
+                    selectInput(
+                      inputId = NS(id, "shape"),
+                      label = make_aesthetic_label("Shape By", "shape", type),
+                      choices = c("(none)", shape),
+                      selected = if (length(shape) == 0) "(none)" else shape,
+                      width = "100%"
+                    )
+                  ),
+                  div(
+                    id = NS(id, "linetype"),
+                    class = "block-input-wrapper",
+                    selectInput(
+                      inputId = NS(id, "linetype"),
+                      label = make_aesthetic_label(
+                        "Line Type By",
+                        "linetype",
+                        type
+                      ),
+                      choices = c("(none)", linetype),
+                      selected = if (length(linetype) == 0) {
+                        "(none)"
+                      } else {
+                        linetype
+                      },
+                      width = "100%"
+                    )
+                  ),
+                  div(
+                    id = NS(id, "group"),
+                    class = "block-input-wrapper",
+                    selectInput(
+                      inputId = NS(id, "group"),
+                      label = make_aesthetic_label("Group By", "group", type),
+                      choices = c("(none)", group),
+                      selected = if (length(group) == 0) "(none)" else group,
+                      width = "100%"
+                    )
+                  ),
+                  div(
+                    id = NS(id, "alpha"),
+                    class = "block-input-wrapper",
+                    selectInput(
+                      inputId = NS(id, "alpha"),
+                      label = make_aesthetic_label("Alpha By", "alpha", type),
+                      choices = c("(none)", alpha),
+                      selected = if (length(alpha) == 0) "(none)" else alpha,
+                      width = "100%"
+                    )
                   )
-                ),
+                )
+              ),
+
+              # Advanced Options
+              div(
+                class = "block-section",
+                tags$h4("Chart-Specific Options"),
                 div(
-                  id = NS(id, "bins"),
-                  class = "block-input-wrapper",
-                  numericInput(
-                    inputId = NS(id, "bins"),
-                    label = "Number of Bins",
-                    value = bins,
-                    min = 1,
-                    max = 100,
-                    width = "100%"
-                  )
-                ),
-                div(
-                  id = NS(id, "donut"),
-                  class = "block-input-wrapper",
-                  checkboxInput(
-                    inputId = NS(id, "donut"),
-                    label = "Donut Chart Style",
-                    value = donut
+                  class = "block-section-grid",
+                  div(
+                    id = NS(id, "position"),
+                    class = "block-input-wrapper",
+                    selectInput(
+                      inputId = NS(id, "position"),
+                      label = "Position",
+                      choices = c("stack", "dodge", "fill"),
+                      selected = position,
+                      width = "100%"
+                    )
+                  ),
+                  div(
+                    id = NS(id, "bins"),
+                    class = "block-input-wrapper",
+                    numericInput(
+                      inputId = NS(id, "bins"),
+                      label = "Number of Bins",
+                      value = bins,
+                      min = 1,
+                      max = 100,
+                      width = "100%"
+                    )
+                  ),
+                  div(
+                    id = NS(id, "donut"),
+                    class = "block-input-wrapper",
+                    checkboxInput(
+                      inputId = NS(id, "donut"),
+                      label = "Donut Chart Style",
+                      value = donut
+                    )
                   )
                 )
               )

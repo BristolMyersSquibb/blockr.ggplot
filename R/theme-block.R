@@ -363,13 +363,15 @@ new_theme_block <- function(
             padding: 8px 0;
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 10px;
             grid-column: 1 / -1;
+            color: #6c757d;
           }
           .advanced-toggle .chevron {
             transition: transform 0.2s;
             display: inline-block;
-            font-size: 10px;
+            font-size: 14px;
+            font-weight: bold;
           }
           .advanced-toggle .chevron.rotated {
             transform: rotate(90deg);
@@ -468,7 +470,7 @@ new_theme_block <- function(
                   section.classList.toggle('expanded');
                   chevron.classList.toggle('rotated');
                 ", NS(id, "advanced-options"), NS(id, "advanced-toggle")),
-                tags$span(class = "chevron", "\u25B6"),  # Right arrow
+                tags$span(class = "chevron", "\u203A"),  # Single right-pointing angle quotation mark (prettier chevron)
                 "Show advanced options"
               )
             ),
