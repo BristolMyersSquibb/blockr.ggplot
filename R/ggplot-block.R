@@ -9,12 +9,25 @@
 #' @param ui UI function for the block
 #' @param class Character vector of CSS classes for the block
 #' @param ctor Constructor environment (default `sys.parent()`)
-#' @param ... Additional arguments forwarded to [blockr.core::new_transform_block()]
+#' @param ... Additional arguments forwarded to
+#'   [blockr.core::new_transform_block()]
 #'
 #' @return A `ggplot_transform_block` object
 #' @export
-new_ggplot_transform_block <- function(server, ui, class, ctor = sys.parent(), ...) {
-  blockr.core::new_transform_block(server, ui, c(class, "ggplot_transform_block"), ctor, ...)
+new_ggplot_transform_block <- function(
+  server,
+  ui,
+  class,
+  ctor = sys.parent(),
+  ...
+) {
+  blockr.core::new_transform_block(
+    server,
+    ui,
+    c(class, "ggplot_transform_block"),
+    ctor,
+    ...
+  )
 }
 
 #' @export
@@ -25,7 +38,9 @@ block_ui.ggplot_transform_block <- function(id, x, ...) {
 #' @export
 block_output.ggplot_transform_block <- function(x, result, session) {
   renderPlot({
-    if (is.null(result)) return(NULL)
-    print(result)  # result is the ggplot object
+    if (is.null(result)) {
+      return(NULL)
+    }
+    print(result) # result is the ggplot object
   })
 }

@@ -15,7 +15,8 @@ new_ggplot_transform_block(server, ui, class, ctor = sys.parent(), ...)
 
 \item{ctor}{Constructor environment (default \code{sys.parent()})}
 
-\item{...}{Additional arguments forwarded to \code{\link[blockr.core:new_transform_block]{blockr.core::new_transform_block()}}}
+\item{...}{Additional arguments forwarded to
+\code{\link[blockr.core:new_transform_block]{blockr.core::new_transform_block()}}}
 }
 \value{
 A \code{ggplot_transform_block} object

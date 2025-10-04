@@ -1,16 +1,19 @@
 #' Plot Grid Block
 #'
 #' Combines multiple ggplot objects using patchwork::wrap_plots().
-#' Variadic block that accepts 2 or more ggplot inputs with automatic alignment.
-#' Supports layout control (ncol, nrow) and annotations (title, subtitle, auto-tags).
+#' Variadic block that accepts 2 or more ggplot inputs with automatic
+#' alignment. Supports layout control (ncol, nrow) and annotations
+#' (title, subtitle, auto-tags).
 #'
 #' @param ncol Number of columns in grid layout (default: NULL for auto)
 #' @param nrow Number of rows in grid layout (default: NULL for auto)
 #' @param title Overall plot title (default: "")
 #' @param subtitle Overall plot subtitle (default: "")
 #' @param caption Overall plot caption (default: "")
-#' @param tag_levels Auto-tagging style: 'A', 'a', '1', 'I', 'i', or NULL (default: NULL)
-#' @param guides Legend handling: 'auto', 'collect', or 'keep' (default: 'auto')
+#' @param tag_levels Auto-tagging style: 'A', 'a', '1', 'I', 'i', or NULL
+#'   (default: NULL)
+#' @param guides Legend handling: 'auto', 'collect', or 'keep'
+#'   (default: 'auto')
 #' @param ... Forwarded to [new_ggplot_transform_block()]
 #' @export
 new_plot_grid_block <- function(
@@ -28,7 +31,6 @@ new_plot_grid_block <- function(
       moduleServer(
         id,
         function(input, output, session) {
-
           arg_names <- reactive(
             set_names(names(...args), blockr.core:::dot_args_names(...args))
           )
@@ -74,10 +76,18 @@ new_plot_grid_block <- function(
 
               # Build plot_annotation() arguments
               annot_args <- list()
-              if (r_title() != "") annot_args$title <- r_title()
-              if (r_subtitle() != "") annot_args$subtitle <- r_subtitle()
-              if (r_caption() != "") annot_args$caption <- r_caption()
-              if (r_tag_levels() != "") annot_args$tag_levels <- r_tag_levels()
+              if (r_title() != "") {
+                annot_args$title <- r_title()
+              }
+              if (r_subtitle() != "") {
+                annot_args$subtitle <- r_subtitle()
+              }
+              if (r_caption() != "") {
+                annot_args$caption <- r_caption()
+              }
+              if (r_tag_levels() != "") {
+                annot_args$tag_levels <- r_tag_levels()
+              }
 
               # Add plot_layout() if needed
               if (length(layout_args) > 0) {
@@ -137,7 +147,14 @@ new_plot_grid_block <- function(
                   selectInput(
                     NS(id, "ncol"),
                     "Columns",
-                    choices = c("Auto" = "", "1" = "1", "2" = "2", "3" = "3", "4" = "4", "5" = "5"),
+                    choices = c(
+                      "Auto" = "",
+                      "1" = "1",
+                      "2" = "2",
+                      "3" = "3",
+                      "4" = "4",
+                      "5" = "5"
+                    ),
                     selected = ncol,
                     width = "100%"
                   )
@@ -147,7 +164,14 @@ new_plot_grid_block <- function(
                   selectInput(
                     NS(id, "nrow"),
                     "Rows",
-                    choices = c("Auto" = "", "1" = "1", "2" = "2", "3" = "3", "4" = "4", "5" = "5"),
+                    choices = c(
+                      "Auto" = "",
+                      "1" = "1",
+                      "2" = "2",
+                      "3" = "3",
+                      "4" = "4",
+                      "5" = "5"
+                    ),
                     selected = nrow,
                     width = "100%"
                   )
@@ -157,7 +181,11 @@ new_plot_grid_block <- function(
                   selectInput(
                     NS(id, "guides"),
                     "Legends",
-                    choices = c("Auto" = "auto", "Collect" = "collect", "Keep separate" = "keep"),
+                    choices = c(
+                      "Auto" = "auto",
+                      "Collect" = "collect",
+                      "Keep separate" = "keep"
+                    ),
                     selected = guides,
                     width = "100%"
                   )
@@ -173,15 +201,30 @@ new_plot_grid_block <- function(
                 class = "block-section-grid",
                 div(
                   class = "block-input-wrapper",
-                  textInput(NS(id, "title"), "Title", value = title, width = "100%")
+                  textInput(
+                    NS(id, "title"),
+                    "Title",
+                    value = title,
+                    width = "100%"
+                  )
                 ),
                 div(
                   class = "block-input-wrapper",
-                  textInput(NS(id, "subtitle"), "Subtitle", value = subtitle, width = "100%")
+                  textInput(
+                    NS(id, "subtitle"),
+                    "Subtitle",
+                    value = subtitle,
+                    width = "100%"
+                  )
                 ),
                 div(
                   class = "block-input-wrapper",
-                  textInput(NS(id, "caption"), "Caption", value = caption, width = "100%")
+                  textInput(
+                    NS(id, "caption"),
+                    "Caption",
+                    value = caption,
+                    width = "100%"
+                  )
                 ),
                 div(
                   class = "block-input-wrapper",
