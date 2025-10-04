@@ -599,9 +599,15 @@ new_facet_block <- function(
           # Add responsive CSS
           block_responsive_css(),
 
-          # Add custom CSS for facet type selector
+          # Add custom CSS for facet block layout
           tags$style(HTML(
             "
+            /* Override display: contents to prevent grid escape in facet block */
+            .facet-layout-wrapper .block-section,
+            .facet-layout-wrapper .block-section-grid {
+              display: block !important;
+            }
+
             .facet-type-selector .btn-group-toggle {
               display: flex;
               flex-wrap: wrap;
@@ -680,10 +686,14 @@ new_facet_block <- function(
           # Responsive wrapper for inputs and preview
           div(
             class = "facet-layout-wrapper",
+            style = "border: 3px dashed green;",
+            tags$div(style = "position: absolute; top: 0; left: 0; background: green; color: white; padding: 5px; z-index: 9999; font-weight: bold;", "GREEN START (facet-layout-wrapper)"),
 
             # Left side: Form inputs
             div(
               class = "facet-inputs",
+              style = "background: rgba(255, 0, 0, 0.3); border: 2px solid red;",
+              tags$div(style = "background: red; color: white; padding: 5px; font-weight: bold;", "RED START (facet-inputs)"),
               div(
                 class = "block-form-grid",
 
@@ -943,18 +953,23 @@ new_facet_block <- function(
                 )
               )
             )
-          )
-        )
-      ), # Close facet-inputs div
+          ),
+          tags$div(style = "background: red; color: white; padding: 5px; font-weight: bold;", "RED END (facet-inputs)")
+            ), # Close facet-inputs div
 
-      # Right side: Preview sidebar
-      div(
-        class = "facet-preview-sidebar",
-        uiOutput(NS(id, "layout_preview"))
-      )
+            # Right side: Preview sidebar
+            div(
+              class = "facet-preview-sidebar",
+              style = "background: rgba(0, 0, 255, 0.3); border: 2px solid blue; padding: 10px;",
+              tags$div(style = "background: blue; color: white; padding: 5px; font-weight: bold;", "BLUE START (facet-preview-sidebar)"),
+              uiOutput(NS(id, "layout_preview")),
+              tags$div(style = "background: blue; color: white; padding: 5px; font-weight: bold;", "BLUE END (facet-preview-sidebar)")
+            ),
 
-    ) # Close facet-layout-wrapper div
-  ) # Close block-container div
+            tags$div(style = "background: green; color: white; padding: 10px; font-size: 20px; font-weight: bold;", "GREEN END (facet-layout-wrapper)")
+          ) # Close facet-layout-wrapper div
+        ) # Close block-container div
+      ) # Close tagList
     },
     dat_valid = function(data) {
       stopifnot(inherits(data, "ggplot"))
