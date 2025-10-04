@@ -348,6 +348,10 @@ new_theme_block <- function(
             max-height: 0;
             overflow: hidden;
             transition: max-height 0.3s ease-out;
+            grid-column: 1 / -1;
+            display: grid;
+            grid-template-columns: subgrid;
+            gap: 15px;
           }
           #%s-advanced-options.expanded {
             max-height: 2000px;
@@ -356,20 +360,16 @@ new_theme_block <- function(
           .advanced-toggle {
             cursor: pointer;
             user-select: none;
-            padding: 12px 0;
-            color: #666;
-            font-size: 14px;
+            padding: 8px 0;
             display: flex;
             align-items: center;
-            gap: 8px;
-          }
-          .advanced-toggle:hover {
-            color: #333;
+            gap: 6px;
+            grid-column: 1 / -1;
           }
           .advanced-toggle .chevron {
             transition: transform 0.2s;
             display: inline-block;
-            font-size: 12px;
+            font-size: 10px;
           }
           .advanced-toggle .chevron.rotated {
             transform: rotate(90deg);
@@ -456,18 +456,21 @@ new_theme_block <- function(
               )
             ),
 
-            # Advanced Options Toggle
+            # Advanced Options Toggle - wrapped in block-section for full width
             div(
-              class = "advanced-toggle",
-              id = NS(id, "advanced-toggle"),
-              onclick = sprintf("
-                const section = document.getElementById('%s');
-                const chevron = document.querySelector('#%s .chevron');
-                section.classList.toggle('expanded');
-                chevron.classList.toggle('rotated');
-              ", NS(id, "advanced-options"), NS(id, "advanced-toggle")),
-              tags$span(class = "chevron", "\u25B6"),  # Right arrow
-              "Show advanced options"
+              class = "block-section",
+              div(
+                class = "advanced-toggle text-muted",
+                id = NS(id, "advanced-toggle"),
+                onclick = sprintf("
+                  const section = document.getElementById('%s');
+                  const chevron = document.querySelector('#%s .chevron');
+                  section.classList.toggle('expanded');
+                  chevron.classList.toggle('rotated');
+                ", NS(id, "advanced-options"), NS(id, "advanced-toggle")),
+                tags$span(class = "chevron", "\u25B6"),  # Right arrow
+                "Show advanced options"
+              )
             ),
 
             # Advanced Options Section (Collapsible)
