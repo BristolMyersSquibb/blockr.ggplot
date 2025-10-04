@@ -65,10 +65,10 @@ create_facet_preview_svg <- function(facet_type, n_levels = 1, ncol_val = "", nr
   }
 
   # SVG dimensions
-  max_width <- 300
+  max_width <- 200
   gap <- 4
   cell_size <- max_width / ncol_actual
-  cell_size <- max(50, min(cell_size, 100))
+  cell_size <- max(40, min(cell_size, 80))
   preview_width <- cell_size * ncol_actual
   preview_height <- cell_size * nrow_actual
 
@@ -135,7 +135,7 @@ create_facet_preview_svg <- function(facet_type, n_levels = 1, ncol_val = "", nr
           `dominant-baseline` = "middle",
           style = sprintf(
             "font-size: %dpx; fill: %s; font-weight: bold;",
-            max(10, cell_size / 5), stroke_color
+            as.integer(max(10, cell_size / 5)), stroke_color
           ),
           as.character(facet_idx)
         )
@@ -148,7 +148,7 @@ create_facet_preview_svg <- function(facet_type, n_levels = 1, ncol_val = "", nr
   svg <- tags$svg(
     width = preview_width,
     height = preview_height,
-    viewBox = sprintf("0 0 %d %d", preview_width, preview_height),
+    viewBox = sprintf("0 0 %d %d", as.integer(preview_width), as.integer(preview_height)),
     style = paste(
       "border: 1px solid #ddd; background: white;",
       "border-radius: 4px;"
@@ -286,12 +286,14 @@ new_facet_block <- function(
               shinyjs::hide("grid_vars_row")
               shinyjs::hide("grid_vars_col")
               shinyjs::show("layout_section")
+              shinyjs::show("layout_options_section")
               shinyjs::hide("space_option")
             } else {
               shinyjs::hide("wrap_vars")
               shinyjs::show("grid_vars_row")
               shinyjs::show("grid_vars_col")
               shinyjs::hide("layout_section")
+              shinyjs::hide("layout_options_section")
               shinyjs::show("space_option")
             }
           })
@@ -314,12 +316,14 @@ new_facet_block <- function(
               shinyjs::hide("grid_vars_row")
               shinyjs::hide("grid_vars_col")
               shinyjs::show("layout_section")
+              shinyjs::show("layout_options_section")
               shinyjs::hide("space_option")
             } else {
               shinyjs::hide("wrap_vars")
               shinyjs::show("grid_vars_row")
               shinyjs::show("grid_vars_col")
               shinyjs::hide("layout_section")
+              shinyjs::hide("layout_options_section")
               shinyjs::show("space_option")
             }
           })
@@ -409,30 +413,23 @@ new_facet_block <- function(
               )
             }
 
-            # Determine background color based on status
-            bg_color <- if (!preview$is_valid) {
-              "#f44336"
+            # Determine status class based on validity
+            status_class <- if (!preview$is_valid) {
+              "error"
             } else if (preview$stroke_color == "#4CAF50") {
-              "#4CAF50"
+              "valid"
             } else {
-              "#2196F3"
+              "warning"
             }
 
             tags$div(
-              style = "margin-bottom: 15px;",
               tags$div(
-                style = "text-align: center; margin-bottom: 10px;",
+                class = "preview-svg-container",
                 preview$svg
               ),
               tags$div(
-                style = sprintf(
-                  paste(
-                    "padding: 8px; border-radius: 4px;",
-                    "background-color: %s; color: white;"
-                  ),
-                  bg_color
-                ),
-                tags$strong(paste(preview$status_icon, preview$status))
+                class = paste("preview-status", status_class),
+                preview$status
               )
             )
           })
@@ -559,6 +556,43 @@ new_facet_block <- function(
       tagList(
         shinyjs::useShinyjs(),
 
+        # CSS for collapsible section
+        tags$style(HTML(sprintf("
+          #%s-advanced-options {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+            grid-column: 1 / -1;
+            display: grid;
+            grid-template-columns: subgrid;
+            gap: 15px;
+          }
+          #%s-advanced-options.expanded {
+            max-height: 2000px;
+            transition: max-height 0.5s ease-in;
+          }
+          .advanced-toggle {
+            cursor: pointer;
+            user-select: none;
+            padding: 8px 0;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            grid-column: 1 / -1;
+            color: #6c757d;
+            font-size: 0.875rem;
+          }
+          .advanced-toggle .chevron {
+            transition: transform 0.2s;
+            display: inline-block;
+            font-size: 14px;
+            font-weight: bold;
+          }
+          .advanced-toggle .chevron.rotated {
+            transform: rotate(90deg);
+          }
+        ", id, id))),
+
         div(
           class = "block-container",
 
@@ -587,17 +621,71 @@ new_facet_block <- function(
             .facet-type-selector .btn span {
               font-size: 0.85em;
             }
+
+            /* Responsive layout for inputs and preview */
+            @media (min-width: 700px) {
+              .facet-layout-wrapper {
+                display: grid;
+                grid-template-columns: 2fr 1fr;
+                gap: 20px;
+                align-items: start;
+              }
+              .facet-preview-sidebar {
+                position: sticky;
+                top: 20px;
+              }
+            }
+
+            @media (max-width: 699px) {
+              .facet-layout-wrapper {
+                display: block;
+              }
+              .facet-preview-sidebar {
+                margin-top: 20px;
+              }
+            }
+
+            /* Subtle preview status */
+            .preview-svg-container {
+              text-align: center;
+              margin-bottom: 8px;
+            }
+
+            .preview-status {
+              font-size: 0.875rem;
+              color: #6c757d;
+              text-align: center;
+              padding: 6px 8px;
+              border-radius: 4px;
+              background-color: #f8f9fa;
+            }
+
+            .preview-status.valid {
+              color: #28a745;
+            }
+
+            .preview-status.warning {
+              color: #ffc107;
+            }
+
+            .preview-status.error {
+              color: #dc3545;
+            }
           "
           )),
 
           # Set container query context
           block_container_script(),
 
-          # Display visual facet layout preview at the top
-          uiOutput(NS(id, "layout_preview")),
-
+          # Responsive wrapper for inputs and preview
           div(
-            class = "block-form-grid",
+            class = "facet-layout-wrapper",
+
+            # Left side: Form inputs
+            div(
+              class = "facet-inputs",
+              div(
+                class = "block-form-grid",
 
             # Facet Type Section
             div(
@@ -644,7 +732,6 @@ new_facet_block <- function(
                   div(
                     id = NS(id, "wrap_vars"),
                     class = "block-input-wrapper",
-                    style = "grid-column: 1 / -1;",
                     selectizeInput(
                       NS(id, "facets"),
                       "Facet By",
@@ -740,19 +827,6 @@ new_facet_block <- function(
                       selected = nrow,
                       width = "100%"
                     )
-                  ),
-                  div(
-                    class = "block-input-wrapper",
-                    selectInput(
-                      NS(id, "dir"),
-                      "Direction",
-                      choices = c(
-                        "Horizontal" = "h",
-                        "Vertical" = "v"
-                      ),
-                      selected = dir,
-                      width = "100%"
-                    )
                   )
                 )
               )
@@ -778,36 +852,92 @@ new_facet_block <- function(
                     selected = scales,
                     width = "100%"
                   )
-                ),
+                )
+              )
+            ),
+
+            # Advanced Options Toggle
+            div(
+              class = "block-section",
+              div(
+                class = "advanced-toggle text-muted",
+                id = NS(id, "advanced-toggle"),
+                onclick = sprintf("
+                  const section = document.getElementById('%s');
+                  const chevron = document.querySelector('#%s .chevron');
+                  section.classList.toggle('expanded');
+                  chevron.classList.toggle('rotated');
+                ", NS(id, "advanced-options"), NS(id, "advanced-toggle")),
+                tags$span(class = "chevron", "\u203A"),
+                "Show advanced options"
+              )
+            ),
+
+            # Advanced Options Section (Collapsible)
+            div(
+              id = NS(id, "advanced-options"),
+
+              # Layout Options (for facet_wrap only)
+              shinyjs::hidden(
                 div(
-                  class = "block-input-wrapper",
-                  selectInput(
-                    NS(id, "labeller"),
-                    "Labels",
-                    choices = c(
-                      "Value only" = "label_value",
-                      "Variable and value" = "label_both",
-                      "Parsed expressions" = "label_parsed"
-                    ),
-                    selected = labeller,
-                    width = "100%"
-                  )
-                ),
-                # Space option for facet_grid only
-                shinyjs::hidden(
+                  id = NS(id, "layout_options_section"),
+                  class = "block-section",
+                  tags$h4("Layout Options"),
                   div(
-                    id = NS(id, "space_option"),
+                    class = "block-section-grid",
+                    div(
+                      class = "block-input-wrapper",
+                      selectInput(
+                        NS(id, "dir"),
+                        "Direction",
+                        choices = c(
+                          "Horizontal" = "h",
+                          "Vertical" = "v"
+                        ),
+                        selected = dir,
+                        width = "100%"
+                      )
+                    )
+                  )
+                )
+              ),
+
+              # Display Options
+              div(
+                class = "block-section",
+                tags$h4("Display Options"),
+                div(
+                  class = "block-section-grid",
+                  div(
                     class = "block-input-wrapper",
                     selectInput(
-                      NS(id, "space"),
-                      "Space",
+                      NS(id, "labeller"),
+                      "Labels",
                       choices = c(
-                        "Fixed" = "fixed",
-                        "Free X" = "free_x",
-                        "Free Y" = "free_y"
+                        "Value only" = "label_value",
+                        "Variable and value" = "label_both",
+                        "Parsed expressions" = "label_parsed"
                       ),
-                      selected = space,
+                      selected = labeller,
                       width = "100%"
+                    )
+                  ),
+                  # Space option for facet_grid only
+                  shinyjs::hidden(
+                    div(
+                      id = NS(id, "space_option"),
+                      class = "block-input-wrapper",
+                      selectInput(
+                        NS(id, "space"),
+                        "Space",
+                        choices = c(
+                          "Fixed" = "fixed",
+                          "Free X" = "free_x",
+                          "Free Y" = "free_y"
+                        ),
+                        selected = space,
+                        width = "100%"
+                      )
                     )
                   )
                 )
@@ -815,7 +945,16 @@ new_facet_block <- function(
             )
           )
         )
+      ), # Close facet-inputs div
+
+      # Right side: Preview sidebar
+      div(
+        class = "facet-preview-sidebar",
+        uiOutput(NS(id, "layout_preview"))
       )
+
+    ) # Close facet-layout-wrapper div
+  ) # Close block-container div
     },
     dat_valid = function(data) {
       stopifnot(inherits(data, "ggplot"))
