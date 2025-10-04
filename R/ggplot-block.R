@@ -555,7 +555,8 @@ new_ggplot_block <- function(
         shinyjs::useShinyjs(),
 
         # CSS for collapsible section
-        tags$style(HTML(sprintf("
+        tags$style(HTML(sprintf(
+          "
           #%s-advanced-options {
             max-height: 0;
             overflow: hidden;
@@ -589,7 +590,10 @@ new_ggplot_block <- function(
           .advanced-toggle .chevron.rotated {
             transform: rotate(90deg);
           }
-        ", id, id))),
+        ",
+          id,
+          id
+        ))),
 
         div(
           class = "block-container",
@@ -766,12 +770,16 @@ new_ggplot_block <- function(
               div(
                 class = "advanced-toggle text-muted",
                 id = NS(id, "advanced-toggle"),
-                onclick = sprintf("
+                onclick = sprintf(
+                  "
                   const section = document.getElementById('%s');
                   const chevron = document.querySelector('#%s .chevron');
                   section.classList.toggle('expanded');
                   chevron.classList.toggle('rotated');
-                ", NS(id, "advanced-options"), NS(id, "advanced-toggle")),
+                ",
+                  NS(id, "advanced-options"),
+                  NS(id, "advanced-toggle")
+                ),
                 tags$span(class = "chevron", "\u203A"),
                 "Show advanced options"
               )

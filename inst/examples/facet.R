@@ -16,8 +16,8 @@ board1 <- new_board(
     facet = new_facet_block(
       facet_type = "wrap",
       facets = "cyl",
-      ncol = "2",  # 2 columns
-      scales = "free_y"  # Free Y-axis scales per facet
+      ncol = "2", # 2 columns
+      scales = "free_y" # Free Y-axis scales per facet
     )
   ),
   links = c(
@@ -39,10 +39,10 @@ board2 <- new_board(
     ),
     facet = new_facet_block(
       facet_type = "wrap",
-      facets = c("cyl", "am"),  # Multiple facet variables
+      facets = c("cyl", "am"), # Multiple facet variables
       ncol = "3",
       scales = "free",
-      labeller = "label_both"  # Show variable names and values
+      labeller = "label_both" # Show variable names and values
     )
   ),
   links = c(
@@ -64,9 +64,9 @@ board3 <- new_board(
     ),
     facet = new_facet_block(
       facet_type = "grid",
-      rows = "cyl",      # Cylinders in rows
-      cols = "gear",     # Gears in columns
-      scales = "free_y"  # Free Y scales
+      rows = "cyl", # Cylinders in rows
+      cols = "gear", # Gears in columns
+      scales = "free_y" # Free Y scales
     )
   ),
   links = c(
@@ -88,8 +88,8 @@ board4 <- new_board(
     facet = new_facet_block(
       facet_type = "wrap",
       facets = "cyl",
-      nrow = "3",      # 3 rows (vertical stacking)
-      dir = "v",       # Vertical direction
+      nrow = "3", # 3 rows (vertical stacking)
+      dir = "v", # Vertical direction
       scales = "free"
     )
   ),
@@ -110,10 +110,10 @@ board5 <- new_board(
     ),
     facet = new_facet_block(
       facet_type = "grid",
-      rows = "cyl",     # Only row facets
-      cols = character(),  # No column facets
+      rows = "cyl", # Only row facets
+      cols = character(), # No column facets
       scales = "free_y",
-      space = "free_y"  # Adjust panel heights based on data
+      space = "free_y" # Adjust panel heights based on data
     )
   ),
   links = c(

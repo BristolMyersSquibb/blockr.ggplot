@@ -1,15 +1,24 @@
 test_that("facet_block constructor", {
   # Test basic constructor
   blk <- new_facet_block()
-  expect_s3_class(blk, c("facet_block", "ggplot_transform_block", "transform_block", "block"))
+  expect_s3_class(
+    blk,
+    c("facet_block", "ggplot_transform_block", "transform_block", "block")
+  )
 
   # Test constructor with facet_type parameter
   blk <- new_facet_block(facet_type = "grid")
-  expect_s3_class(blk, c("facet_block", "ggplot_transform_block", "transform_block", "block"))
+  expect_s3_class(
+    blk,
+    c("facet_block", "ggplot_transform_block", "transform_block", "block")
+  )
 
   # Test constructor with facets parameter (for wrap)
   blk <- new_facet_block(facet_type = "wrap", facets = "category")
-  expect_s3_class(blk, c("facet_block", "ggplot_transform_block", "transform_block", "block"))
+  expect_s3_class(
+    blk,
+    c("facet_block", "ggplot_transform_block", "transform_block", "block")
+  )
 
   # Test constructor with rows and cols (for grid)
   blk <- new_facet_block(
@@ -17,7 +26,10 @@ test_that("facet_block constructor", {
     rows = "group",
     cols = "type"
   )
-  expect_s3_class(blk, c("facet_block", "ggplot_transform_block", "transform_block", "block"))
+  expect_s3_class(
+    blk,
+    c("facet_block", "ggplot_transform_block", "transform_block", "block")
+  )
 })
 
 test_that("facet_block supports both facet types", {
@@ -39,7 +51,10 @@ test_that("facet_block handles empty inputs", {
     rows = character(),
     cols = character()
   )
-  expect_s3_class(blk, c("facet_block", "ggplot_transform_block", "transform_block", "block"))
+  expect_s3_class(
+    blk,
+    c("facet_block", "ggplot_transform_block", "transform_block", "block")
+  )
 })
 
 test_that("facet_block with layout options", {
@@ -50,15 +65,24 @@ test_that("facet_block with layout options", {
     ncol = "2",
     nrow = "3"
   )
-  expect_s3_class(blk, c("facet_block", "ggplot_transform_block", "transform_block", "block"))
+  expect_s3_class(
+    blk,
+    c("facet_block", "ggplot_transform_block", "transform_block", "block")
+  )
 
   # Test with scales option
   blk <- new_facet_block(scales = "free")
-  expect_s3_class(blk, c("facet_block", "ggplot_transform_block", "transform_block", "block"))
+  expect_s3_class(
+    blk,
+    c("facet_block", "ggplot_transform_block", "transform_block", "block")
+  )
 
   # Test with labeller option
   blk <- new_facet_block(labeller = "label_both")
-  expect_s3_class(blk, c("facet_block", "ggplot_transform_block", "transform_block", "block"))
+  expect_s3_class(
+    blk,
+    c("facet_block", "ggplot_transform_block", "transform_block", "block")
+  )
 })
 
 test_that("facet_block with all options", {
@@ -72,7 +96,10 @@ test_that("facet_block with all options", {
     labeller = "label_both",
     dir = "v"
   )
-  expect_s3_class(blk, c("facet_block", "ggplot_transform_block", "transform_block", "block"))
+  expect_s3_class(
+    blk,
+    c("facet_block", "ggplot_transform_block", "transform_block", "block")
+  )
 
   # Test grid with all options
   blk <- new_facet_block(
@@ -83,5 +110,8 @@ test_that("facet_block with all options", {
     labeller = "label_parsed",
     space = "free_x"
   )
-  expect_s3_class(blk, c("facet_block", "ggplot_transform_block", "transform_block", "block"))
+  expect_s3_class(
+    blk,
+    c("facet_block", "ggplot_transform_block", "transform_block", "block")
+  )
 })

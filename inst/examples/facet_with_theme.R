@@ -55,7 +55,7 @@ if (requireNamespace("ggpubr", quietly = TRUE)) {
         labeller = "label_both"
       ),
       theme = new_theme_block(
-        base_theme = "pubr",  # Publication-ready theme
+        base_theme = "pubr", # Publication-ready theme
         legend_position = "right"
       )
     ),
@@ -86,7 +86,7 @@ board3 <- new_board(
     ),
     theme = new_theme_block(
       base_theme = "classic",
-      legend_position = "none"  # Remove legend (facets show the groups)
+      legend_position = "none" # Remove legend (facets show the groups)
     )
   ),
   links = c(

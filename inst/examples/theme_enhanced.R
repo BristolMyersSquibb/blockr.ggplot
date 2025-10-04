@@ -116,6 +116,8 @@ board5 <- new_board(
 print("All theme tests completed successfully!")
 print("UI features:")
 print("- Base Theme and Legend Position are always visible")
-print("- Advanced options (Colors, Typography, Grid & Borders) are in collapsible section")
+print(
+  "- Advanced options (Colors, Typography, Grid & Borders) are in collapsible section"
+)
 print("- Click 'Show advanced options' to expand/collapse")
 print("- Themes are now grouped by package for better organization")

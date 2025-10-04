@@ -8,7 +8,7 @@ background_light_colors <- function() {
     "#E8F4F8", # Light blue
     "#F0FFF0", # Honeydew
     "#FFF0F5", # Lavender Blush
-    "#FFFAF0"  # Floral White
+    "#FFFAF0" # Floral White
   )
 }
 
@@ -21,7 +21,7 @@ plot_bg_colors <- function() {
     "#FFFAF0", # Floral White
     "#F8F8F8", # Very light gray
     "#F0F0F0", # Light gray
-    "#FAFAFA"  # Almost white
+    "#FAFAFA" # Almost white
   )
 }
 
@@ -32,7 +32,7 @@ grid_colors <- function() {
     "#999999", # Dark gray
     "#FFFFFF", # White
     "#000000", # Black
-    "#D3D3D3"  # Light gray 2
+    "#D3D3D3" # Light gray 2
   )
 }
 
@@ -87,42 +87,94 @@ new_theme_block <- function(
           r_base_theme <- reactiveVal(base_theme)
 
           # Observe input changes (convert "transparent" or "#00000000" to empty string for colors)
-          observeEvent(input$panel_bg, {
-            val <- input$panel_bg
-            # Treat transparent, #00000000 (transparent black), or empty as "auto"
-            r_panel_bg(if (val %in% c("transparent", "#00000000", "")) "" else val)
-          }, ignoreNULL = FALSE)
-          observeEvent(input$plot_bg, {
-            val <- input$plot_bg
-            # Treat transparent, #00000000 (transparent black), or empty as "auto"
-            r_plot_bg(if (val %in% c("transparent", "#00000000", "")) "" else val)
-          }, ignoreNULL = FALSE)
-          observeEvent(input$base_size, {
-            r_base_size(if (input$base_size == "auto") NA_real_ else as.numeric(input$base_size))
-          }, ignoreNULL = FALSE)
-          observeEvent(input$base_family, {
-            r_base_family(input$base_family)
-          }, ignoreNULL = FALSE)
-          observeEvent(input$show_major_grid, {
-            r_show_major_grid(input$show_major_grid)
-          }, ignoreNULL = FALSE)
-          observeEvent(input$show_minor_grid, {
-            r_show_minor_grid(input$show_minor_grid)
-          }, ignoreNULL = FALSE)
-          observeEvent(input$grid_color, {
-            val <- input$grid_color
-            # Treat transparent, #00000000 (transparent black), or empty as "auto"
-            r_grid_color(if (val %in% c("transparent", "#00000000", "")) "" else val)
-          }, ignoreNULL = FALSE)
-          observeEvent(input$show_panel_border, {
-            r_show_panel_border(input$show_panel_border)
-          }, ignoreNULL = FALSE)
-          observeEvent(input$legend_position, {
-            r_legend_position(input$legend_position)
-          }, ignoreNULL = FALSE)
-          observeEvent(input$base_theme, {
-            r_base_theme(input$base_theme)
-          }, ignoreNULL = FALSE)
+          observeEvent(
+            input$panel_bg,
+            {
+              val <- input$panel_bg
+              # Treat transparent, #00000000 (transparent black), or empty as "auto"
+              r_panel_bg(
+                if (val %in% c("transparent", "#00000000", "")) "" else val
+              )
+            },
+            ignoreNULL = FALSE
+          )
+          observeEvent(
+            input$plot_bg,
+            {
+              val <- input$plot_bg
+              # Treat transparent, #00000000 (transparent black), or empty as "auto"
+              r_plot_bg(
+                if (val %in% c("transparent", "#00000000", "")) "" else val
+              )
+            },
+            ignoreNULL = FALSE
+          )
+          observeEvent(
+            input$base_size,
+            {
+              r_base_size(
+                if (input$base_size == "auto") {
+                  NA_real_
+                } else {
+                  as.numeric(input$base_size)
+                }
+              )
+            },
+            ignoreNULL = FALSE
+          )
+          observeEvent(
+            input$base_family,
+            {
+              r_base_family(input$base_family)
+            },
+            ignoreNULL = FALSE
+          )
+          observeEvent(
+            input$show_major_grid,
+            {
+              r_show_major_grid(input$show_major_grid)
+            },
+            ignoreNULL = FALSE
+          )
+          observeEvent(
+            input$show_minor_grid,
+            {
+              r_show_minor_grid(input$show_minor_grid)
+            },
+            ignoreNULL = FALSE
+          )
+          observeEvent(
+            input$grid_color,
+            {
+              val <- input$grid_color
+              # Treat transparent, #00000000 (transparent black), or empty as "auto"
+              r_grid_color(
+                if (val %in% c("transparent", "#00000000", "")) "" else val
+              )
+            },
+            ignoreNULL = FALSE
+          )
+          observeEvent(
+            input$show_panel_border,
+            {
+              r_show_panel_border(input$show_panel_border)
+            },
+            ignoreNULL = FALSE
+          )
+          observeEvent(
+            input$legend_position,
+            {
+              r_legend_position(input$legend_position)
+            },
+            ignoreNULL = FALSE
+          )
+          observeEvent(
+            input$base_theme,
+            {
+              r_base_theme(input$base_theme)
+            },
+            ignoreNULL = FALSE
+          )
 
           list(
             expr = reactive({
@@ -133,7 +185,9 @@ new_theme_block <- function(
               if (r_panel_bg() != "") {
                 theme_parts <- c(
                   theme_parts,
-                  glue::glue('panel.background = ggplot2::element_rect(fill = "{r_panel_bg()}")')
+                  glue::glue(
+                    'panel.background = ggplot2::element_rect(fill = "{r_panel_bg()}")'
+                  )
                 )
               }
 
@@ -142,7 +196,9 @@ new_theme_block <- function(
                 # User explicitly set a color
                 theme_parts <- c(
                   theme_parts,
-                  glue::glue('plot.background = ggplot2::element_rect(fill = "{r_plot_bg()}")')
+                  glue::glue(
+                    'plot.background = ggplot2::element_rect(fill = "{r_plot_bg()}")'
+                  )
                 )
               } else if (r_base_theme() == "gray") {
                 # Gray theme: set plot background to match panel (gray theme doesn't set this itself)
@@ -157,19 +213,27 @@ new_theme_block <- function(
 
               # Base text size (only if explicitly set)
               if (!is.na(r_base_size())) {
-                text_parts <- c(text_parts, glue::glue('size = {r_base_size()}'))
+                text_parts <- c(
+                  text_parts,
+                  glue::glue('size = {r_base_size()}')
+                )
               }
 
               # Base font family (only if explicitly set)
               if (r_base_family() != "") {
-                text_parts <- c(text_parts, glue::glue('family = "{r_base_family()}"'))
+                text_parts <- c(
+                  text_parts,
+                  glue::glue('family = "{r_base_family()}"')
+                )
               }
 
               # Add combined text element if any parts were specified
               if (length(text_parts) > 0) {
                 theme_parts <- c(
                   theme_parts,
-                  glue::glue('text = ggplot2::element_text({paste(text_parts, collapse = ", ")})')
+                  glue::glue(
+                    'text = ggplot2::element_text({paste(text_parts, collapse = ", ")})'
+                  )
                 )
               }
 
@@ -186,7 +250,9 @@ new_theme_block <- function(
                   # With custom color
                   theme_parts <- c(
                     theme_parts,
-                    glue::glue('panel.grid.major = ggplot2::element_line(colour = "{r_grid_color()}")')
+                    glue::glue(
+                      'panel.grid.major = ggplot2::element_line(colour = "{r_grid_color()}")'
+                    )
                   )
                 } else {
                   # With theme default color
@@ -195,11 +261,15 @@ new_theme_block <- function(
                     "panel.grid.major = ggplot2::element_line()"
                   )
                 }
-              } else if (r_show_major_grid() == "auto" && r_grid_color() != "") {
+              } else if (
+                r_show_major_grid() == "auto" && r_grid_color() != ""
+              ) {
                 # Auto mode but custom color specified - apply the color
                 theme_parts <- c(
                   theme_parts,
-                  glue::glue('panel.grid.major = ggplot2::element_line(colour = "{r_grid_color()}")')
+                  glue::glue(
+                    'panel.grid.major = ggplot2::element_line(colour = "{r_grid_color()}")'
+                  )
                 )
               }
               # auto with no color: don't add anything, use base theme default
@@ -216,7 +286,9 @@ new_theme_block <- function(
                   # With custom color
                   theme_parts <- c(
                     theme_parts,
-                    glue::glue('panel.grid.minor = ggplot2::element_line(colour = "{r_grid_color()}")')
+                    glue::glue(
+                      'panel.grid.minor = ggplot2::element_line(colour = "{r_grid_color()}")'
+                    )
                   )
                 } else {
                   # With theme default color
@@ -225,11 +297,15 @@ new_theme_block <- function(
                     "panel.grid.minor = ggplot2::element_line()"
                   )
                 }
-              } else if (r_show_minor_grid() == "auto" && r_grid_color() != "") {
+              } else if (
+                r_show_minor_grid() == "auto" && r_grid_color() != ""
+              ) {
                 # Auto mode but custom color specified - apply the color
                 theme_parts <- c(
                   theme_parts,
-                  glue::glue('panel.grid.minor = ggplot2::element_line(colour = "{r_grid_color()}")')
+                  glue::glue(
+                    'panel.grid.minor = ggplot2::element_line(colour = "{r_grid_color()}")'
+                  )
                 )
               }
               # auto with no color: don't add anything, use base theme default
@@ -289,7 +365,7 @@ new_theme_block <- function(
                 # ggpubr
                 pubr = "ggpubr::theme_pubr()",
                 pubclean = "ggpubr::theme_pubclean()",
-                "ggplot2::theme_minimal()"  # fallback
+                "ggplot2::theme_minimal()" # fallback
               )
 
               text <- glue::glue("data + {base_theme_func}")
@@ -320,7 +396,13 @@ new_theme_block <- function(
     },
     function(id) {
       # Helper function for theme color inputs with sub-label
-      make_theme_color_input <- function(id_suffix, label_text, init_value, palette, sub_label = "Transparent: theme default") {
+      make_theme_color_input <- function(
+        id_suffix,
+        label_text,
+        init_value,
+        palette,
+        sub_label = "Transparent: theme default"
+      ) {
         div(
           colourpicker::colourInput(
             inputId = NS(id, id_suffix),
@@ -343,7 +425,8 @@ new_theme_block <- function(
         shinyjs::useShinyjs(),
 
         # CSS for collapsible section
-        tags$style(HTML(sprintf("
+        tags$style(HTML(sprintf(
+          "
           #%s-advanced-options {
             max-height: 0;
             overflow: hidden;
@@ -376,7 +459,10 @@ new_theme_block <- function(
           .advanced-toggle .chevron.rotated {
             transform: rotate(90deg);
           }
-        ", id, id))),
+        ",
+          id,
+          id
+        ))),
 
         div(
           class = "block-container",
@@ -464,13 +550,17 @@ new_theme_block <- function(
               div(
                 class = "advanced-toggle text-muted",
                 id = NS(id, "advanced-toggle"),
-                onclick = sprintf("
+                onclick = sprintf(
+                  "
                   const section = document.getElementById('%s');
                   const chevron = document.querySelector('#%s .chevron');
                   section.classList.toggle('expanded');
                   chevron.classList.toggle('rotated');
-                ", NS(id, "advanced-options"), NS(id, "advanced-toggle")),
-                tags$span(class = "chevron", "\u203A"),  # Single right-pointing angle quotation mark (prettier chevron)
+                ",
+                  NS(id, "advanced-options"),
+                  NS(id, "advanced-toggle")
+                ),
+                tags$span(class = "chevron", "\u203A"), # Single right-pointing angle quotation mark (prettier chevron)
                 "Show advanced options"
               )
             ),
@@ -487,15 +577,30 @@ new_theme_block <- function(
                   class = "block-section-grid",
                   div(
                     class = "block-input-wrapper",
-                    make_theme_color_input("panel_bg", "Panel Background", panel_bg, background_light_colors())
+                    make_theme_color_input(
+                      "panel_bg",
+                      "Panel Background",
+                      panel_bg,
+                      background_light_colors()
+                    )
                   ),
                   div(
                     class = "block-input-wrapper",
-                    make_theme_color_input("plot_bg", "Plot Background", plot_bg, plot_bg_colors())
+                    make_theme_color_input(
+                      "plot_bg",
+                      "Plot Background",
+                      plot_bg,
+                      plot_bg_colors()
+                    )
                   ),
                   div(
                     class = "block-input-wrapper",
-                    make_theme_color_input("grid_color", "Grid Color", grid_color, grid_colors())
+                    make_theme_color_input(
+                      "grid_color",
+                      "Grid Color",
+                      grid_color,
+                      grid_colors()
+                    )
                   )
                 )
               ),
@@ -524,7 +629,11 @@ new_theme_block <- function(
                         "18" = "18",
                         "20" = "20"
                       ),
-                      selected = if (is.na(base_size)) "auto" else as.character(base_size),
+                      selected = if (is.na(base_size)) {
+                        "auto"
+                      } else {
+                        as.character(base_size)
+                      },
                       width = "100%"
                     )
                   ),
@@ -602,8 +711,14 @@ new_theme_block <- function(
       )
     },
     class = "theme_block",
-    allow_empty_state = c("panel_bg", "plot_bg", "base_size", "base_family",
-                          "grid_color", "legend_position"),
+    allow_empty_state = c(
+      "panel_bg",
+      "plot_bg",
+      "base_size",
+      "base_family",
+      "grid_color",
+      "legend_position"
+    ),
     ...
   )
 }

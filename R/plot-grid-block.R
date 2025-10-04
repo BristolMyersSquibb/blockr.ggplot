@@ -71,28 +71,34 @@ create_grid_preview_svg <- function(n_plots, ncol_val, nrow_val) {
   if (!is_valid) {
     fill_color <- "rgba(244, 67, 54, 0.3)"
     stroke_color <- "#f44336"
-    status_icon <- "\u274c"  # Red X
+    status_icon <- "\u274c" # Red X
     status_text <- sprintf(
       "Need %d slots but only have %d (increase ncol and/or nrow)",
-      n_plots, total_slots
+      n_plots,
+      total_slots
     )
   } else if (total_slots == n_plots) {
     fill_color <- "rgba(76, 175, 80, 0.3)"
     stroke_color <- "#4CAF50"
-    status_icon <- "\u2713"  # Check mark
+    status_icon <- "\u2713" # Check mark
     status_text <- sprintf(
       "Perfect fit: %d plots in %dx%d grid",
-      n_plots, nrow_actual, ncol_actual
+      n_plots,
+      nrow_actual,
+      ncol_actual
     )
   } else {
     fill_color <- "rgba(33, 150, 243, 0.3)"
     stroke_color <- "#2196F3"
-    status_icon <- "\u2713"  # Check mark
+    status_icon <- "\u2713" # Check mark
     empty_slots <- total_slots - n_plots
     status_text <- sprintf(
       "%d plots in %dx%d grid (%d empty slot%s)",
-      n_plots, nrow_actual, ncol_actual,
-      empty_slots, if (empty_slots > 1) "s" else ""
+      n_plots,
+      nrow_actual,
+      ncol_actual,
+      empty_slots,
+      if (empty_slots > 1) "s" else ""
     )
   }
 
@@ -109,7 +115,10 @@ create_grid_preview_svg <- function(n_plots, ncol_val, nrow_val) {
       is_filled <- plot_idx <= n_plots
 
       cells[[length(cells) + 1]] <- tags$rect(
-        x = x, y = y, width = w, height = h,
+        x = x,
+        y = y,
+        width = w,
+        height = h,
         fill = if (is_filled) fill_color else "#f5f5f5",
         stroke = if (is_filled) stroke_color else "#ddd",
         `stroke-width` = if (is_filled) "2" else "1",
@@ -118,12 +127,14 @@ create_grid_preview_svg <- function(n_plots, ncol_val, nrow_val) {
 
       if (is_filled) {
         cells[[length(cells) + 1]] <- tags$text(
-          x = x + w / 2, y = y + h / 2,
+          x = x + w / 2,
+          y = y + h / 2,
           `text-anchor` = "middle",
           `dominant-baseline` = "middle",
           style = sprintf(
             "font-size: %dpx; fill: %s; font-weight: bold;",
-            max(10, cell_size / 5), stroke_color
+            max(10, cell_size / 5),
+            stroke_color
           ),
           as.character(plot_idx)
         )
@@ -232,11 +243,11 @@ new_plot_grid_block <- function(
 
             # Determine background color based on status
             bg_color <- if (!preview$is_valid) {
-              "#f44336"  # Red
+              "#f44336" # Red
             } else if (preview$stroke_color == "#4CAF50") {
-              "#4CAF50"  # Green
+              "#4CAF50" # Green
             } else {
-              "#2196F3"  # Blue
+              "#2196F3" # Blue
             }
 
             tags$div(
