@@ -1,3 +1,41 @@
+# Color palette functions for theme block
+background_light_colors <- function() {
+  c(
+    "#FFFFFF", # White
+    "#FFF8DC", # Cornsilk (yellowish)
+    "#FFFACD", # Lemon Chiffon
+    "#F0F0F0", # Light gray
+    "#E8F4F8", # Light blue
+    "#F0FFF0", # Honeydew
+    "#FFF0F5", # Lavender Blush
+    "#FFFAF0"  # Floral White
+  )
+}
+
+plot_bg_colors <- function() {
+  c(
+    "#FFFFFF", # White
+    "#FFF6E8", # Light yellow
+    "#FFF8DC", # Cornsilk (yellowish)
+    "#FFFACD", # Lemon Chiffon
+    "#FFFAF0", # Floral White
+    "#F8F8F8", # Very light gray
+    "#F0F0F0", # Light gray
+    "#FAFAFA"  # Almost white
+  )
+}
+
+grid_colors <- function() {
+  c(
+    "#E5E5E5", # Default light gray
+    "#CCCCCC", # Medium gray
+    "#999999", # Dark gray
+    "#FFFFFF", # White
+    "#000000", # Black
+    "#D3D3D3"  # Light gray 2
+  )
+}
+
 #' Theme customization block for ggplot2 plots
 #'
 #' A block that applies advanced theme customizations to ggplot2 objects.
@@ -14,6 +52,7 @@
 #' @param legend_position Legend position: "right", "left", "top", "bottom", "none" (default "right")
 #' @param ... Forwarded to \code{\link[blockr.core]{new_transform_block}}
 #'
+#' @importFrom colourpicker colourInput
 #' @export
 new_theme_block <- function(
   panel_bg = "#FFFFFF",
@@ -166,6 +205,18 @@ new_theme_block <- function(
       )
     },
     function(id) {
+      # Helper function for theme color inputs
+      make_theme_color_input <- function(id_suffix, label_text, init_value, palette) {
+        colourpicker::colourInput(
+          inputId = NS(id, id_suffix),
+          label = label_text,
+          value = init_value,
+          showColour = "both",
+          palette = "square",
+          allowedCols = palette
+        )
+      }
+
       tagList(
         shinyjs::useShinyjs(),
         div(
@@ -188,43 +239,11 @@ new_theme_block <- function(
                 class = "block-section-grid",
                 div(
                   class = "block-input-wrapper",
-                  colourpicker::colourInput(
-                    inputId = NS(id, "panel_bg"),
-                    label = "Panel Background",
-                    value = panel_bg,
-                    showColour = "background",
-                    palette = "limited",
-                    allowedCols = c(
-                      "#FFFFFF", # White
-                      "#FFF8DC", # Cornsilk (yellowish)
-                      "#FFFACD", # Lemon Chiffon
-                      "#F0F0F0", # Light gray
-                      "#E8F4F8", # Light blue
-                      "#F0FFF0", # Honeydew
-                      "#FFF0F5", # Lavender Blush
-                      "#FFFAF0"  # Floral White
-                    )
-                  )
+                  make_theme_color_input("panel_bg", "Panel Background", panel_bg, background_light_colors())
                 ),
                 div(
                   class = "block-input-wrapper",
-                  colourpicker::colourInput(
-                    inputId = NS(id, "plot_bg"),
-                    label = "Plot Background",
-                    value = plot_bg,
-                    showColour = "background",
-                    palette = "limited",
-                    allowedCols = c(
-                      "#FFFFFF", # White
-                      "#FFF6E8", # Light yellow
-                      "#FFF8DC", # Cornsilk (yellowish)
-                      "#FFFACD", # Lemon Chiffon
-                      "#FFFAF0", # Floral White
-                      "#F8F8F8", # Very light gray
-                      "#F0F0F0", # Light gray
-                      "#FAFAFA"  # Almost white
-                    )
-                  )
+                  make_theme_color_input("plot_bg", "Plot Background", plot_bg, plot_bg_colors())
                 )
               )
             ),
@@ -288,21 +307,7 @@ new_theme_block <- function(
                 ),
                 div(
                   class = "block-input-wrapper",
-                  colourpicker::colourInput(
-                    inputId = NS(id, "grid_color"),
-                    label = "Grid Color",
-                    value = grid_color,
-                    showColour = "background",
-                    palette = "limited",
-                    allowedCols = c(
-                      "#E5E5E5", # Default light gray
-                      "#CCCCCC", # Medium gray
-                      "#999999", # Dark gray
-                      "#FFFFFF", # White
-                      "#000000", # Black
-                      "#D3D3D3"  # Light gray 2
-                    )
-                  )
+                  make_theme_color_input("grid_color", "Grid Color", grid_color, grid_colors())
                 )
               )
             ),
