@@ -1,3 +1,158 @@
+#' Create SVG preview of plot grid layout
+#'
+#' @param n_plots Number of plots to arrange
+#' @param ncol_val Number of columns ("" for auto)
+#' @param nrow_val Number of rows ("" for auto)
+#' @return List with svg, status text, and status type
+#' @noRd
+create_grid_preview_svg <- function(n_plots, ncol_val, nrow_val) {
+  # Calculate actual grid dimensions using exact patchwork algorithm
+  # (via ggplot2::wrap_dims which patchwork uses internally)
+  # wrap_dims throws an error if nrow * ncol < n_plots, so catch that
+  result <- tryCatch(
+    {
+      if (ncol_val == "" && nrow_val == "") {
+        # Full auto mode - use wrap_dims with both NULL
+        dims <- ggplot2::wrap_dims(n_plots, nrow = NULL, ncol = NULL)
+      } else if (nrow_val != "" && ncol_val != "") {
+        # Both specified - validate with wrap_dims
+        dims <- ggplot2::wrap_dims(
+          n_plots,
+          nrow = as.numeric(nrow_val),
+          ncol = as.numeric(ncol_val)
+        )
+      } else if (ncol_val != "") {
+        # Only ncol specified - let wrap_dims calculate nrow
+        dims <- ggplot2::wrap_dims(
+          n_plots,
+          nrow = NULL,
+          ncol = as.numeric(ncol_val)
+        )
+      } else {
+        # Only nrow specified - let wrap_dims calculate ncol
+        dims <- ggplot2::wrap_dims(
+          n_plots,
+          nrow = as.numeric(nrow_val),
+          ncol = NULL
+        )
+      }
+      list(dims = dims, is_valid = TRUE, error_msg = NULL)
+    },
+    error = function(e) {
+      # If wrap_dims fails, calculate what it would be without validation
+      if (nrow_val != "" && ncol_val != "") {
+        dims <- c(as.numeric(nrow_val), as.numeric(ncol_val))
+      } else {
+        # Fallback dimensions for error display
+        dims <- c(1, 1)
+      }
+      list(dims = dims, is_valid = FALSE, error_msg = conditionMessage(e))
+    }
+  )
+
+  nrow_actual <- result$dims[1]
+  ncol_actual <- result$dims[2]
+  is_valid <- result$is_valid
+
+  # Check if configuration is valid
+  total_slots <- nrow_actual * ncol_actual
+
+  # SVG dimensions - scale to fit the actual grid
+  max_width <- 300
+  gap <- 4
+  # Calculate cell size based on actual columns (not a minimum)
+  cell_size <- max_width / ncol_actual
+  # But ensure cells aren't too small or too large
+  cell_size <- max(50, min(cell_size, 100))
+  preview_width <- cell_size * ncol_actual
+  preview_height <- cell_size * nrow_actual
+
+  # Status based on validation
+  if (!is_valid) {
+    fill_color <- "rgba(244, 67, 54, 0.3)"
+    stroke_color <- "#f44336"
+    status_icon <- "\u274c"  # Red X
+    status_text <- sprintf(
+      "Need %d slots but only have %d (increase ncol and/or nrow)",
+      n_plots, total_slots
+    )
+  } else if (total_slots == n_plots) {
+    fill_color <- "rgba(76, 175, 80, 0.3)"
+    stroke_color <- "#4CAF50"
+    status_icon <- "\u2713"  # Check mark
+    status_text <- sprintf(
+      "Perfect fit: %d plots in %dx%d grid",
+      n_plots, nrow_actual, ncol_actual
+    )
+  } else {
+    fill_color <- "rgba(33, 150, 243, 0.3)"
+    stroke_color <- "#2196F3"
+    status_icon <- "\u2713"  # Check mark
+    empty_slots <- total_slots - n_plots
+    status_text <- sprintf(
+      "%d plots in %dx%d grid (%d empty slot%s)",
+      n_plots, nrow_actual, ncol_actual,
+      empty_slots, if (empty_slots > 1) "s" else ""
+    )
+  }
+
+  # Create cells
+  cells <- list()
+  plot_idx <- 1
+  for (row in 0:(nrow_actual - 1)) {
+    for (col in 0:(ncol_actual - 1)) {
+      x <- col * cell_size + gap
+      y <- row * cell_size + gap
+      w <- cell_size - 2 * gap
+      h <- cell_size - 2 * gap
+
+      is_filled <- plot_idx <= n_plots
+
+      cells[[length(cells) + 1]] <- tags$rect(
+        x = x, y = y, width = w, height = h,
+        fill = if (is_filled) fill_color else "#f5f5f5",
+        stroke = if (is_filled) stroke_color else "#ddd",
+        `stroke-width` = if (is_filled) "2" else "1",
+        rx = "3"
+      )
+
+      if (is_filled) {
+        cells[[length(cells) + 1]] <- tags$text(
+          x = x + w / 2, y = y + h / 2,
+          `text-anchor` = "middle",
+          `dominant-baseline` = "middle",
+          style = sprintf(
+            "font-size: %dpx; fill: %s; font-weight: bold;",
+            max(10, cell_size / 5), stroke_color
+          ),
+          as.character(plot_idx)
+        )
+      }
+
+      plot_idx <- plot_idx + 1
+    }
+  }
+
+  svg <- tags$svg(
+    width = preview_width,
+    height = preview_height,
+    viewBox = sprintf("0 0 %d %d", preview_width, preview_height),
+    style = paste(
+      "border: 1px solid #ddd; background: white;",
+      "border-radius: 4px;"
+    ),
+    do.call(tagList, cells)
+  )
+
+  list(
+    svg = svg,
+    status = status_text,
+    status_icon = status_icon,
+    is_valid = is_valid,
+    stroke_color = stroke_color
+  )
+}
+
 #' Plot Grid Block
 #'
 #' Combines multiple ggplot objects using patchwork::wrap_plots().
@@ -52,6 +207,56 @@ new_plot_grid_block <- function(
           observeEvent(input$caption, r_caption(input$caption))
           observeEvent(input$tag_levels, r_tag_levels(input$tag_levels))
           observeEvent(input$guides, r_guides(input$guides))
+
+          # Layout preview output
+          output$layout_preview <- renderUI({
+            n_plots <- length(...args)
+            ncol_val <- r_ncol()
+            nrow_val <- r_nrow()
+
+            # Handle case where no plots are connected yet
+            if (n_plots == 0) {
+              return(tags$div(
+                style = paste(
+                  "padding: 10px; background: #fff3cd;",
+                  "border-radius: 4px; margin-bottom: 15px;"
+                ),
+                tags$strong("\u26a0\ufe0f Waiting for input plots"),
+                tags$br(),
+                "Connect 2 or more ggplot blocks to create a grid"
+              ))
+            }
+
+            # Generate preview
+            preview <- create_grid_preview_svg(n_plots, ncol_val, nrow_val)
+
+            # Determine background color based on status
+            bg_color <- if (!preview$is_valid) {
+              "#f44336"  # Red
+            } else if (preview$stroke_color == "#4CAF50") {
+              "#4CAF50"  # Green
+            } else {
+              "#2196F3"  # Blue
+            }
+
+            tags$div(
+              style = "margin-bottom: 15px;",
+              tags$div(
+                style = "text-align: center; margin-bottom: 10px;",
+                preview$svg
+              ),
+              tags$div(
+                style = sprintf(
+                  paste(
+                    "padding: 8px; border-radius: 4px;",
+                    "background-color: %s; color: white;"
+                  ),
+                  bg_color
+                ),
+                tags$strong(paste(preview$status_icon, preview$status))
+              )
+            )
+          })
 
           list(
             expr = reactive({
@@ -132,6 +337,9 @@ new_plot_grid_block <- function(
 
           # Set container query context
           block_container_script(),
+
+          # Display visual grid layout preview at the top
+          uiOutput(NS(id, "layout_preview")),
 
           div(
             class = "block-form-grid",
