@@ -230,6 +230,16 @@ blockr.core::serve(
 )
 ```
 
+## Contributing
+
+**Want to contribute to blockr.ggplot?** See the [Developer Documentation](dev/README.md) to get started.
+
+The developer docs include:
+- Complete guide to creating blocks
+- blockr.ggplot architecture and patterns
+- Step-by-step examples and templates
+- Testing and validation guidelines
+
 ## Learn More
 
 - [blockr.core documentation](https://github.com/BristolMyersSquibb/blockr.core)
