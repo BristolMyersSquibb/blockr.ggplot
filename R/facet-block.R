@@ -391,13 +391,8 @@ new_facet_block <- function(
               # facet_grid
               if (length(r_rows()) == 0 && length(r_cols()) == 0) {
                 return(tags$div(
-                  style = paste(
-                    "padding: 10px; background: #fff3cd;",
-                    "border-radius: 4px; margin-bottom: 15px;"
-                  ),
-                  tags$strong("\u26a0\ufe0f Select row and/or column variables"),
-                  tags$br(),
-                  "Choose variables for rows and/or columns"
+                  style = "font-size: 0.875rem; color: #6c757d;",
+                  "Select row and/or column variables"
                 ))
               }
 
