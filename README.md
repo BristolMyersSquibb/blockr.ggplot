@@ -167,7 +167,7 @@ This creates an interactive dashboard where you can:
 
 ### Combining Multiple Plots with Plot Grid
 
-Create a dashboard that combines multiple charts side-by-side using `new_plot_grid_block()`:
+Create a dashboard that combines multiple charts using `new_plot_grid_block()`. The grid block uses [patchwork](https://patchwork.data-imaginist.com/) for modern, automatically-aligned plot composition:
 
 ```r
 library(blockr.core)
@@ -196,7 +196,8 @@ blockr.core::serve(board)
 This creates a single combined visualization with:
 - A scatter plot showing weight vs. mpg
 - A boxplot showing mpg distribution by cylinder count
-- Both plots arranged side-by-side in a grid
+- Both plots automatically aligned and arranged using patchwork
+- Supports any number of plots (not just two!)
 
 ### Exploring Different Chart Types with Same Data
 

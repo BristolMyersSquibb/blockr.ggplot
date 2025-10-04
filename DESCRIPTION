@@ -25,7 +25,7 @@ Imports:
     glue,
     shinyWidgets,
     shinyjs,
-    cowplot
+    patchwork
 Suggests:
     testthat (>= 3.0.0),
     webshot2
