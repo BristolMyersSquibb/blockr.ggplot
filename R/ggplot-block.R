@@ -113,7 +113,24 @@ new_ggplot_block <- function(
           r_donut <- reactiveVal(donut)
 
           # Observe input changes
-          observeEvent(input$type, r_type(input$type))
+          observeEvent(input$type, {
+            r_type(input$type)
+            # Clear statistical chart selection when main chart is selected
+            shinyWidgets::updateRadioGroupButtons(
+              session,
+              inputId = "type_stat",
+              selected = character(0)
+            )
+          })
+          observeEvent(input$type_stat, {
+            r_type(input$type_stat)
+            # Clear main chart selection when statistical chart is selected
+            shinyWidgets::updateRadioGroupButtons(
+              session,
+              inputId = "type",
+              selected = character(0)
+            )
+          })
           observeEvent(input$x, r_x(input$x))
           observeEvent(input$y, r_y(input$y))
           observeEvent(input$color, r_color(input$color))
@@ -558,9 +575,10 @@ new_ggplot_block <- function(
             padding: 8px 0;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 6px;
             grid-column: 1 / -1;
             color: #6c757d;
+            font-size: 0.875rem;
           }
           .advanced-toggle .chevron {
             transition: transform 0.2s;
@@ -582,10 +600,15 @@ new_ggplot_block <- function(
           # Add custom CSS for chart type selector
           tags$style(HTML(
             "
+            .chart-type-selector {
+              margin-top: 0 !important;
+              padding-top: 0 !important;
+            }
             .chart-type-selector .btn-group-toggle {
               display: flex;
               flex-wrap: wrap;
               gap: 5px;
+              margin: 0;
             }
             .chart-type-selector .btn {
               display: flex;
@@ -627,10 +650,6 @@ new_ggplot_block <- function(
                       tags$div(icon("chart-bar"), tags$span("Bar")),
                       tags$div(icon("chart-line"), tags$span("Line")),
                       tags$div(icon("th-large"), tags$span("Box")),
-                      tags$div(icon("chart-area"), tags$span("Violin")),
-                      tags$div(icon("wave-square"), tags$span("Density")),
-                      tags$div(icon("chart-area"), tags$span("Area")),
-                      tags$div(icon("chart-bar"), tags$span("Histogram")),
                       tags$div(icon("chart-pie"), tags$span("Pie"))
                     ),
                     choiceValues = c(
@@ -638,10 +657,6 @@ new_ggplot_block <- function(
                       "bar",
                       "line",
                       "boxplot",
-                      "violin",
-                      "density",
-                      "area",
-                      "histogram",
                       "pie"
                     ),
                     selected = type,
@@ -765,6 +780,47 @@ new_ggplot_block <- function(
             # Advanced Options Section (Collapsible)
             div(
               id = NS(id, "advanced-options"),
+
+              # Additional Charts
+              div(
+                class = "block-section",
+                tags$h4("Additional Charts"),
+                div(
+                  class = "block-section-grid",
+                  div(
+                    class = "block-input-wrapper chart-type-selector",
+                    style = "grid-column: 1 / -1;",
+                    shinyWidgets::radioGroupButtons(
+                      inputId = NS(id, "type_stat"),
+                      label = NULL,
+                      choiceNames = list(
+                        tags$div(icon("chart-column"), tags$span("Histogram")),
+                        tags$div(icon("signal"), tags$span("Density")),
+                        tags$div(icon("water"), tags$span("Violin")),
+                        tags$div(icon("chart-area"), tags$span("Area"))
+                      ),
+                      choiceValues = c(
+                        "histogram",
+                        "density",
+                        "violin",
+                        "area"
+                      ),
+                      selected = character(0),
+                      status = "light",
+                      size = "sm",
+                      justified = FALSE,
+                      individual = FALSE,
+                      checkIcon = list(
+                        yes = tags$i(
+                          class = "fa fa-check",
+                          style = "display: none;"
+                        ),
+                        no = tags$i(style = "display: none;")
+                      )
+                    )
+                  )
+                )
+              ),
 
               # Advanced Aesthetics
               div(
