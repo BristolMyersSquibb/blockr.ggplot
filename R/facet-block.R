@@ -212,6 +212,58 @@ new_facet_block <- function(
             character()
           })
 
+          # Count actual unique levels for facet variables
+          count_unique_levels <- reactive({
+            if (inherits(data(), "ggplot")) {
+              plot_data <- data()$data
+              if (is.data.frame(plot_data)) {
+                # Count for rows
+                n_rows <- if (length(r_rows()) > 0) {
+                  # Check if columns exist in data
+                  if (all(r_rows() %in% colnames(plot_data))) {
+                    nrow(unique(plot_data[, r_rows(), drop = FALSE]))
+                  } else {
+                    2^length(r_rows())  # Fallback estimate
+                  }
+                } else {
+                  1
+                }
+
+                # Count for cols
+                n_cols <- if (length(r_cols()) > 0) {
+                  # Check if columns exist in data
+                  if (all(r_cols() %in% colnames(plot_data))) {
+                    nrow(unique(plot_data[, r_cols(), drop = FALSE]))
+                  } else {
+                    2^length(r_cols())  # Fallback estimate
+                  }
+                } else {
+                  1
+                }
+
+                # Count for wrap facets
+                n_facets <- if (length(r_facets()) > 0) {
+                  # Check if columns exist in data
+                  if (all(r_facets() %in% colnames(plot_data))) {
+                    nrow(unique(plot_data[, r_facets(), drop = FALSE]))
+                  } else {
+                    3^length(r_facets())  # Fallback estimate
+                  }
+                } else {
+                  0
+                }
+
+                return(list(rows = n_rows, cols = n_cols, facets = n_facets))
+              }
+            }
+            # Fallback estimates if no data available
+            list(
+              rows = if (length(r_rows()) > 0) 2^length(r_rows()) else 1,
+              cols = if (length(r_cols()) > 0) 2^length(r_cols()) else 1,
+              facets = if (length(r_facets()) > 0) 3^length(r_facets()) else 0
+            )
+          })
+
           # Reactive values
           r_facet_type <- reactiveVal(facet_type)
           r_facets <- reactiveVal(facets)
@@ -225,7 +277,25 @@ new_facet_block <- function(
           r_space <- reactiveVal(space)
 
           # Update reactive values from inputs
-          observeEvent(input$facet_type, r_facet_type(input$facet_type))
+          observeEvent(input$facet_type, {
+            r_facet_type(input$facet_type)
+
+            # Toggle visibility of variable selectors based on facet type
+            if (input$facet_type == "wrap") {
+              shinyjs::show("wrap_vars")
+              shinyjs::hide("grid_vars_row")
+              shinyjs::hide("grid_vars_col")
+              shinyjs::show("layout_section")
+              shinyjs::hide("space_option")
+            } else {
+              shinyjs::hide("wrap_vars")
+              shinyjs::show("grid_vars_row")
+              shinyjs::show("grid_vars_col")
+              shinyjs::hide("layout_section")
+              shinyjs::show("space_option")
+            }
+          })
+
           observeEvent(input$facets, r_facets(input$facets), ignoreNULL = FALSE)
           observeEvent(input$rows, r_rows(input$rows), ignoreNULL = FALSE)
           observeEvent(input$cols, r_cols(input$cols), ignoreNULL = FALSE)
@@ -235,6 +305,24 @@ new_facet_block <- function(
           observeEvent(input$labeller, r_labeller(input$labeller))
           observeEvent(input$dir, r_dir(input$dir))
           observeEvent(input$space, r_space(input$space))
+
+          # Initialize visibility based on default facet_type
+          observe({
+            # This runs once on initialization
+            if (facet_type == "wrap") {
+              shinyjs::show("wrap_vars")
+              shinyjs::hide("grid_vars_row")
+              shinyjs::hide("grid_vars_col")
+              shinyjs::show("layout_section")
+              shinyjs::hide("space_option")
+            } else {
+              shinyjs::hide("wrap_vars")
+              shinyjs::show("grid_vars_row")
+              shinyjs::show("grid_vars_col")
+              shinyjs::hide("layout_section")
+              shinyjs::show("space_option")
+            }
+          })
 
           # Update column choices when data changes
           observeEvent(
@@ -273,9 +361,7 @@ new_facet_block <- function(
 
             if (current_type == "wrap") {
               # Calculate number of unique levels for preview
-              # For now, use a placeholder (in reality would need actual data)
-              n_facets <- length(r_facets())
-              if (n_facets == 0) {
+              if (length(r_facets()) == 0) {
                 return(tags$div(
                   style = paste(
                     "padding: 10px; background: #fff3cd;",
@@ -287,21 +373,19 @@ new_facet_block <- function(
                 ))
               }
 
-              # Estimate: assume each facet variable has ~3 levels for preview
-              estimated_levels <- 3^n_facets
+              # Use actual data to count unique levels
+              level_counts <- count_unique_levels()
+              actual_levels <- level_counts$facets
 
               preview <- create_facet_preview_svg(
                 "wrap",
-                n_levels = estimated_levels,
+                n_levels = actual_levels,
                 ncol_val = r_ncol(),
                 nrow_val = r_nrow()
               )
             } else {
               # facet_grid
-              n_row_vars <- length(r_rows())
-              n_col_vars <- length(r_cols())
-
-              if (n_row_vars == 0 && n_col_vars == 0) {
+              if (length(r_rows()) == 0 && length(r_cols()) == 0) {
                 return(tags$div(
                   style = paste(
                     "padding: 10px; background: #fff3cd;",
@@ -313,9 +397,10 @@ new_facet_block <- function(
                 ))
               }
 
-              # Estimate: assume each variable has ~2-3 levels
-              n_row_levels <- if (n_row_vars > 0) 2^n_row_vars else 1
-              n_col_levels <- if (n_col_vars > 0) 2^n_col_vars else 1
+              # Use actual data to count unique levels
+              level_counts <- count_unique_levels()
+              n_row_levels <- level_counts$rows
+              n_col_levels <- level_counts$cols
 
               preview <- create_facet_preview_svg(
                 "grid",
@@ -360,8 +445,8 @@ new_facet_block <- function(
                 # Build facet_wrap call
                 facet_vars <- r_facets()
                 if (length(facet_vars) == 0) {
-                  # No faceting - just return the plot
-                  return(quote(data))
+                  # No faceting - return data as-is (wrapped in parens to make it a call)
+                  return(parse(text = "(data)")[[1]])
                 }
 
                 # Build facets formula
@@ -406,8 +491,8 @@ new_facet_block <- function(
                 col_vars <- r_cols()
 
                 if (length(row_vars) == 0 && length(col_vars) == 0) {
-                  # No faceting
-                  return(quote(data))
+                  # No faceting - return data as-is (wrapped in parens to make it a call)
+                  return(parse(text = "(data)")[[1]])
                 }
 
                 # Build rows formula
@@ -472,11 +557,38 @@ new_facet_block <- function(
     },
     ui = function(id) {
       tagList(
+        shinyjs::useShinyjs(),
+
         div(
           class = "block-container",
 
           # Add responsive CSS
           block_responsive_css(),
+
+          # Add custom CSS for facet type selector
+          tags$style(HTML(
+            "
+            .facet-type-selector .btn-group-toggle {
+              display: flex;
+              flex-wrap: wrap;
+              gap: 5px;
+            }
+            .facet-type-selector .btn {
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              padding: 8px 12px;
+              min-width: 80px;
+            }
+            .facet-type-selector .btn i {
+              font-size: 1.2em;
+              margin-bottom: 4px;
+            }
+            .facet-type-selector .btn span {
+              font-size: 0.85em;
+            }
+          "
+          )),
 
           # Set container query context
           block_container_script(),
@@ -494,14 +606,28 @@ new_facet_block <- function(
               div(
                 class = "block-section-grid",
                 div(
-                  class = "block-input-wrapper",
+                  class = "block-input-wrapper facet-type-selector",
+                  style = "grid-column: 1 / -1;",
                   shinyWidgets::radioGroupButtons(
                     inputId = NS(id, "facet_type"),
                     label = NULL,
-                    choices = c("Wrap" = "wrap", "Grid" = "grid"),
+                    choiceNames = list(
+                      tags$div(icon("border-all"), tags$span("Wrap")),
+                      tags$div(icon("th"), tags$span("Grid"))
+                    ),
+                    choiceValues = c("wrap", "grid"),
                     selected = facet_type,
                     status = "primary",
-                    justified = TRUE
+                    size = "sm",
+                    justified = FALSE,
+                    individual = FALSE,
+                    checkIcon = list(
+                      yes = tags$i(
+                        class = "fa fa-check",
+                        style = "display: none;"
+                      ),
+                      no = tags$i(style = "display: none;")
+                    )
                   )
                 )
               )
@@ -688,47 +814,7 @@ new_facet_block <- function(
               )
             )
           )
-        ),
-
-        # JavaScript to toggle visibility based on facet type
-        tags$script(HTML(sprintf("
-          $(document).on('shiny:connected', function() {
-            var facetTypeInput = $('#%s');
-
-            function updateVisibility() {
-              var type = facetTypeInput.find('input:checked').val();
-
-              if (type === 'wrap') {
-                $('#%s').show();
-                $('#%s').hide();
-                $('#%s').hide();
-                $('#%s').show();
-                $('#%s').hide();
-              } else {
-                $('#%s').hide();
-                $('#%s').show();
-                $('#%s').show();
-                $('#%s').hide();
-                $('#%s').show();
-              }
-            }
-
-            facetTypeInput.on('change', updateVisibility);
-            updateVisibility();
-          });
-        ",
-        NS(id, "facet_type"),
-        NS(id, "wrap_vars"),
-        NS(id, "grid_vars_row"),
-        NS(id, "grid_vars_col"),
-        NS(id, "layout_section"),
-        NS(id, "space_option"),
-        NS(id, "wrap_vars"),
-        NS(id, "grid_vars_row"),
-        NS(id, "grid_vars_col"),
-        NS(id, "layout_section"),
-        NS(id, "space_option")
-        )))
+        )
       )
     },
     dat_valid = function(data) {
