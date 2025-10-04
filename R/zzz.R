@@ -29,6 +29,21 @@ register_ggplot_blocks <- function() {
     package = utils::packageName(),
     overwrite = TRUE
   )
+
+  register_blocks(
+    "new_theme_block",
+    name = "Theme",
+    description = paste0(
+      "Advanced theme customization for ggplot2 plots. ",
+      "Fine-tune backgrounds, fonts, grid lines, panel borders, ",
+      "and legend positioning. Use color pickers for backgrounds, ",
+      "sliders for font sizes, and checkboxes for grid visibility. ",
+      "Perfect for creating custom styled visualizations."
+    ),
+    category = "plot",
+    package = utils::packageName(),
+    overwrite = TRUE
+  )
 }
 
 .onLoad <- function(libname, pkgname) {
