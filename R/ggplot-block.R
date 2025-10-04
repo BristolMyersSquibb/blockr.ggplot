@@ -13,11 +13,9 @@
 #' @param shape Column for shape aesthetic
 #' @param linetype Column for linetype aesthetic
 #' @param group Column for group aesthetic
-#' @param alpha Transparency level (0-1, default 1.0)
+#' @param alpha Column for alpha aesthetic (variable transparency)
 #' @param position Position adjustment for certain geoms
 #' @param bins Number of bins for histogram
-#' @param theme ggplot2 theme to apply (default "minimal"). Options: "minimal",
-#'   "classic", "dark", "light", "gray"
 #' @param donut Whether to create donut chart when type is "pie" (default FALSE)
 #' @param ... Forwarded to \code{\link[blockr.core]{new_plot_block}}
 #'
@@ -32,10 +30,9 @@ new_ggplot_block <- function(
   shape = character(),
   linetype = character(),
   group = character(),
-  alpha = 1.0,
+  alpha = character(),
   position = "stack",
   bins = 30,
-  theme = "minimal",
   donut = FALSE,
   ...
 ) {
@@ -110,10 +107,9 @@ new_ggplot_block <- function(
             if (length(linetype) == 0) "(none)" else linetype
           )
           r_group <- reactiveVal(if (length(group) == 0) "(none)" else group)
-          r_alpha <- reactiveVal(alpha)
+          r_alpha <- reactiveVal(if (length(alpha) == 0) "(none)" else alpha)
           r_position <- reactiveVal(position)
           r_bins <- reactiveVal(bins)
-          r_theme <- reactiveVal(theme)
           r_donut <- reactiveVal(donut)
 
           # Observe input changes
@@ -129,7 +125,6 @@ new_ggplot_block <- function(
           observeEvent(input$alpha, r_alpha(input$alpha))
           observeEvent(input$position, r_position(input$position))
           observeEvent(input$bins, r_bins(input$bins))
-          observeEvent(input$theme, r_theme(input$theme))
           observeEvent(input$donut, r_donut(input$donut))
 
           # Update column-dependent inputs
@@ -184,6 +179,12 @@ new_ggplot_block <- function(
                 choices = c("(none)", cols()),
                 selected = if (length(group) == 0) "(none)" else group
               )
+              updateSelectInput(
+                session,
+                inputId = "alpha",
+                choices = c("(none)", cols()),
+                selected = if (length(alpha) == 0) "(none)" else alpha
+              )
             }
           )
 
@@ -200,7 +201,8 @@ new_ggplot_block <- function(
                 "size",
                 "shape",
                 "linetype",
-                "group"
+                "group",
+                "alpha"
               )
               valid_aesthetics <- c(
                 chart_config$required,
@@ -259,7 +261,8 @@ new_ggplot_block <- function(
                 "size",
                 "shape",
                 "linetype",
-                "group"
+                "group",
+                "alpha"
               )) {
                 if (aes_field %in% valid_aesthetics) {
                   label_text <- switch(
@@ -269,7 +272,8 @@ new_ggplot_block <- function(
                     size = "Size By",
                     shape = "Shape By",
                     linetype = "Line Type By",
-                    group = "Group By"
+                    group = "Group By",
+                    alpha = "Alpha By"
                   )
 
                   updateSelectInput(
@@ -387,41 +391,40 @@ new_ggplot_block <- function(
               if (r_group() != "(none)" && "group" %in% chart_config$optional) {
                 aes_parts <- c(aes_parts, glue::glue("group = {r_group()}"))
               }
+              if (r_alpha() != "(none)" && "alpha" %in% chart_config$optional) {
+                aes_parts <- c(aes_parts, glue::glue("alpha = {r_alpha()}"))
+              }
 
               aes_text <- paste(aes_parts, collapse = ", ")
 
               # Build chart-specific call
-              geom_args <- glue::glue("alpha = {r_alpha()}")
-
               if (current_type == "bar") {
                 if (r_y() == "(none)") {
                   geom_call <- glue::glue(
-                    "ggplot2::geom_bar(position = '{r_position()}', ",
-                    "{geom_args})"
+                    "ggplot2::geom_bar(position = '{r_position()}')"
                   )
                 } else {
                   geom_call <- glue::glue(
-                    "ggplot2::geom_col(position = '{r_position()}', ",
-                    "{geom_args})"
+                    "ggplot2::geom_col(position = '{r_position()}')"
                   )
                 }
               } else if (current_type == "histogram") {
                 geom_call <- glue::glue(
                   "ggplot2::geom_histogram(bins = {r_bins()}, ",
-                  "position = '{r_position()}', {geom_args})"
+                  "position = '{r_position()}')"
                 )
               } else if (current_type == "point") {
-                geom_call <- glue::glue("ggplot2::geom_point({geom_args})")
+                geom_call <- "ggplot2::geom_point()"
               } else if (current_type == "line") {
-                geom_call <- glue::glue("ggplot2::geom_line({geom_args})")
+                geom_call <- "ggplot2::geom_line()"
               } else if (current_type == "boxplot") {
-                geom_call <- glue::glue("ggplot2::geom_boxplot({geom_args})")
+                geom_call <- "ggplot2::geom_boxplot()"
               } else if (current_type == "violin") {
-                geom_call <- glue::glue("ggplot2::geom_violin({geom_args})")
+                geom_call <- "ggplot2::geom_violin()"
               } else if (current_type == "density") {
-                geom_call <- glue::glue("ggplot2::geom_density({geom_args})")
+                geom_call <- "ggplot2::geom_density()"
               } else if (current_type == "area") {
-                geom_call <- glue::glue("ggplot2::geom_area({geom_args})")
+                geom_call <- "ggplot2::geom_area()"
               } else if (current_type == "pie") {
                 # PIE CHART: Special handling required
 
@@ -453,17 +456,13 @@ new_ggplot_block <- function(
 
                 # Choose geom based on y
                 if (r_y() != "(none)") {
-                  geom_call <- glue::glue(
-                    "ggplot2::geom_col(width = 1, {geom_args})"
-                  )
+                  geom_call <- "ggplot2::geom_col(width = 1)"
                 } else {
-                  geom_call <- glue::glue(
-                    "ggplot2::geom_bar(width = 1, {geom_args})"
-                  )
+                  geom_call <- "ggplot2::geom_bar(width = 1)"
                 }
               } else {
                 # Fallback
-                geom_call <- glue::glue("ggplot2::geom_point({geom_args})")
+                geom_call <- "ggplot2::geom_point()"
               }
 
               text <- glue::glue(
@@ -471,22 +470,13 @@ new_ggplot_block <- function(
                 "{geom_call}"
               )
 
-              # Add theme based on selection
+              # Add theme_minimal() as default for all charts
               if (current_type == "pie") {
-                # Pie charts: add polar coordinates first, then apply
-                # selected theme
+                # Pie charts: add polar coordinates and theme
                 text <- glue::glue(
-                  "({text}) + ggplot2::coord_polar('y', start = 0)"
+                  "({text}) + ggplot2::coord_polar('y', start = 0) + ",
+                  "ggplot2::theme_minimal()"
                 )
-
-                # Apply selected theme (pie charts can use any theme)
-                if (r_theme() == "minimal") {
-                  text <- glue::glue("({text}) + ggplot2::theme_minimal()")
-                } else if (r_theme() == "classic") {
-                  text <- glue::glue("({text}) + ggplot2::theme_classic()")
-                } else if (r_theme() == "gray") {
-                  text <- glue::glue("({text}) + ggplot2::theme_gray()")
-                }
 
                 # Add donut hole if requested
                 if (r_donut()) {
@@ -501,14 +491,8 @@ new_ggplot_block <- function(
                   "axis.ticks = ggplot2::element_blank())"
                 )
               } else {
-                # Regular charts: apply selected theme
-                if (r_theme() == "minimal") {
-                  text <- glue::glue("({text}) + ggplot2::theme_minimal()")
-                } else if (r_theme() == "classic") {
-                  text <- glue::glue("({text}) + ggplot2::theme_classic()")
-                } else if (r_theme() == "gray") {
-                  text <- glue::glue("({text}) + ggplot2::theme_gray()")
-                }
+                # Regular charts: apply theme_minimal()
+                text <- glue::glue("({text}) + ggplot2::theme_minimal()")
               }
 
               parse(text = text)[[1]]
@@ -526,7 +510,6 @@ new_ggplot_block <- function(
               alpha = r_alpha,
               position = r_position,
               bins = r_bins,
-              theme = r_theme,
               donut = r_donut
             )
           )
@@ -559,7 +542,7 @@ new_ggplot_block <- function(
           # Add responsive CSS
           block_responsive_css(),
 
-          # Add custom CSS for chart type and theme selectors
+          # Add custom CSS for chart type selector
           tags$style(HTML(
             "
             .chart-type-selector .btn-group-toggle {
@@ -580,25 +563,6 @@ new_ggplot_block <- function(
             }
             .chart-type-selector .btn span {
               font-size: 0.85em;
-            }
-            .theme-selector .btn-group-toggle {
-              display: flex;
-              flex-wrap: wrap;
-              gap: 5px;
-            }
-            .theme-selector .btn {
-              display: flex;
-              flex-direction: column;
-              align-items: center;
-              padding: 6px 10px;
-              min-width: 65px;
-            }
-            .theme-selector .btn i {
-              font-size: 1.1em;
-              margin-bottom: 3px;
-            }
-            .theme-selector .btn span {
-              font-size: 0.8em;
             }
           "
           )),
@@ -781,6 +745,17 @@ new_ggplot_block <- function(
                     selected = if (length(group) == 0) "(none)" else group,
                     width = "100%"
                   )
+                ),
+                div(
+                  id = NS(id, "alpha"),
+                  class = "block-input-wrapper",
+                  selectInput(
+                    inputId = NS(id, "alpha"),
+                    label = make_aesthetic_label("Alpha By", "alpha", type),
+                    choices = c("(none)", alpha),
+                    selected = if (length(alpha) == 0) "(none)" else alpha,
+                    width = "100%"
+                  )
                 )
               )
             ),
@@ -791,18 +766,6 @@ new_ggplot_block <- function(
               tags$h4("Options"),
               div(
                 class = "block-section-grid",
-                div(
-                  class = "block-input-wrapper",
-                  sliderInput(
-                    inputId = NS(id, "alpha"),
-                    label = "Transparency",
-                    min = 0.1,
-                    max = 1.0,
-                    value = alpha,
-                    step = 0.1,
-                    width = "100%"
-                  )
-                ),
                 div(
                   id = NS(id, "position"),
                   class = "block-input-wrapper",
@@ -834,41 +797,6 @@ new_ggplot_block <- function(
                     label = "Donut Chart Style",
                     value = donut
                   )
-                ),
-                # Theme selector - allow natural grid positioning
-                div(
-                  class = "block-input-wrapper theme-selector",
-                  tags$label(
-                    "Theme",
-                    class = "control-label",
-                    style = "margin-bottom: 8px;"
-                  ),
-                  shinyWidgets::radioGroupButtons(
-                    inputId = NS(id, "theme"),
-                    label = NULL,
-                    choiceNames = list(
-                      tags$div(icon("minus"), tags$span("Minimal")),
-                      tags$div(icon("columns"), tags$span("Classic")),
-                      tags$div(icon("palette"), tags$span("Gray"))
-                    ),
-                    choiceValues = c(
-                      "minimal",
-                      "classic",
-                      "gray"
-                    ),
-                    selected = theme,
-                    status = "primary",
-                    size = "sm",
-                    justified = FALSE,
-                    individual = FALSE,
-                    checkIcon = list(
-                      yes = tags$i(
-                        class = "fa fa-check",
-                        style = "display: none;"
-                      ),
-                      no = tags$i(style = "display: none;")
-                    )
-                  )
                 )
               )
             )
@@ -884,7 +812,8 @@ new_ggplot_block <- function(
       "size",
       "shape",
       "linetype",
-      "group"
+      "group",
+      "alpha"
     ),
     ...
   )

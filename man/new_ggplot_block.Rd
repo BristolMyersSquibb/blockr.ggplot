@@ -14,10 +14,9 @@ new_ggplot_block(
   shape = character(),
   linetype = character(),
   group = character(),
-  alpha = 1,
+  alpha = character(),
   position = "stack",
   bins = 30,
-  theme = "minimal",
   donut = FALSE,
   ...
 )
@@ -42,14 +41,11 @@ new_ggplot_block(
 
 \item{group}{Column for group aesthetic}
 
-\item{alpha}{Transparency level (0-1, default 1.0)}
+\item{alpha}{Column for alpha aesthetic (variable transparency)}
 
 \item{position}{Position adjustment for certain geoms}
 
 \item{bins}{Number of bins for histogram}
-
-\item{theme}{ggplot2 theme to apply (default "minimal"). Options: "minimal",
-"classic", "dark", "light", "gray"}
 
 \item{donut}{Whether to create donut chart when type is "pie" (default FALSE)}
 

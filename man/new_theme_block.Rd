@@ -14,6 +14,7 @@ new_theme_block(
   grid_color = "#E5E5E5",
   show_panel_border = FALSE,
   legend_position = "right",
+  base_theme = "minimal",
   ...
 )
 }
@@ -35,6 +36,8 @@ new_theme_block(
 \item{show_panel_border}{Show panel border (default FALSE)}
 
 \item{legend_position}{Legend position: "right", "left", "top", "bottom", "none" (default "right")}
+
+\item{base_theme}{Base ggplot2 theme: "minimal", "classic", "gray", "bw" (default "minimal")}
 
 \item{...}{Forwarded to \code{\link[blockr.core]{new_transform_block}}}
 }

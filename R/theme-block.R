@@ -50,6 +50,7 @@ grid_colors <- function() {
 #' @param grid_color Grid line color (default "#E5E5E5")
 #' @param show_panel_border Show panel border (default FALSE)
 #' @param legend_position Legend position: "right", "left", "top", "bottom", "none" (default "right")
+#' @param base_theme Base ggplot2 theme: "minimal", "classic", "gray", "bw" (default "minimal")
 #' @param ... Forwarded to \code{\link[blockr.core]{new_transform_block}}
 #'
 #' @importFrom colourpicker colourInput
@@ -64,6 +65,7 @@ new_theme_block <- function(
   grid_color = "#E5E5E5",
   show_panel_border = FALSE,
   legend_position = "right",
+  base_theme = "minimal",
   ...
 ) {
   new_ggplot_transform_block(
@@ -81,6 +83,7 @@ new_theme_block <- function(
           r_grid_color <- reactiveVal(grid_color)
           r_show_panel_border <- reactiveVal(show_panel_border)
           r_legend_position <- reactiveVal(legend_position)
+          r_base_theme <- reactiveVal(base_theme)
 
           # Observe input changes
           observeEvent(input$panel_bg, r_panel_bg(input$panel_bg))
@@ -92,6 +95,7 @@ new_theme_block <- function(
           observeEvent(input$grid_color, r_grid_color(input$grid_color))
           observeEvent(input$show_panel_border, r_show_panel_border(input$show_panel_border))
           observeEvent(input$legend_position, r_legend_position(input$legend_position))
+          observeEvent(input$base_theme, r_base_theme(input$base_theme))
 
           list(
             expr = reactive({
@@ -179,12 +183,22 @@ new_theme_block <- function(
               }
 
               # Build the complete expression
+              # Start with base theme (overrides ggplot block's theme_minimal if different)
+              base_theme_func <- switch(
+                r_base_theme(),
+                minimal = "ggplot2::theme_minimal()",
+                classic = "ggplot2::theme_classic()",
+                gray = "ggplot2::theme_gray()",
+                bw = "ggplot2::theme_bw()",
+                "ggplot2::theme_minimal()"  # fallback
+              )
+
+              text <- glue::glue("data + {base_theme_func}")
+
+              # Add custom theme tweaks if any
               if (length(theme_parts) > 0) {
                 theme_call <- paste(theme_parts, collapse = ", ")
-                text <- glue::glue("data + ggplot2::theme({theme_call})")
-              } else {
-                # No customizations, just return the input plot
-                text <- "data"
+                text <- glue::glue("({text}) + ggplot2::theme({theme_call})")
               }
 
               parse(text = text)[[1]]
@@ -198,7 +212,8 @@ new_theme_block <- function(
               show_minor_grid = r_show_minor_grid,
               grid_color = r_grid_color,
               show_panel_border = r_show_panel_border,
-              legend_position = r_legend_position
+              legend_position = r_legend_position,
+              base_theme = r_base_theme
             )
           )
         }
@@ -231,10 +246,10 @@ new_theme_block <- function(
           div(
             class = "block-form-grid",
 
-            # Background Colors Section
+            # Section 1: Colors & Backgrounds
             div(
               class = "block-section",
-              tags$h4("Background Colors"),
+              tags$h4("Colors & Backgrounds"),
               div(
                 class = "block-section-grid",
                 div(
@@ -244,14 +259,18 @@ new_theme_block <- function(
                 div(
                   class = "block-input-wrapper",
                   make_theme_color_input("plot_bg", "Plot Background", plot_bg, plot_bg_colors())
+                ),
+                div(
+                  class = "block-input-wrapper",
+                  make_theme_color_input("grid_color", "Grid Color", grid_color, grid_colors())
                 )
               )
             ),
 
-            # Text and Font Section
+            # Section 2: Typography
             div(
               class = "block-section",
-              tags$h4("Text & Font"),
+              tags$h4("Typography"),
               div(
                 class = "block-section-grid",
                 div(
@@ -283,10 +302,10 @@ new_theme_block <- function(
               )
             ),
 
-            # Grid Lines Section
+            # Section 3: Elements
             div(
               class = "block-section",
-              tags$h4("Grid Lines"),
+              tags$h4("Elements"),
               div(
                 class = "block-section-grid",
                 div(
@@ -307,25 +326,21 @@ new_theme_block <- function(
                 ),
                 div(
                   class = "block-input-wrapper",
-                  make_theme_color_input("grid_color", "Grid Color", grid_color, grid_colors())
-                )
-              )
-            ),
-
-            # Other Options Section
-            div(
-              class = "block-section",
-              tags$h4("Other Options"),
-              div(
-                class = "block-section-grid",
-                div(
-                  class = "block-input-wrapper",
                   checkboxInput(
                     inputId = NS(id, "show_panel_border"),
                     label = "Show Panel Border",
                     value = show_panel_border
                   )
-                ),
+                )
+              )
+            ),
+
+            # Section 4: Appearance
+            div(
+              class = "block-section",
+              tags$h4("Appearance"),
+              div(
+                class = "block-section-grid",
                 div(
                   class = "block-input-wrapper",
                   selectInput(
@@ -339,6 +354,21 @@ new_theme_block <- function(
                       "None" = "none"
                     ),
                     selected = legend_position,
+                    width = "100%"
+                  )
+                ),
+                div(
+                  class = "block-input-wrapper",
+                  selectInput(
+                    inputId = NS(id, "base_theme"),
+                    label = "Base Theme",
+                    choices = c(
+                      "Minimal" = "minimal",
+                      "Classic" = "classic",
+                      "Gray" = "gray",
+                      "Black & White" = "bw"
+                    ),
+                    selected = base_theme,
                     width = "100%"
                   )
                 )
