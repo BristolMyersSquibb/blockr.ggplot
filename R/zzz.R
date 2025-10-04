@@ -44,6 +44,21 @@ register_ggplot_blocks <- function() {
     package = utils::packageName(),
     overwrite = TRUE
   )
+
+  register_blocks(
+    "new_facet_block",
+    name = "Facet",
+    description = paste0(
+      "Add faceting to ggplot objects with facet_wrap() or facet_grid(). ",
+      "Split your plot into multiple panels based on categorical variables. ",
+      "Visual preview shows layout, supports free scales, and customizable ",
+      "labels. Choose wrap for automatic grid layout or grid for explicit ",
+      "rows and columns control."
+    ),
+    category = "plot",
+    package = utils::packageName(),
+    overwrite = TRUE
+  )
 }
 
 .onLoad <- function(libname, pkgname) {
