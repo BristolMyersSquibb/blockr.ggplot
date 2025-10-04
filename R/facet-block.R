@@ -617,7 +617,7 @@ new_facet_block <- function(
                     ),
                     choiceValues = c("wrap", "grid"),
                     selected = facet_type,
-                    status = "primary",
+                    status = "light",
                     size = "sm",
                     justified = FALSE,
                     individual = FALSE,

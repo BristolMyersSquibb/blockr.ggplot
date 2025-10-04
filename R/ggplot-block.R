@@ -645,6 +645,7 @@ new_ggplot_block <- function(
                       "pie"
                     ),
                     selected = type,
+                    status = "light",
                     size = "sm",
                     justified = FALSE,
                     individual = FALSE,
