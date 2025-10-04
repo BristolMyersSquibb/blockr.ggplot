@@ -1,6 +1,9 @@
 # Claude Development Notes for blockr.ggplot
 
-> **📚 Complete guide:** [dev/writing-blocks.md](dev/writing-blocks.md)
+> **📚 Developer guides:** [dev/README.md](dev/README.md)
+> - Core concepts: [blocks-core-guide.md](dev/blocks-core-guide.md)
+> - ggplot patterns: [ggplot-blocks-guide.md](dev/ggplot-blocks-guide.md)
+> - UI guidelines: [ui-guidelines.md](dev/ui-guidelines.md)
 
 ## Must Follow
 
@@ -17,4 +20,4 @@
 
 ## More
 
-See [dev/writing-blocks.md](dev/writing-blocks.md) for full guide and examples.
+See [dev/README.md](dev/README.md) for complete documentation structure.
