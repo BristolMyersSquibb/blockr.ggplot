@@ -5,37 +5,37 @@
 \title{Theme customization block for ggplot2 plots}
 \usage{
 new_theme_block(
-  panel_bg = "#FFFFFF",
-  plot_bg = "#FFFFFF",
-  base_size = 11,
-  base_family = "sans",
-  show_major_grid = TRUE,
-  show_minor_grid = TRUE,
-  grid_color = "#E5E5E5",
-  show_panel_border = FALSE,
-  legend_position = "right",
+  panel_bg = "",
+  plot_bg = "",
+  base_size = NA_real_,
+  base_family = "",
+  show_major_grid = "auto",
+  show_minor_grid = "auto",
+  grid_color = "",
+  show_panel_border = "auto",
+  legend_position = "",
   base_theme = "minimal",
   ...
 )
 }
 \arguments{
-\item{panel_bg}{Panel background color (default "#FFFFFF" - white)}
+\item{panel_bg}{Panel background color (default "" uses base theme default)}
 
-\item{plot_bg}{Plot background color (default "#FFFFFF" - white)}
+\item{plot_bg}{Plot background color (default "" uses base theme default)}
 
-\item{base_size}{Base font size in points (default 11)}
+\item{base_size}{Base font size in points (default NA uses base theme default)}
 
-\item{base_family}{Font family: "sans", "serif", or "mono" (default "sans")}
+\item{base_family}{Font family: "sans", "serif", or "mono" (default "" uses base theme default)}
 
-\item{show_major_grid}{Show major grid lines (default TRUE)}
+\item{show_major_grid}{Show major grid lines: "auto", "show", "hide" (default "auto" uses base theme default)}
 
-\item{show_minor_grid}{Show minor grid lines (default TRUE)}
+\item{show_minor_grid}{Show minor grid lines: "auto", "show", "hide" (default "auto" uses base theme default)}
 
-\item{grid_color}{Grid line color (default "#E5E5E5")}
+\item{grid_color}{Grid line color (default "" uses base theme default)}
 
-\item{show_panel_border}{Show panel border (default FALSE)}
+\item{show_panel_border}{Show panel border: "auto", "show", "hide" (default "auto" uses base theme default)}
 
-\item{legend_position}{Legend position: "right", "left", "top", "bottom", "none" (default "right")}
+\item{legend_position}{Legend position: "", "right", "left", "top", "bottom", "none" (default "" uses base theme default)}
 
 \item{base_theme}{Base ggplot2 theme: "minimal", "classic", "gray", "bw" (default "minimal")}
 
@@ -44,4 +44,5 @@ new_theme_block(
 \description{
 A block that applies advanced theme customizations to ggplot2 objects.
 Allows fine-grained control over backgrounds, fonts, grid lines, and more.
+Empty/NULL values will use the base theme's defaults.
 }
