@@ -601,7 +601,7 @@ new_ggplot_block <- function(
           # Add responsive CSS
           block_responsive_css(),
 
-          # Add custom CSS for chart type selector
+          # Add custom CSS for chart type selector and two-column layout
           tags$style(HTML(
             "
             .chart-type-selector {
@@ -628,17 +628,47 @@ new_ggplot_block <- function(
             .chart-type-selector .btn span {
               font-size: 0.85em;
             }
+
+            /* Two-column layout - responsive wrapper */
+            @media (min-width: 700px) {
+              .ggplot-layout-wrapper {
+                display: grid;
+                grid-template-columns: 2fr 1fr;
+                gap: 20px;
+                align-items: start;
+              }
+              .ggplot-preview-sidebar {
+                position: sticky;
+                top: 20px;
+              }
+            }
+
+            @media (max-width: 699px) {
+              .ggplot-layout-wrapper {
+                display: block;
+              }
+              .ggplot-preview-sidebar {
+                margin-top: 20px;
+              }
+            }
           "
           )),
 
           # Set container query context
           block_container_script(),
 
+          # Two-column layout wrapper
           div(
-            class = "block-form-grid",
+            class = "ggplot-layout-wrapper",
 
-            # Chart Type Selection Section (always visible)
+            # Left side: Form inputs (2/3 width)
             div(
+              class = "ggplot-inputs",
+              div(
+                class = "block-form-grid",
+
+                # Chart Type Selection Section (always visible)
+                div(
               class = "block-section",
               tags$h4("Chart Type"),
               div(
@@ -933,8 +963,22 @@ new_ggplot_block <- function(
               )
             )
           )
-        )
-      )
+                )
+              ) # Close ggplot-inputs div
+            ), # Close block-form-grid div
+
+            # Right side: Preview sidebar (1/3 width)
+            div(
+              class = "ggplot-preview-sidebar",
+              # Placeholder for future preview content
+              tags$div(
+                style = "font-size: 0.875rem; color: #6c757d; text-align: center; padding: 20px;",
+                "Chart preview"
+              )
+            )
+          ) # Close ggplot-layout-wrapper div
+        ) # Close block-container div
+      ) # Close tagList
     },
     class = "ggplot_block",
     allow_empty_state = c(

@@ -7,10 +7,11 @@ This guide documents the UI patterns and design principles for blockr.ggplot blo
 1. [UI Philosophy](#ui-philosophy)
 2. [Responsive Layout System](#responsive-layout-system)
 3. [Advanced Options Toggle](#advanced-options-toggle)
-4. [Preview Components](#preview-components)
-5. [Color & Styling](#color--styling)
-6. [Complete Examples](#complete-examples)
-7. [Quick Reference](#quick-reference)
+4. [Two-Column Layout with Preview Sidebar](#two-column-layout-with-preview-sidebar)
+5. [Preview Components](#preview-components)
+6. [Color & Styling](#color--styling)
+7. [Complete Examples](#complete-examples)
+8. [Quick Reference](#quick-reference)
 
 ---
 
@@ -228,6 +229,189 @@ ui <- function(id) {
 - Required fields
 - Core functionality
 - Commonly used options
+
+---
+
+## Two-Column Layout with Preview Sidebar
+
+### The Pattern
+
+For blocks with previews or supplementary content, use a two-column layout: inputs (2/3 width) on left, preview/sidebar (1/3 width) on right. This layout is responsive and collapses to a single column on narrow screens.
+
+### Structure
+
+```r
+ui <- function(id) {
+  tagList(
+    block_responsive_css(),
+
+    # Two-column responsive CSS
+    tags$style(HTML("
+      /* Two-column layout - responsive wrapper */
+      @media (min-width: 700px) {
+        .my-layout-wrapper {
+          display: grid;
+          grid-template-columns: 2fr 1fr;
+          gap: 20px;
+          align-items: start;
+        }
+        .my-preview-sidebar {
+          position: sticky;
+          top: 20px;
+        }
+      }
+
+      @media (max-width: 699px) {
+        .my-layout-wrapper {
+          display: block;
+        }
+        .my-preview-sidebar {
+          margin-top: 20px;
+        }
+      }
+    ")),
+
+    div(
+      class = "block-container",
+
+      # Two-column wrapper
+      div(
+        class = "my-layout-wrapper",
+
+        # Left: Inputs (2/3 width)
+        div(
+          class = "my-inputs",
+          div(
+            class = "block-form-grid",
+
+            # All sections and inputs here
+            div(
+              class = "block-section",
+              tags$h4("Options"),
+              div(
+                class = "block-section-grid",
+                div(class = "block-input-wrapper",
+                    selectInput(NS(id, "x"), "X-axis", ...)
+                )
+              )
+            )
+          )
+        ),
+
+        # Right: Preview/Sidebar (1/3 width)
+        div(
+          class = "my-preview-sidebar",
+          uiOutput(NS(id, "preview"))
+        )
+      )
+    )
+  )
+}
+```
+
+### Responsive Behavior
+
+| Screen Width | Layout | Description |
+|-------------|--------|-------------|
+| **≥ 700px** | Side-by-side | Inputs (2/3) left, preview (1/3) right with sticky positioning |
+| **< 700px** | Stacked | Inputs full-width on top, preview full-width below |
+
+**Key CSS Features:**
+- **Grid layout**: `grid-template-columns: 2fr 1fr` creates 2:1 ratio
+- **Sticky preview**: `position: sticky; top: 20px` keeps preview visible while scrolling
+- **Responsive gap**: `gap: 20px` for spacing between columns
+- **Block fallback**: On narrow screens, wrapper uses `display: block` for stacking
+
+### When to Use
+
+Use the two-column layout when:
+- ✅ Block has visual preview or supplementary information
+- ✅ Preview is helpful but not essential for input selection
+- ✅ Preview doesn't require full width to be useful
+- ✅ You want preview visible while changing inputs (wide screens)
+
+**Examples:**
+- **Facet block**: Layout preview shows facet grid configuration
+- **ggplot block**: Chart preview or aesthetic guidance
+- **Plot grid block**: Grid arrangement preview
+
+Don't use when:
+- ❌ Preview requires full width (use below-input placement instead)
+- ❌ Block has no preview/sidebar content
+- ❌ Content is primarily vertical (tables, lists)
+
+### Implementation Pattern
+
+**Step 1: Create wrapper classes**
+```r
+# Use descriptive, unique class names
+div(class = "facet-layout-wrapper",       # Wrapper
+  div(class = "facet-inputs", ...),       # Left column
+  div(class = "facet-preview-sidebar",    # Right column
+    ...)
+)
+```
+
+**Step 2: Add responsive CSS**
+```css
+/* Wide screens: side-by-side */
+@media (min-width: 700px) {
+  .{name}-layout-wrapper {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 20px;
+    align-items: start;
+  }
+  .{name}-preview-sidebar {
+    position: sticky;
+    top: 20px;
+  }
+}
+
+/* Narrow screens: stacked */
+@media (max-width: 699px) {
+  .{name}-layout-wrapper {
+    display: block;
+  }
+  .{name}-preview-sidebar {
+    margin-top: 20px;
+  }
+}
+```
+
+**Step 3: Wrap form grid**
+```r
+# The left column contains block-form-grid
+div(
+  class = "{name}-inputs",
+  div(
+    class = "block-form-grid",
+    # All your existing sections
+  )
+)
+```
+
+### Naming Convention
+
+Follow this naming pattern for consistency:
+
+| Element | Class Name | Purpose |
+|---------|-----------|----------|
+| Wrapper | `.{name}-layout-wrapper` | Container for two columns |
+| Left Column | `.{name}-inputs` | Contains form grid with inputs |
+| Right Column | `.{name}-preview-sidebar` | Contains preview/supplementary content |
+
+**Example:**
+- Facet block: `.facet-layout-wrapper`, `.facet-inputs`, `.facet-preview-sidebar`
+- ggplot block: `.ggplot-layout-wrapper`, `.ggplot-inputs`, `.ggplot-preview-sidebar`
+
+### Complete Example
+
+See the facet block implementation in [facet-block.R](../R/facet-block.R) for a complete working example with:
+- Two-column responsive wrapper
+- Sticky preview sidebar
+- SVG preview with status indicators
+- Proper HTML structure and closing tags
 
 ---
 
