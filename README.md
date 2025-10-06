@@ -39,7 +39,7 @@ This launches an interactive web interface where you can:
 
 `blockr.ggplot` provides a single, powerful block that handles all your visualization needs. No need to learn multiple blocks - just one interface that adapts to your chosen chart type.
 
-<img src="man/figures/chart-block.png" alt="Universal ggplot Block" width="70%">
+<img src="man/figures/block-ggplot-scatter.png" alt="Universal ggplot Block" width="70%">
 
 ### Key Features
 
@@ -88,46 +88,166 @@ All visualizations below are created with the same `ggplot_block` - just by chan
 ### Distribution Visualizations
 
 #### Scatter Plot (`type = "point"`)
-<img src="man/figures/chart-scatter.png" alt="Scatter Plot" width="60%">
+<img src="man/figures/block-ggplot-scatter.png" alt="Scatter Plot" width="60%">
 *Perfect for exploring relationships between continuous variables*
 
 #### Histogram (`type = "histogram"`)
-<img src="man/figures/chart-histogram.png" alt="Histogram" width="60%">
+<img src="man/figures/block-ggplot-histogram.png" alt="Histogram" width="60%">
 *Visualize the distribution of a single continuous variable*
 
 #### Density Plot (`type = "density"`)
-<img src="man/figures/chart-density.png" alt="Density Plot" width="60%">
+<img src="man/figures/block-ggplot-density.png" alt="Density Plot" width="60%">
 *Smooth probability density curves for distribution analysis*
 
 ### Categorical Comparisons
 
 #### Bar Chart (`type = "bar"`)
-<img src="man/figures/chart-bar.png" alt="Bar Chart" width="60%">
+<img src="man/figures/block-ggplot-bar.png" alt="Bar Chart" width="60%">
 *Compare values across categories with optional grouping and stacking*
 
 #### Box Plot (`type = "boxplot"`)
-<img src="man/figures/chart-boxplot.png" alt="Box Plot" width="60%">
+<img src="man/figures/block-ggplot-boxplot.png" alt="Box Plot" width="60%">
 *Show distribution statistics across different groups*
 
 #### Violin Plot (`type = "violin"`)
-<img src="man/figures/chart-violin.png" alt="Violin Plot" width="60%">
+<img src="man/figures/block-ggplot-violin.png" alt="Violin Plot" width="60%">
 *Combine box plot statistics with density distribution shapes*
 
 ### Time Series & Trends
 
 #### Line Chart (`type = "line"`)
-<img src="man/figures/chart-line.png" alt="Line Chart" width="60%">
+<img src="man/figures/block-ggplot-line.png" alt="Line Chart" width="60%">
 *Track changes over time or continuous sequences*
 
 #### Area Chart (`type = "area"`)
-<img src="man/figures/chart-area.png" alt="Area Chart" width="60%">
+<img src="man/figures/block-ggplot-area.png" alt="Area Chart" width="60%">
 *Emphasize cumulative totals and magnitude of change*
 
 ### Proportions
 
 #### Pie Chart (`type = "pie"`)
-<img src="man/figures/chart-pie.png" alt="Pie Chart" width="60%">
+<img src="man/figures/block-ggplot-pie.png" alt="Pie Chart" width="60%">
 *Show parts of a whole (set `donut = TRUE` for donut charts)*
+
+## Advanced Composition Blocks
+
+Beyond the universal ggplot block, `blockr.ggplot` provides specialized blocks for advanced plot composition and styling:
+
+### Facet Block - Small Multiples
+
+<img src="man/figures/block-facet.png" alt="Facet Block" width="60%">
+
+Split your visualization into multiple panels to compare patterns across categories. The facet block supports both `facet_wrap()` (flexible grid layout) and `facet_grid()` (rows × columns matrix).
+
+```r
+# Example: Split scatter plot by cylinder count
+board <- new_board(
+  blocks = c(
+    data = new_dataset_block("mtcars", package = "datasets"),
+    scatter = new_ggplot_block(
+      type = "point",
+      x = "wt",
+      y = "mpg",
+      color = "cyl"
+    ),
+    facet = new_facet_block(
+      facet_type = "wrap",
+      facets = "cyl",
+      ncol = "2",
+      scales = "free_y"  # Independent Y-axis per panel
+    )
+  ),
+  links = c(
+    new_link("data", "scatter", "data"),
+    new_link("scatter", "facet", "data")
+  )
+)
+
+blockr.core::serve(board)
+```
+
+**Key Features:**
+- 📊 **Two Modes**: facet_wrap (auto-layout) or facet_grid (explicit rows/columns)
+- 📐 **Visual Preview**: See facet layout before rendering
+- 🎯 **Flexible Scales**: Free, fixed, or partially free axes
+- 🏷️ **Custom Labels**: Multiple labeller functions for panel titles
+
+### Plot Grid Block - Multi-Plot Dashboards
+
+<img src="man/figures/block-grid.png" alt="Plot Grid Block" width="60%">
+
+Combine multiple independent plots into a unified dashboard using the powerful [patchwork](https://patchwork.data-imaginist.com/) package. Plots are automatically aligned and arranged for publication-quality output.
+
+```r
+# Example: Combine three different chart types
+board <- new_board(
+  blocks = c(
+    data = new_dataset_block("mtcars", package = "datasets"),
+    scatter = new_ggplot_block(type = "point", x = "wt", y = "mpg", color = "cyl"),
+    boxplot = new_ggplot_block(type = "boxplot", x = "cyl", y = "mpg", fill = "cyl"),
+    histogram = new_ggplot_block(type = "histogram", x = "mpg", bins = 15),
+    grid = new_plot_grid_block()
+  ),
+  links = c(
+    new_link("data", "scatter", "data"),
+    new_link("data", "boxplot", "data"),
+    new_link("data", "histogram", "data"),
+    new_link("scatter", "grid", "1"),
+    new_link("boxplot", "grid", "2"),
+    new_link("histogram", "grid", "3")
+  )
+)
+
+blockr.core::serve(board)
+```
+
+**Key Features:**
+- 🎨 **Automatic Layout**: Intelligent plot arrangement using patchwork
+- 🔗 **Any Number of Plots**: Combine 2, 3, 4+ plots seamlessly
+- 📏 **Perfect Alignment**: Axes, legends, and spacing automatically aligned
+- 📊 **Mixed Chart Types**: Combine scatter, bar, line, box plots, and more
+
+### Theme Block - Professional Styling
+
+<img src="man/figures/block-theme.png" alt="Theme Block" width="60%">
+
+Apply professional themes and fine-tune visual styling with 20+ pre-built themes from ggplot2, ggthemes, cowplot, and ggpubr packages.
+
+```r
+# Example: Apply publication-ready theme
+board <- new_board(
+  blocks = c(
+    data = new_dataset_block("mtcars", package = "datasets"),
+    scatter = new_ggplot_block(
+      type = "point",
+      x = "wt",
+      y = "mpg",
+      color = "cyl"
+    ),
+    theme = new_theme_block(
+      base_theme = "minimal"  # Choose from 20+ themes
+    )
+  ),
+  links = c(
+    new_link("data", "scatter", "data"),
+    new_link("scatter", "theme", "data")
+  )
+)
+
+blockr.core::serve(board)
+```
+
+**Available Themes:**
+- 📈 **ggplot2 Built-ins**: minimal, classic, gray, bw, dark, light, void, test
+- 🎯 **ggthemes**: Economist, FiveThirtyEight, Tufte, WSJ, Excel, and more
+- 📰 **cowplot**: Publication-ready themes with clean backgrounds
+- 🔬 **ggpubr**: Scientific publication themes
+
+**Customization Options:**
+- 🎨 Colors (background, panel, grid, text)
+- 📝 Typography (font size, family)
+- 🔲 Grid lines and panel borders
+- 📍 Legend position and styling
 
 
 ## Example: Interactive Pipeline with DAG Board
@@ -164,40 +284,6 @@ This creates an interactive dashboard where you can:
 - **Build complex workflows**: Chain multiple data operations before visualization
 
 ## More Examples
-
-### Combining Multiple Plots with Plot Grid
-
-Create a dashboard that combines multiple charts using `new_plot_grid_block()`. The grid block uses [patchwork](https://patchwork.data-imaginist.com/) for modern, automatically-aligned plot composition:
-
-```r
-library(blockr.core)
-library(blockr.ggplot)
-library(blockr.ui)
-
-# Create a dashboard with two charts combined in a grid
-board <- blockr.ui::new_dag_board(
-  blocks = c(
-    data = new_dataset_block("mtcars", package = "datasets"),
-    scatter = new_ggplot_block(type = "point", x = "wt", y = "mpg", color = "cyl"),
-    boxplot = new_ggplot_block(type = "boxplot", x = "cyl", y = "mpg", fill = "cyl"),
-    grid = new_plot_grid_block()
-  ),
-  links = c(
-    new_link("data", "scatter", "data"),
-    new_link("data", "boxplot", "data"),
-    new_link("scatter", "grid", "1"),
-    new_link("boxplot", "grid", "2")
-  )
-)
-
-blockr.core::serve(board)
-```
-
-This creates a single combined visualization with:
-- A scatter plot showing weight vs. mpg
-- A boxplot showing mpg distribution by cylinder count
-- Both plots automatically aligned and arranged using patchwork
-- Supports any number of plots (not just two!)
 
 ### Exploring Different Chart Types with Same Data
 
