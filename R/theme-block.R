@@ -335,7 +335,10 @@ new_theme_block <- function(
                 # Force show panel border
                 theme_parts <- c(
                   theme_parts,
-                  "panel.border = ggplot2::element_rect(colour = \"grey50\", fill = NA)"
+                  paste0(
+                    "panel.border = ggplot2::element_rect(",
+                    "colour = \"grey50\", fill = NA)"
+                  )
                 )
               } else if (r_show_panel_border() == "hide") {
                 # Force hide panel border
