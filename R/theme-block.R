@@ -44,14 +44,22 @@ grid_colors <- function() {
 #'
 #' @param panel_bg Panel background color (default "" uses base theme default)
 #' @param plot_bg Plot background color (default "" uses base theme default)
-#' @param base_size Base font size in points (default NA uses base theme default)
-#' @param base_family Font family: "sans", "serif", or "mono" (default "" uses base theme default)
-#' @param show_major_grid Show major grid lines: "auto", "show", "hide" (default "auto" uses base theme default)
-#' @param show_minor_grid Show minor grid lines: "auto", "show", "hide" (default "auto" uses base theme default)
-#' @param grid_color Grid line color (default "" uses base theme default)
-#' @param show_panel_border Show panel border: "auto", "show", "hide" (default "auto" uses base theme default)
-#' @param legend_position Legend position: "", "right", "left", "top", "bottom", "none" (default "" uses base theme default)
-#' @param base_theme Base ggplot2 theme: "minimal", "classic", "gray", "bw" (default "minimal")
+#' @param base_size Base font size in points
+#'   (default NA uses base theme default)
+#' @param base_family Font family: "sans", "serif", or "mono"
+#'   (default "" uses base theme default)
+#' @param show_major_grid Show major grid lines: "auto", "show", "hide"
+#'   (default "auto" uses base theme default)
+#' @param show_minor_grid Show minor grid lines: "auto", "show", "hide"
+#'   (default "auto" uses base theme default)
+#' @param grid_color Grid line color
+#'   (default "" uses base theme default)
+#' @param show_panel_border Show panel border: "auto", "show", "hide"
+#'   (default "auto" uses base theme default)
+#' @param legend_position Legend position: "", "right", "left", "top",
+#'   "bottom", "none" (default "" uses base theme default)
+#' @param base_theme Base ggplot2 theme: "minimal", "classic", "gray", "bw"
+#'   (default "minimal")
 #' @param ... Forwarded to \code{\link[blockr.core]{new_transform_block}}
 #'
 #' @importFrom colourpicker colourInput
@@ -86,12 +94,14 @@ new_theme_block <- function(
           r_legend_position <- reactiveVal(legend_position)
           r_base_theme <- reactiveVal(base_theme)
 
-          # Observe input changes (convert "transparent" or "#00000000" to empty string for colors)
+          # Observe input changes
+          # (convert "transparent" or "#00000000" to empty string for colors)
           observeEvent(
             input$panel_bg,
             {
               val <- input$panel_bg
-              # Treat transparent, #00000000 (transparent black), or empty as "auto"
+              # Treat transparent, #00000000 (transparent black),
+              # or empty as "auto"
               r_panel_bg(
                 if (val %in% c("transparent", "#00000000", "")) "" else val
               )
@@ -102,7 +112,8 @@ new_theme_block <- function(
             input$plot_bg,
             {
               val <- input$plot_bg
-              # Treat transparent, #00000000 (transparent black), or empty as "auto"
+              # Treat transparent, #00000000 (transparent black),
+              # or empty as "auto"
               r_plot_bg(
                 if (val %in% c("transparent", "#00000000", "")) "" else val
               )
@@ -147,7 +158,8 @@ new_theme_block <- function(
             input$grid_color,
             {
               val <- input$grid_color
-              # Treat transparent, #00000000 (transparent black), or empty as "auto"
+              # Treat transparent, #00000000 (transparent black),
+              # or empty as "auto"
               r_grid_color(
                 if (val %in% c("transparent", "#00000000", "")) "" else val
               )
@@ -186,7 +198,8 @@ new_theme_block <- function(
                 theme_parts <- c(
                   theme_parts,
                   glue::glue(
-                    'panel.background = ggplot2::element_rect(fill = "{r_panel_bg()}")'
+                    "panel.background = ",
+                    'ggplot2::element_rect(fill = "{r_panel_bg()}")'
                   )
                 )
               }
@@ -197,11 +210,13 @@ new_theme_block <- function(
                 theme_parts <- c(
                   theme_parts,
                   glue::glue(
-                    'plot.background = ggplot2::element_rect(fill = "{r_plot_bg()}")'
+                    "plot.background = ",
+                    'ggplot2::element_rect(fill = "{r_plot_bg()}")'
                   )
                 )
               } else if (r_base_theme() == "gray") {
-                # Gray theme: set plot background to match panel (gray theme doesn't set this itself)
+                # Gray theme: set plot background to match panel
+                # (gray theme doesn't set this itself)
                 theme_parts <- c(
                   theme_parts,
                   'plot.background = ggplot2::element_rect(fill = "#EBEBEB")'
@@ -215,7 +230,7 @@ new_theme_block <- function(
               if (!is.na(r_base_size())) {
                 text_parts <- c(
                   text_parts,
-                  glue::glue('size = {r_base_size()}')
+                  glue::glue("size = {r_base_size()}")
                 )
               }
 
@@ -232,7 +247,8 @@ new_theme_block <- function(
                 theme_parts <- c(
                   theme_parts,
                   glue::glue(
-                    'text = ggplot2::element_text({paste(text_parts, collapse = ", ")})'
+                    "text = ggplot2::element_text(",
+                    "{paste(text_parts, collapse = \", \")})"
                   )
                 )
               }
@@ -251,7 +267,8 @@ new_theme_block <- function(
                   theme_parts <- c(
                     theme_parts,
                     glue::glue(
-                      'panel.grid.major = ggplot2::element_line(colour = "{r_grid_color()}")'
+                      "panel.grid.major = ggplot2::element_line(",
+                      'colour = "{r_grid_color()}")'
                     )
                   )
                 } else {
@@ -268,7 +285,8 @@ new_theme_block <- function(
                 theme_parts <- c(
                   theme_parts,
                   glue::glue(
-                    'panel.grid.major = ggplot2::element_line(colour = "{r_grid_color()}")'
+                    "panel.grid.major = ggplot2::element_line(",
+                    'colour = "{r_grid_color()}")'
                   )
                 )
               }
@@ -287,7 +305,8 @@ new_theme_block <- function(
                   theme_parts <- c(
                     theme_parts,
                     glue::glue(
-                      'panel.grid.minor = ggplot2::element_line(colour = "{r_grid_color()}")'
+                      "panel.grid.minor = ggplot2::element_line(",
+                      'colour = "{r_grid_color()}")'
                     )
                   )
                 } else {
@@ -304,7 +323,8 @@ new_theme_block <- function(
                 theme_parts <- c(
                   theme_parts,
                   glue::glue(
-                    'panel.grid.minor = ggplot2::element_line(colour = "{r_grid_color()}")'
+                    "panel.grid.minor = ggplot2::element_line(",
+                    'colour = "{r_grid_color()}")'
                   )
                 )
               }

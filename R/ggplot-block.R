@@ -962,23 +962,21 @@ new_ggplot_block <- function(
                 )
               )
             )
-          )
-                )
-              ) # Close ggplot-inputs div
-            ), # Close block-form-grid div
+          ) # Close block-form-grid div
+        ), # Close ggplot-inputs div
 
-            # Right side: Preview sidebar (1/3 width)
-            div(
-              class = "ggplot-preview-sidebar",
-              # Placeholder for future preview content
-              tags$div(
-                style = "font-size: 0.875rem; color: #6c757d; text-align: center; padding: 20px;",
-                "Chart preview"
-              )
-            )
-          ) # Close ggplot-layout-wrapper div
-        ) # Close block-container div
-      ) # Close tagList
+        # Right side: Preview sidebar (1/3 width)
+        div(
+          class = "ggplot-preview-sidebar",
+          # Placeholder for future preview content
+          tags$div(
+            style = "font-size: 0.875rem; color: #6c757d; text-align: center; padding: 20px;",
+            "Chart preview"
+          )
+        )
+      ) # Close ggplot-layout-wrapper div
+    ) # Close block-container div
+  ) # Close tagList
     },
     class = "ggplot_block",
     allow_empty_state = c(
