@@ -1,5 +1,5 @@
 Package: blockr.ggplot
-Title: GGplots for the blockr ecosystem
+Title: Interactive ggplot2 Charts for Blockr
 Version: 0.0.1
 Authors@R: c(
     person(given = "Nicolas",
@@ -32,6 +32,5 @@ Suggests:
     webshot2,
     cowplot,
     ggthemes,
-    hrbrthemes,
     ggpubr
 Config/testthat/edition: 3

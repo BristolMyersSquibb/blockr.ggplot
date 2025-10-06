@@ -8,7 +8,12 @@
 #' @param n_cols Number of column facet levels (for grid)
 #' @return List with svg, status text, and status type
 #' @noRd
-create_facet_preview_svg <- function(facet_type, n_levels = 1, ncol_val = "", nrow_val = "", n_rows = 1, n_cols = 1) {
+create_facet_preview_svg <- function(facet_type,
+                                     n_levels = 1,
+                                     ncol_val = "",
+                                     nrow_val = "",
+                                     n_rows = 1,
+                                     n_cols = 1) {
   if (facet_type == "wrap") {
     # Use ggplot2::wrap_dims for wrap layout calculation
     result <- tryCatch(
@@ -92,7 +97,7 @@ create_facet_preview_svg <- function(facet_type, n_levels = 1, ncol_val = "", nr
       )
     } else {
       status_text <- sprintf(
-        "%d × %d grid (%d total facets)",
+        "%d \u00d7 %d grid (%d total facets)",
         nrow_actual, ncol_actual, total_slots
       )
     }
@@ -148,7 +153,11 @@ create_facet_preview_svg <- function(facet_type, n_levels = 1, ncol_val = "", nr
   svg <- tags$svg(
     width = preview_width,
     height = preview_height,
-    viewBox = sprintf("0 0 %d %d", as.integer(preview_width), as.integer(preview_height)),
+    viewBox = sprintf(
+      "0 0 %d %d",
+      as.integer(preview_width),
+      as.integer(preview_height)
+    ),
     style = paste(
       "border: 1px solid #ddd; background: white;",
       "border-radius: 4px;"
@@ -176,10 +185,14 @@ create_facet_preview_svg <- function(facet_type, n_levels = 1, ncol_val = "", nr
 #' @param cols Column(s) for column facets in facet_grid (character vector)
 #' @param ncol Number of columns for facet_wrap (default: NULL for auto)
 #' @param nrow Number of rows for facet_wrap (default: NULL for auto)
-#' @param scales Scale behavior: "fixed", "free", "free_x", "free_y" (default: "fixed")
-#' @param labeller Labeller function: "label_value", "label_both", "label_parsed" (default: "label_value")
-#' @param dir Direction for facet_wrap: "h" (horizontal) or "v" (vertical) (default: "h")
-#' @param space Space behavior for facet_grid: "fixed", "free_x", "free_y" (default: "fixed")
+#' @param scales Scale behavior: "fixed", "free", "free_x", "free_y"
+#'   (default: "fixed")
+#' @param labeller Labeller function: "label_value", "label_both",
+#'   "label_parsed" (default: "label_value")
+#' @param dir Direction for facet_wrap: "h" (horizontal) or "v" (vertical)
+#'   (default: "h")
+#' @param space Space behavior for facet_grid: "fixed", "free_x", "free_y"
+#'   (default: "fixed")
 #' @param ... Forwarded to [new_ggplot_transform_block()]
 #' @export
 new_facet_block <- function(
@@ -437,7 +450,8 @@ new_facet_block <- function(
                 # Build facet_wrap call
                 facet_vars <- r_facets()
                 if (length(facet_vars) == 0) {
-                  # No faceting - return data as-is (wrapped in parens to make it a call)
+                  # No faceting - return data as-is
+                  # (wrapped in parens to make it a call)
                   return(parse(text = "(data)")[[1]])
                 }
 
@@ -445,7 +459,9 @@ new_facet_block <- function(
                 if (length(facet_vars) == 1) {
                   facets_formula <- glue::glue("~{facet_vars[1]}")
                 } else {
-                  facets_formula <- glue::glue("~{paste(facet_vars, collapse = ' + ')}")
+                  facets_formula <- glue::glue(
+                    "~{paste(facet_vars, collapse = ' + ')}"
+                  )
                 }
 
                 # Build function call arguments
@@ -483,7 +499,8 @@ new_facet_block <- function(
                 col_vars <- r_cols()
 
                 if (length(row_vars) == 0 && length(col_vars) == 0) {
-                  # No faceting - return data as-is (wrapped in parens to make it a call)
+                  # No faceting - return data as-is
+                  # (wrapped in parens to make it a call)
                   return(parse(text = "(data)")[[1]])
                 }
 

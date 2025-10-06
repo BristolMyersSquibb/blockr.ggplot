@@ -335,13 +335,13 @@ new_theme_block <- function(
                 # Force show panel border
                 theme_parts <- c(
                   theme_parts,
-                  'panel.border = ggplot2::element_rect(colour = "grey50", fill = NA)'
+                  "panel.border = ggplot2::element_rect(colour = \"grey50\", fill = NA)"
                 )
               } else if (r_show_panel_border() == "hide") {
                 # Force hide panel border
                 theme_parts <- c(
                   theme_parts,
-                  'panel.border = ggplot2::element_blank()'
+                  "panel.border = ggplot2::element_blank()"
                 )
               }
               # auto: don't add anything, use base theme default
@@ -355,7 +355,8 @@ new_theme_block <- function(
               }
 
               # Build the complete expression
-              # Start with base theme (overrides ggplot block's theme_minimal if different)
+              # Start with base theme
+              # (overrides ggplot block's theme_minimal if different)
               base_theme_func <- switch(
                 r_base_theme(),
                 # Built-in ggplot2 themes
@@ -580,7 +581,8 @@ new_theme_block <- function(
                   NS(id, "advanced-options"),
                   NS(id, "advanced-toggle")
                 ),
-                tags$span(class = "chevron", "\u203A"), # Single right-pointing angle quotation mark (prettier chevron)
+                # Single right-pointing angle quotation mark (prettier chevron)
+                tags$span(class = "chevron", "\u203A"),
                 "Show advanced options"
               )
             ),
