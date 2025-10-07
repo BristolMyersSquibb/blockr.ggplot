@@ -1,5 +1,4 @@
 library(blockr.core)
-library(blockr.ggplot)
 devtools::load_all()
 
 # Test 1: Gray theme preset
