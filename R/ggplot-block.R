@@ -694,7 +694,7 @@ new_ggplot_block <- function(
                   "display: flex; align-items: center;",
                   "justify-content: space-between;"
                 ),
-                "Aesthetic Mapping",
+                "Mappings",
                 tags$small(
                   tags$span("*", style = "color: #dc3545; font-weight: bold;"),
                   " Required field",
@@ -831,10 +831,10 @@ new_ggplot_block <- function(
                 )
               ),
 
-              # Advanced Aesthetics
+              # Advanced Aesthetic Mappings
               div(
                 class = "block-section",
-                tags$h4("Advanced Aesthetics"),
+                tags$h4("Advanced Mappings"),
                 div(
                   class = "block-section-grid",
                   div(

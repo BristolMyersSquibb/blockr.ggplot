@@ -2,6 +2,7 @@
 
 S3method(block_output,ggplot_transform_block)
 S3method(block_ui,ggplot_transform_block)
+export(new_facet_block)
 export(new_ggplot_block)
 export(new_ggplot_transform_block)
 export(new_plot_grid_block)
