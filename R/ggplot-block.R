@@ -568,6 +568,7 @@ new_ggplot_block <- function(
           }
           #%s-advanced-options.expanded {
             max-height: 2000px;
+            overflow: visible;
             transition: max-height 0.5s ease-in;
           }
           .advanced-toggle {
