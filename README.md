@@ -14,7 +14,7 @@ Install the development version from GitHub:
 
 ```r
 # install.packages("devtools")
-devtools::install_github("BristolMyersSquibb/blockr.ggplot")
+pak::pak("BristolMyersSquibb/blockr.ggplot")
 ```
 
 ## Quick Start
