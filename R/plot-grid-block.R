@@ -241,30 +241,23 @@ new_plot_grid_block <- function(
             # Generate preview
             preview <- create_grid_preview_svg(n_plots, ncol_val, nrow_val)
 
-            # Determine background color based on status
-            bg_color <- if (!preview$is_valid) {
-              "#f44336" # Red
+            # Determine status class based on validity
+            status_class <- if (!preview$is_valid) {
+              "error"
             } else if (preview$stroke_color == "#4CAF50") {
-              "#4CAF50" # Green
+              "valid"
             } else {
-              "#2196F3" # Blue
+              "warning"
             }
 
             tags$div(
-              style = "margin-bottom: 15px;",
               tags$div(
-                style = "text-align: center; margin-bottom: 10px;",
+                class = "preview-svg-container",
                 preview$svg
               ),
               tags$div(
-                style = sprintf(
-                  paste(
-                    "padding: 8px; border-radius: 4px;",
-                    "background-color: %s; color: white;"
-                  ),
-                  bg_color
-                ),
-                tags$strong(paste(preview$status_icon, preview$status))
+                class = paste("preview-status", status_class),
+                preview$status
               )
             )
           })
@@ -346,14 +339,71 @@ new_plot_grid_block <- function(
           # Add responsive CSS
           block_responsive_css(),
 
+          # Two-column responsive CSS
+          tags$style(HTML("
+            /* Responsive layout for inputs and preview */
+            @media (min-width: 700px) {
+              .grid-layout-wrapper {
+                display: grid;
+                grid-template-columns: 2fr 1fr;
+                gap: 20px;
+                align-items: start;
+              }
+              .grid-preview-sidebar {
+                position: sticky;
+                top: 20px;
+              }
+            }
+
+            @media (max-width: 699px) {
+              .grid-layout-wrapper {
+                display: block;
+              }
+              .grid-preview-sidebar {
+                margin-top: 20px;
+              }
+            }
+
+            /* Subtle preview status */
+            .preview-svg-container {
+              text-align: center;
+              margin-bottom: 8px;
+            }
+
+            .preview-status {
+              font-size: 0.875rem;
+              color: #6c757d;
+              text-align: center;
+              padding: 6px 8px;
+              border-radius: 4px;
+              background-color: #f8f9fa;
+            }
+
+            .preview-status.valid {
+              color: #28a745;
+            }
+
+            .preview-status.warning {
+              color: #ffc107;
+            }
+
+            .preview-status.error {
+              color: #dc3545;
+            }
+          ")),
+
           # Set container query context
           block_container_script(),
 
-          # Display visual grid layout preview at the top
-          uiOutput(NS(id, "layout_preview")),
-
+          # Two-column wrapper
           div(
-            class = "block-form-grid",
+            class = "grid-layout-wrapper",
+
+            # Left: Inputs (2/3 width)
+            div(
+              class = "grid-inputs",
+              div(
+                class = "block-form-grid",
 
             # Layout Section
             div(
@@ -465,9 +515,17 @@ new_plot_grid_block <- function(
               )
             )
           )
-        )
-      )
-    },
+          ), # Close grid-inputs div (and block-form-grid div)
+
+          # Right: Preview sidebar (1/3 width)
+          div(
+            class = "grid-preview-sidebar",
+            uiOutput(NS(id, "layout_preview"))
+          )
+        ) # Close grid-layout-wrapper div
+      ) # Close block-container div
+    ) # Close tagList
+  },
     dat_valid = function(...args) {
       stopifnot(length(...args) >= 2L)
     },
