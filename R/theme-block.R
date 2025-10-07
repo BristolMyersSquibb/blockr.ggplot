@@ -1,41 +1,3 @@
-# Color palette functions for theme block
-background_light_colors <- function() {
-  c(
-    "#FFFFFF", # White
-    "#FFF8DC", # Cornsilk (yellowish)
-    "#FFFACD", # Lemon Chiffon
-    "#F0F0F0", # Light gray
-    "#E8F4F8", # Light blue
-    "#F0FFF0", # Honeydew
-    "#FFF0F5", # Lavender Blush
-    "#FFFAF0" # Floral White
-  )
-}
-
-plot_bg_colors <- function() {
-  c(
-    "#FFFFFF", # White
-    "#FFF6E8", # Light yellow
-    "#FFF8DC", # Cornsilk (yellowish)
-    "#FFFACD", # Lemon Chiffon
-    "#FFFAF0", # Floral White
-    "#F8F8F8", # Very light gray
-    "#F0F0F0", # Light gray
-    "#FAFAFA" # Almost white
-  )
-}
-
-grid_colors <- function() {
-  c(
-    "#E5E5E5", # Default light gray
-    "#CCCCCC", # Medium gray
-    "#999999", # Dark gray
-    "#FFFFFF", # White
-    "#000000", # Black
-    "#D3D3D3" # Light gray 2
-  )
-}
-
 #' Theme customization block for ggplot2 plots
 #'
 #' A block that applies advanced theme customizations to ggplot2 objects.
@@ -424,7 +386,6 @@ new_theme_block <- function(
         id_suffix,
         label_text,
         init_value,
-        palette,
         sub_label = "Transparent: theme default"
       ) {
         div(
@@ -434,7 +395,6 @@ new_theme_block <- function(
             value = if (init_value == "") "transparent" else init_value,
             showColour = "both",
             palette = "square",
-            allowedCols = c("transparent", palette),
             allowTransparent = TRUE
           ),
           tags$small(
@@ -605,8 +565,7 @@ new_theme_block <- function(
                     make_theme_color_input(
                       "panel_bg",
                       "Panel Background",
-                      panel_bg,
-                      background_light_colors()
+                      panel_bg
                     )
                   ),
                   div(
@@ -614,8 +573,7 @@ new_theme_block <- function(
                     make_theme_color_input(
                       "plot_bg",
                       "Plot Background",
-                      plot_bg,
-                      plot_bg_colors()
+                      plot_bg
                     )
                   ),
                   div(
@@ -623,8 +581,7 @@ new_theme_block <- function(
                     make_theme_color_input(
                       "grid_color",
                       "Grid Color",
-                      grid_color,
-                      grid_colors()
+                      grid_color
                     )
                   )
                 )
