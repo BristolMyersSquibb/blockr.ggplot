@@ -16,8 +16,8 @@ register_ggplot_blocks <- function() {
   )
 
   register_blocks(
-    "new_plot_grid_block",
-    name = "Plot Grid",
+    "new_grid_block",
+    name = "Grid",
     description = paste0(
       "Combine multiple ggplot objects into a responsive grid layout. ",
       "Supports automatic or manual layout control (rows/columns), ",

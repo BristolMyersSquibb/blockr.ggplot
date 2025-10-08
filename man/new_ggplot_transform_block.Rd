@@ -15,15 +15,14 @@ new_ggplot_transform_block(server, ui, class, ctor = sys.parent(), ...)
 
 \item{ctor}{Constructor environment (default \code{sys.parent()})}
 
-\item{...}{Additional arguments forwarded to
-\code{\link[blockr.core:new_transform_block]{blockr.core::new_transform_block()}}}
+\item{...}{Additional arguments forwarded to \code{\link[blockr.core:new_block]{blockr.core::new_block()}}}
 }
 \value{
 A \code{ggplot_transform_block} object
 }
 \description{
-Creates a specialized transform block for ggplot2-based visualizations.
+Creates a specialized block for ggplot2-based visualizations.
 This block returns ggplot objects as data, allowing ggplot blocks to be
-chained together (e.g., for combining plots with cowplot). Custom output
-methods ensure plots are still displayed properly.
+chained together (e.g., for combining plots with patchwork). Custom output
+methods ensure plots are displayed properly rather than as data tables.
 }

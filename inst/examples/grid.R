@@ -12,22 +12,14 @@ board <- new_board(
       y = "mpg",
       color = "cyl"
     ),
-    boxplot = new_ggplot_block(
-      type = "boxplot",
-      x = "cyl",
-      y = "mpg",
-      fill = "cyl"
-    ),
     histogram = new_ggplot_block(type = "histogram", x = "mpg", bins = 15),
-    grid = new_plot_grid_block()
+    grid = new_grid_block()
   ),
   links = c(
     new_link("data", "scatter", "data"),
-    new_link("data", "boxplot", "data"),
     new_link("data", "histogram", "data"),
     new_link("scatter", "grid", "1"),
-    new_link("boxplot", "grid", "2"),
-    new_link("histogram", "grid", "3")
+    new_link("histogram", "grid", "2")
   )
 )
 
