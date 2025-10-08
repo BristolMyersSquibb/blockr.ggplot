@@ -238,7 +238,8 @@ new_plot_grid_block <- function(
 
           # Layout preview output
           output$layout_preview <- renderUI({
-            n_plots <- length(...args)
+            args_list <- shiny::reactiveValuesToList(...args)
+            n_plots <- sum(!sapply(args_list, is.null))
             ncol_val <- r_ncol()
             nrow_val <- r_nrow()
 
