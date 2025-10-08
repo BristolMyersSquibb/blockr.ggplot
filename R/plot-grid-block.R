@@ -282,10 +282,14 @@ new_grid_block <- function(
 
           list(
             expr = reactive({
-              # Base wrap_plots expression
+              # Filter out NULL inputs
+              args_list <- shiny::reactiveValuesToList(...args)
+              non_null_names <- names(args_list)[!sapply(args_list, is.null)]
+
+              # Base wrap_plots expression (only non-NULL inputs)
               base_expr <- bquote(
                 patchwork::wrap_plots(..(dat)),
-                list(dat = lapply(arg_names(), as.name)),
+                list(dat = lapply(non_null_names, as.name)),
                 splice = TRUE
               )
 
