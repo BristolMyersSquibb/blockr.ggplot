@@ -207,6 +207,9 @@ create_facet_preview_svg <- function(
 #'   (default: "h")
 #' @param space Space behavior for facet_grid: "fixed", "free_x", "free_y"
 #'   (default: "fixed")
+#' @param panel_spacing Panel spacing for both axes (default: "" uses ggplot2 default)
+#' @param panel_spacing_x Horizontal panel spacing (default: "" uses ggplot2 default)
+#' @param panel_spacing_y Vertical panel spacing (default: "" uses ggplot2 default)
 #' @param ... Forwarded to [new_ggplot_transform_block()]
 #' @export
 new_facet_block <- function(
@@ -220,6 +223,9 @@ new_facet_block <- function(
   labeller = "label_value",
   dir = "h",
   space = "fixed",
+  panel_spacing = character(),
+  panel_spacing_x = character(),
+  panel_spacing_y = character(),
   ...
 ) {
   new_ggplot_transform_block(
@@ -302,6 +308,9 @@ new_facet_block <- function(
           r_labeller <- reactiveVal(labeller)
           r_dir <- reactiveVal(dir)
           r_space <- reactiveVal(space)
+          r_panel_spacing <- reactiveVal(panel_spacing)
+          r_panel_spacing_x <- reactiveVal(panel_spacing_x)
+          r_panel_spacing_y <- reactiveVal(panel_spacing_y)
 
           # Update reactive values from inputs
           observeEvent(input$facet_type, {
@@ -334,6 +343,9 @@ new_facet_block <- function(
           observeEvent(input$labeller, r_labeller(input$labeller))
           observeEvent(input$dir, r_dir(input$dir))
           observeEvent(input$space, r_space(input$space))
+          observeEvent(input$panel_spacing, r_panel_spacing(input$panel_spacing))
+          observeEvent(input$panel_spacing_x, r_panel_spacing_x(input$panel_spacing_x))
+          observeEvent(input$panel_spacing_y, r_panel_spacing_y(input$panel_spacing_y))
 
           # Initialize visibility based on default facet_type
           observe({
@@ -521,6 +533,24 @@ new_facet_block <- function(
                 )
 
                 text <- glue::glue("data + {facet_call}")
+
+                # Add panel spacing theme if specified
+                theme_parts <- c()
+                if (r_panel_spacing() != "") {
+                  theme_parts <- c(theme_parts, glue::glue('panel.spacing = grid::unit({r_panel_spacing()}, "lines")'))
+                }
+                if (r_panel_spacing_x() != "") {
+                  theme_parts <- c(theme_parts, glue::glue('panel.spacing.x = grid::unit({r_panel_spacing_x()}, "lines")'))
+                }
+                if (r_panel_spacing_y() != "") {
+                  theme_parts <- c(theme_parts, glue::glue('panel.spacing.y = grid::unit({r_panel_spacing_y()}, "lines")'))
+                }
+
+                if (length(theme_parts) > 0) {
+                  theme_call <- paste(theme_parts, collapse = ", ")
+                  text <- glue::glue("({text}) + ggplot2::theme({theme_call})")
+                }
+
                 parse(text = text)[[1]]
               } else {
                 # Build facet_grid call
@@ -586,6 +616,24 @@ new_facet_block <- function(
                 )
 
                 text <- glue::glue("data + {facet_call}")
+
+                # Add panel spacing theme if specified
+                theme_parts <- c()
+                if (r_panel_spacing() != "") {
+                  theme_parts <- c(theme_parts, glue::glue('panel.spacing = grid::unit({r_panel_spacing()}, "lines")'))
+                }
+                if (r_panel_spacing_x() != "") {
+                  theme_parts <- c(theme_parts, glue::glue('panel.spacing.x = grid::unit({r_panel_spacing_x()}, "lines")'))
+                }
+                if (r_panel_spacing_y() != "") {
+                  theme_parts <- c(theme_parts, glue::glue('panel.spacing.y = grid::unit({r_panel_spacing_y()}, "lines")'))
+                }
+
+                if (length(theme_parts) > 0) {
+                  theme_call <- paste(theme_parts, collapse = ", ")
+                  text <- glue::glue("({text}) + ggplot2::theme({theme_call})")
+                }
+
                 parse(text = text)[[1]]
               }
             }),
@@ -599,7 +647,10 @@ new_facet_block <- function(
               scales = r_scales,
               labeller = r_labeller,
               dir = r_dir,
-              space = r_space
+              space = r_space,
+              panel_spacing = r_panel_spacing,
+              panel_spacing_x = r_panel_spacing_x,
+              panel_spacing_y = r_panel_spacing_y
             )
           )
         }
@@ -910,6 +961,60 @@ new_facet_block <- function(
                         selected = scales,
                         width = "100%"
                       )
+                    ),
+                    div(
+                      class = "block-input-wrapper",
+                      selectInput(
+                        NS(id, "panel_spacing"),
+                        "Panel Spacing",
+                        choices = c(
+                          "Auto (theme default)" = "",
+                          "0 (no spacing)" = "0",
+                          "0.5 lines" = "0.5",
+                          "1 line" = "1",
+                          "1.5 lines" = "1.5",
+                          "2 lines" = "2",
+                          "3 lines" = "3"
+                        ),
+                        selected = panel_spacing,
+                        width = "100%"
+                      )
+                    ),
+                    div(
+                      class = "block-input-wrapper",
+                      selectInput(
+                        NS(id, "panel_spacing_x"),
+                        "Panel Spacing X",
+                        choices = c(
+                          "Auto (theme default)" = "",
+                          "0 (no spacing)" = "0",
+                          "0.5 lines" = "0.5",
+                          "1 line" = "1",
+                          "1.5 lines" = "1.5",
+                          "2 lines" = "2",
+                          "3 lines" = "3"
+                        ),
+                        selected = panel_spacing_x,
+                        width = "100%"
+                      )
+                    ),
+                    div(
+                      class = "block-input-wrapper",
+                      selectInput(
+                        NS(id, "panel_spacing_y"),
+                        "Panel Spacing Y",
+                        choices = c(
+                          "Auto (theme default)" = "",
+                          "0 (no spacing)" = "0",
+                          "0.5 lines" = "0.5",
+                          "1 line" = "1",
+                          "1.5 lines" = "1.5",
+                          "2 lines" = "2",
+                          "3 lines" = "3"
+                        ),
+                        selected = panel_spacing_y,
+                        width = "100%"
+                      )
                     )
                   )
                 ),
@@ -1020,7 +1125,7 @@ new_facet_block <- function(
     dat_valid = function(data) {
       stopifnot(inherits(data, "ggplot"))
     },
-    allow_empty_state = c("facets", "rows", "cols", "ncol", "nrow"),
+    allow_empty_state = c("facets", "rows", "cols", "ncol", "nrow", "panel_spacing", "panel_spacing_x", "panel_spacing_y"),
     class = "facet_block",
     ...
   )

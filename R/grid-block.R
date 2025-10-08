@@ -197,6 +197,7 @@ dot_args_names <- function(x) {
 #'   (default: NULL)
 #' @param guides Legend handling: 'auto', 'collect', or 'keep'
 #'   (default: 'auto')
+#' @param spacing Spacing between plots in points (default: "" uses ggplot2 default)
 #' @param ... Forwarded to [new_ggplot_transform_block()]
 #' @export
 new_grid_block <- function(
@@ -207,6 +208,7 @@ new_grid_block <- function(
   caption = character(),
   tag_levels = character(),
   guides = "auto",
+  spacing = character(),
   ...
 ) {
   new_ggplot_transform_block(
@@ -226,6 +228,7 @@ new_grid_block <- function(
           r_caption <- reactiveVal(caption)
           r_tag_levels <- reactiveVal(tag_levels)
           r_guides <- reactiveVal(guides)
+          r_spacing <- reactiveVal(spacing)
 
           # Update reactive values from inputs
           observeEvent(input$ncol, r_ncol(input$ncol))
@@ -235,6 +238,7 @@ new_grid_block <- function(
           observeEvent(input$caption, r_caption(input$caption))
           observeEvent(input$tag_levels, r_tag_levels(input$tag_levels))
           observeEvent(input$guides, r_guides(input$guides))
+          observeEvent(input$spacing, r_spacing(input$spacing))
 
           # Layout preview output
           output$layout_preview <- renderUI({
@@ -338,6 +342,24 @@ new_grid_block <- function(
                 )
               }
 
+              # Add spacing to all plots if specified
+              if (r_spacing() != "") {
+                spacing_val <- as.numeric(r_spacing())
+                half_spacing <- spacing_val / 2  # Divide by 2 so adjacent plots combine to full spacing
+                theme_call <- call(
+                  "theme",
+                  plot.margin = call("unit", call("c", half_spacing, half_spacing, half_spacing, half_spacing), "pt")
+                )
+                theme_call[[1]] <- quote(ggplot2::theme)
+                theme_call[[2]][[1]] <- quote(grid::unit)
+
+                base_expr <- call(
+                  "&",
+                  base_expr,
+                  theme_call
+                )
+              }
+
               base_expr
             }),
             state = list(
@@ -347,7 +369,8 @@ new_grid_block <- function(
               subtitle = r_subtitle,
               caption = r_caption,
               tag_levels = r_tag_levels,
-              guides = r_guides
+              guides = r_guides,
+              spacing = r_spacing
             )
           )
         }
@@ -478,6 +501,24 @@ new_grid_block <- function(
                       "Keep separate" = "keep"
                     ),
                     selected = guides,
+                    width = "100%"
+                  )
+                ),
+                div(
+                  class = "block-input-wrapper",
+                  selectInput(
+                    NS(id, "spacing"),
+                    "Spacing",
+                    choices = c(
+                      "Auto (theme default)" = "",
+                      "0 (no spacing)" = "0",
+                      "5 pt" = "5",
+                      "10 pt" = "10",
+                      "15 pt" = "15",
+                      "20 pt" = "20",
+                      "30 pt" = "30"
+                    ),
+                    selected = spacing,
                     width = "100%"
                   )
                 )
