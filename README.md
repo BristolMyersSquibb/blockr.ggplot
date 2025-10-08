@@ -172,9 +172,9 @@ blockr.core::serve(board)
 - 🎯 **Flexible Scales**: Free, fixed, or partially free axes
 - 🏷️ **Custom Labels**: Multiple labeller functions for panel titles
 
-### Plot Grid Block - Multi-Plot Dashboards
+### Grid Block - Multi-Plot Dashboards
 
-<img src="man/figures/block-grid.png" alt="Plot Grid Block" width="60%">
+<img src="man/figures/block-grid.png" alt="Grid Block" width="60%">
 
 Combine multiple independent plots into a unified dashboard using the powerful [patchwork](https://patchwork.data-imaginist.com/) package. Plots are automatically aligned and arranged for publication-quality output.
 
@@ -186,7 +186,7 @@ board <- new_board(
     scatter = new_ggplot_block(type = "point", x = "wt", y = "mpg", color = "cyl"),
     boxplot = new_ggplot_block(type = "boxplot", x = "cyl", y = "mpg", fill = "cyl"),
     histogram = new_ggplot_block(type = "histogram", x = "mpg", bins = 15),
-    grid = new_plot_grid_block()
+    grid = new_grid_block()
   ),
   links = c(
     new_link("data", "scatter", "data"),

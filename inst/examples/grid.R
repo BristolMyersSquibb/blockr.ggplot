@@ -13,7 +13,7 @@ board <- new_board(
       color = "cyl"
     ),
     histogram = new_ggplot_block(type = "histogram", x = "mpg", bins = 15),
-    grid = new_plot_grid_block()
+    grid = new_grid_block()
   ),
   links = c(
     new_link("data", "scatter", "data"),

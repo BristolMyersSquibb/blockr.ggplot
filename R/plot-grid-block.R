@@ -181,7 +181,7 @@ dot_args_names <- function(x) {
   res
 }
 
-#' Plot Grid Block
+#' Grid Block
 #'
 #' Combines multiple ggplot objects using patchwork::wrap_plots().
 #' Variadic block that accepts 1 or more ggplot inputs with automatic
@@ -199,7 +199,7 @@ dot_args_names <- function(x) {
 #'   (default: 'auto')
 #' @param ... Forwarded to [new_ggplot_transform_block()]
 #' @export
-new_plot_grid_block <- function(
+new_grid_block <- function(
   ncol = character(),
   nrow = character(),
   title = character(),
@@ -548,7 +548,7 @@ new_plot_grid_block <- function(
       stopifnot(length(...args) >= 1L)
     },
     allow_empty_state = TRUE,
-    class = c("plot_grid_block", "rbind_block"),
+    class = c("grid_block", "rbind_block"),
     ...
   )
 }
