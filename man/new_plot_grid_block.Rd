@@ -36,7 +36,7 @@ new_plot_grid_block(
 }
 \description{
 Combines multiple ggplot objects using patchwork::wrap_plots().
-Variadic block that accepts 2 or more ggplot inputs with automatic
+Variadic block that accepts 1 or more ggplot inputs with automatic
 alignment. Supports layout control (ncol, nrow) and annotations
 (title, subtitle, auto-tags).
 }

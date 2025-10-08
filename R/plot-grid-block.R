@@ -164,10 +164,27 @@ create_grid_preview_svg <- function(n_plots, ncol_val, nrow_val) {
   )
 }
 
+# Helper function to extract argument names for variadic blocks
+# Copied from blockr.core:::dot_args_names (not exported)
+dot_args_names <- function(x) {
+  res <- names(x)
+  unnamed <- grepl("^[1-9][0-9]*$", res)
+
+  if (all(unnamed)) {
+    return(NULL)
+  }
+
+  if (any(unnamed)) {
+    return(replace(res, unnamed, ""))
+  }
+
+  res
+}
+
 #' Plot Grid Block
 #'
 #' Combines multiple ggplot objects using patchwork::wrap_plots().
-#' Variadic block that accepts 2 or more ggplot inputs with automatic
+#' Variadic block that accepts 1 or more ggplot inputs with automatic
 #' alignment. Supports layout control (ncol, nrow) and annotations
 #' (title, subtitle, auto-tags).
 #'
@@ -198,7 +215,7 @@ new_plot_grid_block <- function(
         id,
         function(input, output, session) {
           arg_names <- reactive(
-            set_names(names(...args), blockr.core:::dot_args_names(...args))
+            set_names(names(...args), dot_args_names(...args))
           )
 
           # Reactive values for UI inputs
@@ -234,7 +251,7 @@ new_plot_grid_block <- function(
                 ),
                 tags$strong("\u26a0\ufe0f Waiting for input plots"),
                 tags$br(),
-                "Connect 2 or more ggplot blocks to create a grid"
+                "Connect 1 or more ggplot blocks to create a grid"
               ))
             }
 
@@ -527,10 +544,10 @@ new_plot_grid_block <- function(
     ) # Close tagList
   },
     dat_valid = function(...args) {
-      stopifnot(length(...args) >= 2L)
+      stopifnot(length(...args) >= 1L)
     },
     allow_empty_state = TRUE,
-    class = "plot_grid_block",
+    class = c("plot_grid_block", "rbind_block"),
     ...
   )
 }
