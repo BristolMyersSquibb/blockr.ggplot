@@ -4,7 +4,6 @@
 #' takes a screenshot, and returns the result. It's designed to be a
 #' simple, direct way to test whether a block implementation works correctly.
 #'
-#' @importFrom stats setNames
 #' @param block A blockr block object (e.g., from new_chart_block())
 #' @param data Data to use for the block (default: mtcars)
 #' @param filename Name for the screenshot file (default: auto-generated)
@@ -290,7 +289,7 @@ validate_blocks_batch <- function(
     data_list <- data
   } else {
     # data is a single dataset, use for all blocks
-    data_list <- setNames(
+    data_list <- stats::setNames(
       rep(list(data), length(blocks)),
       block_names
     )
