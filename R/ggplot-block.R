@@ -84,7 +84,7 @@ new_ggplot_block <- function(
     pie = list(
       required = c("x"), # x is categories, but rendered as x = ""
       optional = c("y", "fill", "alpha"),
-      specific = list() # Could add donut = TRUE/FALSE later
+      specific = list()
     )
   )
 
