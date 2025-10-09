@@ -61,6 +61,9 @@ new_theme_block <- function(
             input$panel_bg,
             {
               val <- input$panel_bg
+              if (is.null(val)) {
+                val <- ""
+              }
               # Treat transparent, #00000000 (transparent black),
               # or empty as "auto"
               r_panel_bg(
@@ -73,6 +76,9 @@ new_theme_block <- function(
             input$plot_bg,
             {
               val <- input$plot_bg
+              if (is.null(val)) {
+                val <- ""
+              }
               # Treat transparent, #00000000 (transparent black),
               # or empty as "auto"
               r_plot_bg(
@@ -84,11 +90,15 @@ new_theme_block <- function(
           observeEvent(
             input$base_size,
             {
+              val <- input$base_size
+              if (is.null(val)) {
+                val <- "auto"
+              }
               r_base_size(
-                if (input$base_size == "auto") {
+                if (val == "auto") {
                   NA_real_
                 } else {
-                  as.numeric(input$base_size)
+                  as.numeric(val)
                 }
               )
             },
@@ -97,21 +107,21 @@ new_theme_block <- function(
           observeEvent(
             input$base_family,
             {
-              r_base_family(input$base_family)
+              r_base_family(input$base_family %||% "")
             },
             ignoreNULL = FALSE
           )
           observeEvent(
             input$show_major_grid,
             {
-              r_show_major_grid(input$show_major_grid)
+              r_show_major_grid(input$show_major_grid %||% "auto")
             },
             ignoreNULL = FALSE
           )
           observeEvent(
             input$show_minor_grid,
             {
-              r_show_minor_grid(input$show_minor_grid)
+              r_show_minor_grid(input$show_minor_grid %||% "auto")
             },
             ignoreNULL = FALSE
           )
@@ -119,6 +129,9 @@ new_theme_block <- function(
             input$grid_color,
             {
               val <- input$grid_color
+              if (is.null(val)) {
+                val <- ""
+              }
               # Treat transparent, #00000000 (transparent black),
               # or empty as "auto"
               r_grid_color(
@@ -130,21 +143,21 @@ new_theme_block <- function(
           observeEvent(
             input$show_panel_border,
             {
-              r_show_panel_border(input$show_panel_border)
+              r_show_panel_border(input$show_panel_border %||% "auto")
             },
             ignoreNULL = FALSE
           )
           observeEvent(
             input$legend_position,
             {
-              r_legend_position(input$legend_position)
+              r_legend_position(input$legend_position %||% "")
             },
             ignoreNULL = FALSE
           )
           observeEvent(
             input$base_theme,
             {
-              r_base_theme(input$base_theme)
+              r_base_theme(input$base_theme %||% "minimal")
             },
             ignoreNULL = FALSE
           )
