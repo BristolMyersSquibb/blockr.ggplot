@@ -512,6 +512,49 @@ new_ggplot_block <- function(
                 text <- glue::glue("({text}) + ggplot2::theme_minimal()")
               }
 
+              # Determine if we need viridis scales
+              add_color_scale <- r_color() != "(none)"
+              add_fill_scale <- r_fill() != "(none)"
+
+              # For pie charts, fill is always added internally, so check that too
+              if (current_type == "pie" && !add_fill_scale) {
+                add_fill_scale <- TRUE
+              }
+
+              # For fill scale, determine if it's discrete or continuous
+              # based on chart type (certain types always use discrete/factor)
+              fill_is_discrete <- current_type %in%
+                c(
+                  "histogram",
+                  "bar",
+                  "boxplot",
+                  "violin"
+                )
+
+              # Add viridis color scale if color aesthetic is used
+              if (add_color_scale) {
+                # Color is typically continuous unless explicitly needed discrete
+                # For most cases, use continuous scale
+                text <- glue::glue(
+                  "({text}) + ggplot2::scale_colour_viridis_c()"
+                )
+              }
+
+              # Add viridis fill scale if fill aesthetic is used
+              if (add_fill_scale) {
+                if (fill_is_discrete) {
+                  # Use discrete viridis scale for categorical data
+                  text <- glue::glue(
+                    "({text}) + ggplot2::scale_fill_viridis_d()"
+                  )
+                } else {
+                  # Use continuous viridis scale for numeric data
+                  text <- glue::glue(
+                    "({text}) + ggplot2::scale_fill_viridis_c()"
+                  )
+                }
+              }
+
               parse(text = text)[[1]]
             }),
             state = list(
