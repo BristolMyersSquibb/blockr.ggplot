@@ -525,7 +525,7 @@ new_ggplot_block <- function(
               add_color_scale <- r_color() != "(none)"
               add_fill_scale <- r_fill() != "(none)"
 
-              # For pie charts, fill is always added internally, so check that too
+              # For pie charts, fill is always added internally, so check that
               if (current_type == "pie" && !add_fill_scale) {
                 add_fill_scale <- TRUE
               }
@@ -545,10 +545,10 @@ new_ggplot_block <- function(
 
               # Add viridis color scale if color aesthetic is used
               if (add_color_scale) {
-                # Color is typically continuous unless explicitly needed discrete
+                # Color is typically continuous unless explicitly discrete
                 # For most cases, use continuous scale
                 text <- glue::glue(
-                  "({text}) + ggplot2::scale_colour_viridis_c(option = '{viridis_opt}')"
+                  "({text}) + ggplot2::scale_colour_viridis_c(option = '{viridis_opt}')" # nolint
                 )
               }
 
@@ -557,12 +557,12 @@ new_ggplot_block <- function(
                 if (fill_is_discrete) {
                   # Use discrete viridis scale for categorical data
                   text <- glue::glue(
-                    "({text}) + ggplot2::scale_fill_viridis_d(option = '{viridis_opt}')"
+                    "({text}) + ggplot2::scale_fill_viridis_d(option = '{viridis_opt}')" # nolint
                   )
                 } else {
                   # Use continuous viridis scale for numeric data
                   text <- glue::glue(
-                    "({text}) + ggplot2::scale_fill_viridis_c(option = '{viridis_opt}')"
+                    "({text}) + ggplot2::scale_fill_viridis_c(option = '{viridis_opt}')" # nolint
                   )
                 }
               }
