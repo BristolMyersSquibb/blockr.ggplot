@@ -661,31 +661,36 @@ new_ggplot_block <- function(
           # Add custom CSS for chart type selector
           tags$style(HTML(
             "
-            .chart-type-selector {
-              margin-top: 0 !important;
-              padding-top: 0 !important;
-            }
-            .chart-type-selector .btn-group-toggle {
-              display: flex;
-              flex-wrap: wrap;
-              gap: 5px;
-              margin: 0;
-            }
-            .chart-type-selector .btn {
-              display: flex;
-              flex-direction: column;
-              align-items: center;
-              padding: 8px 12px;
-              min-width: 80px;
-            }
-            .chart-type-selector .btn i {
-              font-size: 1.2em;
-              margin-bottom: 4px;
-            }
-            .chart-type-selector .btn span {
-              font-size: 0.85em;
-            }
-          "
+  .chart-type-selector {
+    margin-top: 0 !important;
+    padding-top: 0 !important;
+    width: 100%;
+  }
+  .chart-type-selector .btn-group-toggle,
+  .chart-type-selector .btn-group {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 5px;
+    margin: 0;
+    width: 100% !important;
+    max-width: 100%;
+  }
+  .chart-type-selector .btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 8px 12px;
+    min-width: 80px;
+    flex: 0 0 auto;
+  }
+  .chart-type-selector .btn i {
+    font-size: 1.2em;
+    margin-bottom: 4px;
+  }
+  .chart-type-selector .btn span {
+    font-size: 0.85em;
+  }
+"
           )),
 
           # Set container query context
