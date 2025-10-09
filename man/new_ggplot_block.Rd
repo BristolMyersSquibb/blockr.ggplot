@@ -18,6 +18,7 @@ new_ggplot_block(
   position = "stack",
   bins = 30,
   donut = FALSE,
+  viridis_option = "D",
   ...
 )
 }
@@ -48,6 +49,10 @@ new_ggplot_block(
 \item{bins}{Number of bins for histogram}
 
 \item{donut}{Whether to create donut chart when type is "pie" (default FALSE)}
+
+\item{viridis_option}{Viridis color palette option (default "D"). Options:
+"A" (magma), "B" (inferno), "C" (plasma), "D" (viridis), "E" (cividis),
+"F" (rocket), "G" (mako), "H" (turbo)}
 
 \item{...}{Forwarded to \code{\link[blockr.core]{new_plot_block}}}
 }
