@@ -681,7 +681,8 @@ new_ggplot_block <- function(
     align-items: center;
     padding: 8px 12px;
     min-width: 80px;
-    flex: 0 0 auto;
+    max-width: 150px;
+    flex: 1 1 auto;
   }
   .chart-type-selector .btn i {
     font-size: 1.2em;
