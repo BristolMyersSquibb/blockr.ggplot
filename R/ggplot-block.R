@@ -74,7 +74,7 @@ new_ggplot_block <- function(
     ),
     area = list(
       required = c("x", "y"),
-      optional = c("fill", "color", "alpha"),
+      optional = c("fill", "alpha"),
       specific = list()
     ),
     histogram = list(
