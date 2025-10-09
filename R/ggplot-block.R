@@ -712,14 +712,22 @@ new_ggplot_block <- function(
                       tags$div(icon("chart-bar"), tags$span("Bar")),
                       tags$div(icon("chart-line"), tags$span("Line")),
                       tags$div(icon("th-large"), tags$span("Box")),
-                      tags$div(icon("chart-pie"), tags$span("Pie"))
+                      tags$div(icon("chart-pie"), tags$span("Pie")),
+                      tags$div(icon("chart-column"), tags$span("Histogram")),
+                      tags$div(icon("signal"), tags$span("Density")),
+                      tags$div(icon("water"), tags$span("Violin")),
+                      tags$div(icon("chart-area"), tags$span("Area"))
                     ),
                     choiceValues = c(
                       "point",
                       "bar",
                       "line",
                       "boxplot",
-                      "pie"
+                      "pie",
+                      "histogram",
+                      "density",
+                      "violin",
+                      "area"
                     ),
                     selected = type,
                     status = "light",
@@ -865,47 +873,6 @@ new_ggplot_block <- function(
             # Advanced Options Section (Collapsible)
             div(
               id = NS(id, "advanced-options"),
-
-              # Additional Charts
-              div(
-                class = "block-section",
-                tags$h4("Additional Charts"),
-                div(
-                  class = "block-section-grid",
-                  div(
-                    class = "block-input-wrapper chart-type-selector",
-                    style = "grid-column: 1 / -1;",
-                    shinyWidgets::radioGroupButtons(
-                      inputId = NS(id, "type_stat"),
-                      label = NULL,
-                      choiceNames = list(
-                        tags$div(icon("chart-column"), tags$span("Histogram")),
-                        tags$div(icon("signal"), tags$span("Density")),
-                        tags$div(icon("water"), tags$span("Violin")),
-                        tags$div(icon("chart-area"), tags$span("Area"))
-                      ),
-                      choiceValues = c(
-                        "histogram",
-                        "density",
-                        "violin",
-                        "area"
-                      ),
-                      selected = character(0),
-                      status = "light",
-                      size = "sm",
-                      justified = FALSE,
-                      individual = FALSE,
-                      checkIcon = list(
-                        yes = tags$i(
-                          class = "fa fa-check",
-                          style = "display: none;"
-                        ),
-                        no = tags$i(style = "display: none;")
-                      )
-                    )
-                  )
-                )
-              ),
 
               # Advanced Aesthetic Mappings
               div(
