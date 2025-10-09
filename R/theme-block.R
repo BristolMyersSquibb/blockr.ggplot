@@ -24,7 +24,6 @@
 #'   (default "minimal")
 #' @param ... Forwarded to \code{\link[blockr.core]{new_transform_block}}
 #'
-#' @importFrom colourpicker colourInput
 #' @export
 new_theme_block <- function(
   panel_bg = "",

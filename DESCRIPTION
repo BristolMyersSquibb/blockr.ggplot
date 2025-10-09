@@ -2,35 +2,31 @@ Package: blockr.ggplot
 Title: Interactive ggplot2 Charts for Blockr
 Version: 0.0.1
 Authors@R: c(
-    person(given = "Nicolas",
-           family = "Bennett",
-           role = c("aut", "cre"),
-           email = "nicolas@cynkra.com"),
-    person(given = "Christoph",
-           family = "Sax",
-           role = "aut",
-           email = "christoph@cynkra.com"))
-Description: Provides comprehensive blocks for plotting with blockr using 'ggplot2'.
-    Includes PowerBI-style chart types (bar charts, line charts, pie charts, scatter plots)
-    as well as statistical plots (boxplots, histograms, density plots, violin plots, heatmaps)
-    with rich customization options and intuitive user interfaces.
+    person("Nicolas", "Bennett", , "nicolas@cynkra.com", role = c("aut", "cre")),
+    person("Christoph", "Sax", , "christoph@cynkra.com", role = "aut")
+  )
+Description: Provides comprehensive blocks for plotting with blockr using
+    'ggplot2'.  Includes PowerBI-style chart types (bar charts, line
+    charts, pie charts, scatter plots) as well as statistical plots
+    (boxplots, histograms, density plots, violin plots, heatmaps) with
+    rich customization options and intuitive user interfaces.
 License: GPL (>= 3)
+Imports:
+    blockr.core (>= 0.0.1),
+    colourpicker,
+    ggplot2,
+    glue,
+    patchwork,
+    shiny,
+    shinyjs,
+    shinyWidgets
+Suggests:
+    cowplot,
+    ggpubr,
+    ggthemes,
+    testthat (>= 3.0.0),
+    webshot2
+Config/testthat/edition: 3
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.3
-Imports:
-    shiny,
-    blockr.core (>= 0.0.1),
-    ggplot2,
-    glue,
-    shinyWidgets,
-    shinyjs,
-    patchwork,
-    colourpicker
-Suggests:
-    testthat (>= 3.0.0),
-    webshot2,
-    cowplot,
-    ggthemes,
-    ggpubr
-Config/testthat/edition: 3
