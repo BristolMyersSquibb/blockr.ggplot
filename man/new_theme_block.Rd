@@ -8,13 +8,13 @@ new_theme_block(
   panel_bg = "",
   plot_bg = "",
   base_size = NA_real_,
-  base_family = "",
+  base_family = "auto",
   show_major_grid = "auto",
   show_minor_grid = "auto",
   grid_color = "",
   show_panel_border = "auto",
-  legend_position = "",
-  base_theme = "minimal",
+  legend_position = "auto",
+  base_theme = "auto",
   ...
 )
 }
@@ -26,8 +26,8 @@ new_theme_block(
 \item{base_size}{Base font size in points
 (default NA uses base theme default)}
 
-\item{base_family}{Font family: "sans", "serif", or "mono"
-(default "" uses base theme default)}
+\item{base_family}{Font family: "auto", "sans", "serif", or "mono"
+(default "auto" preserves upstream font)}
 
 \item{show_major_grid}{Show major grid lines: "auto", "show", "hide"
 (default "auto" uses base theme default)}
@@ -41,11 +41,11 @@ new_theme_block(
 \item{show_panel_border}{Show panel border: "auto", "show", "hide"
 (default "auto" uses base theme default)}
 
-\item{legend_position}{Legend position: "", "right", "left", "top",
-"bottom", "none" (default "" uses base theme default)}
+\item{legend_position}{Legend position: "auto", "right", "left", "top",
+"bottom", "none" (default "auto" preserves upstream position)}
 
-\item{base_theme}{Base ggplot2 theme: "minimal", "classic", "gray", "bw"
-(default "minimal")}
+\item{base_theme}{Base ggplot2 theme: "auto", "minimal", "classic", "gray", "bw", etc.
+(default "auto" preserves upstream theme)}
 
 \item{...}{Forwarded to \code{\link[blockr.core]{new_transform_block}}}
 }
