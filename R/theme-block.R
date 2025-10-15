@@ -8,8 +8,8 @@
 #' @param plot_bg Plot background color (default "" uses base theme default)
 #' @param base_size Base font size in points
 #'   (default NA uses base theme default)
-#' @param base_family Font family: "sans", "serif", or "mono"
-#'   (default "" uses base theme default)
+#' @param base_family Font family: "auto", "sans", "serif", or "mono"
+#'   (default "auto" preserves upstream font)
 #' @param show_major_grid Show major grid lines: "auto", "show", "hide"
 #'   (default "auto" uses base theme default)
 #' @param show_minor_grid Show minor grid lines: "auto", "show", "hide"
@@ -18,10 +18,10 @@
 #'   (default "" uses base theme default)
 #' @param show_panel_border Show panel border: "auto", "show", "hide"
 #'   (default "auto" uses base theme default)
-#' @param legend_position Legend position: "", "right", "left", "top",
-#'   "bottom", "none" (default "" uses base theme default)
-#' @param base_theme Base ggplot2 theme: "minimal", "classic", "gray", "bw"
-#'   (default "minimal")
+#' @param legend_position Legend position: "auto", "right", "left", "top",
+#'   "bottom", "none" (default "auto" preserves upstream position)
+#' @param base_theme Base ggplot2 theme: "auto", "minimal", "classic", "gray", "bw", etc.
+#'   (default "auto" preserves upstream theme)
 #' @param ... Forwarded to \code{\link[blockr.core]{new_transform_block}}
 #'
 #' @export
@@ -29,13 +29,13 @@ new_theme_block <- function(
   panel_bg = "",
   plot_bg = "",
   base_size = NA_real_,
-  base_family = "",
+  base_family = "auto",
   show_major_grid = "auto",
   show_minor_grid = "auto",
   grid_color = "",
   show_panel_border = "auto",
-  legend_position = "",
-  base_theme = "minimal",
+  legend_position = "auto",
+  base_theme = "auto",
   ...
 ) {
   new_ggplot_transform_block(
@@ -107,7 +107,7 @@ new_theme_block <- function(
           observeEvent(
             input$base_family,
             {
-              r_base_family(input$base_family %||% "")
+              r_base_family(input$base_family %||% "auto")
             },
             ignoreNULL = FALSE
           )
@@ -150,7 +150,7 @@ new_theme_block <- function(
           observeEvent(
             input$legend_position,
             {
-              r_legend_position(input$legend_position %||% "")
+              r_legend_position(input$legend_position %||% "auto")
             },
             ignoreNULL = FALSE
           )
@@ -209,7 +209,7 @@ new_theme_block <- function(
               }
 
               # Base font family (only if explicitly set)
-              if (r_base_family() != "") {
+              if (r_base_family() != "" && r_base_family() != "auto") {
                 text_parts <- c(
                   text_parts,
                   glue::glue('family = "{r_base_family()}"')
@@ -324,7 +324,7 @@ new_theme_block <- function(
               # auto: don't add anything, use base theme default
 
               # Legend position (only if explicitly set)
-              if (r_legend_position() != "") {
+              if (r_legend_position() != "" && r_legend_position() != "auto") {
                 theme_parts <- c(
                   theme_parts,
                   glue::glue('legend.position = "{r_legend_position()}"')
@@ -332,10 +332,11 @@ new_theme_block <- function(
               }
 
               # Build the complete expression
-              # Start with base theme
-              # (overrides ggplot block's theme_minimal if different)
+              # Start with base theme (unless "auto" - keep upstream)
               base_theme_func <- switch(
                 r_base_theme(),
+                # Auto: keep upstream theme (don't apply any base theme)
+                auto = "",
                 # Built-in ggplot2 themes
                 minimal = "ggplot2::theme_minimal()",
                 classic = "ggplot2::theme_classic()",
@@ -366,7 +367,14 @@ new_theme_block <- function(
                 "ggplot2::theme_minimal()" # fallback
               )
 
-              text <- glue::glue("data + {base_theme_func}")
+              # Start with data, optionally add base theme
+              if (base_theme_func == "") {
+                # Auto mode: don't apply base theme, just pass data through
+                text <- "data"
+              } else {
+                # Apply selected base theme
+                text <- glue::glue("data + {base_theme_func}")
+              }
 
               # Add custom theme tweaks if any
               if (length(theme_parts) > 0) {
@@ -484,6 +492,7 @@ new_theme_block <- function(
                     inputId = NS(id, "base_theme"),
                     label = "Base Theme",
                     choices = list(
+                      "Auto (keep upstream)" = "auto",
                       "ggplot2 (Built-in)" = list(
                         "Minimal" = "minimal",
                         "Classic" = "classic",
@@ -527,7 +536,7 @@ new_theme_block <- function(
                     inputId = NS(id, "legend_position"),
                     label = "Legend Position",
                     choices = c(
-                      "Auto (theme default)" = "",
+                      "Auto (theme default)" = "auto",
                       "Right" = "right",
                       "Left" = "left",
                       "Top" = "top",
@@ -638,7 +647,7 @@ new_theme_block <- function(
                       inputId = NS(id, "base_family"),
                       label = "Font Family",
                       choices = c(
-                        "Auto (theme default)" = "",
+                        "Auto (theme default)" = "auto",
                         "Sans Serif" = "sans",
                         "Serif" = "serif",
                         "Monospace" = "mono"
