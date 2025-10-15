@@ -17,9 +17,6 @@
 #' @param position Position adjustment for certain geoms
 #' @param bins Number of bins for histogram
 #' @param donut Whether to create donut chart when type is "pie" (default FALSE)
-#' @param viridis_option Viridis color palette option (default "D"). Options:
-#'   "A" (magma), "B" (inferno), "C" (plasma), "D" (viridis), "E" (cividis),
-#'   "F" (rocket), "G" (mako), "H" (turbo)
 #' @param ... Forwarded to \code{\link[blockr.core]{new_plot_block}}
 #'
 #' @export
@@ -37,7 +34,6 @@ new_ggplot_block <- function(
   position = "stack",
   bins = 30,
   donut = FALSE,
-  viridis_option = "D",
   ...
 ) {
   # Define which aesthetics are valid for each chart type
@@ -88,7 +84,7 @@ new_ggplot_block <- function(
     pie = list(
       required = c("x"), # x is categories, but rendered as x = ""
       optional = c("y", "fill", "alpha"),
-      specific = list()
+      specific = list() # Could add donut = TRUE/FALSE later
     )
   )
 
@@ -115,7 +111,6 @@ new_ggplot_block <- function(
           r_position <- reactiveVal(position)
           r_bins <- reactiveVal(bins)
           r_donut <- reactiveVal(donut)
-          r_viridis_option <- reactiveVal(viridis_option)
 
           # Observe input changes
           observeEvent(input$type, {
@@ -148,10 +143,6 @@ new_ggplot_block <- function(
           observeEvent(input$position, r_position(input$position))
           observeEvent(input$bins, r_bins(input$bins))
           observeEvent(input$donut, r_donut(input$donut))
-          observeEvent(
-            input$viridis_option,
-            r_viridis_option(input$viridis_option)
-          )
 
           # Update column-dependent inputs
           observeEvent(
@@ -521,52 +512,6 @@ new_ggplot_block <- function(
                 text <- glue::glue("({text}) + ggplot2::theme_minimal()")
               }
 
-              # Determine if we need viridis scales
-              add_color_scale <- r_color() != "(none)"
-              add_fill_scale <- r_fill() != "(none)"
-
-              # For pie charts, fill is always added internally, so check that too
-              if (current_type == "pie" && !add_fill_scale) {
-                add_fill_scale <- TRUE
-              }
-
-              # For fill scale, determine if it's discrete or continuous
-              # based on chart type (certain types always use discrete/factor)
-              fill_is_discrete <- current_type %in%
-                c(
-                  "histogram",
-                  "bar",
-                  "boxplot",
-                  "violin"
-                )
-
-              # Get the selected viridis option
-              viridis_opt <- r_viridis_option()
-
-              # Add viridis color scale if color aesthetic is used
-              if (add_color_scale) {
-                # Color is typically continuous unless explicitly needed discrete
-                # For most cases, use continuous scale
-                text <- glue::glue(
-                  "({text}) + ggplot2::scale_colour_viridis_c(option = '{viridis_opt}')"
-                )
-              }
-
-              # Add viridis fill scale if fill aesthetic is used
-              if (add_fill_scale) {
-                if (fill_is_discrete) {
-                  # Use discrete viridis scale for categorical data
-                  text <- glue::glue(
-                    "({text}) + ggplot2::scale_fill_viridis_d(option = '{viridis_opt}')"
-                  )
-                } else {
-                  # Use continuous viridis scale for numeric data
-                  text <- glue::glue(
-                    "({text}) + ggplot2::scale_fill_viridis_c(option = '{viridis_opt}')"
-                  )
-                }
-              }
-
               parse(text = text)[[1]]
             }),
             state = list(
@@ -582,8 +527,7 @@ new_ggplot_block <- function(
               alpha = r_alpha,
               position = r_position,
               bins = r_bins,
-              donut = r_donut,
-              viridis_option = r_viridis_option
+              donut = r_donut
             )
           )
         }
@@ -830,25 +774,6 @@ new_ggplot_block <- function(
                     label = make_aesthetic_label("Size By", "size", type),
                     choices = c("(none)", size),
                     selected = if (length(size) == 0) "(none)" else size,
-                    width = "100%"
-                  )
-                ),
-                div(
-                  class = "block-input-wrapper",
-                  selectInput(
-                    inputId = NS(id, "viridis_option"),
-                    label = "Viridis Palette",
-                    choices = c(
-                      "Magma" = "A",
-                      "Inferno" = "B",
-                      "Plasma" = "C",
-                      "Viridis" = "D",
-                      "Cividis" = "E",
-                      "Rocket" = "F",
-                      "Mako" = "G",
-                      "Turbo" = "H"
-                    ),
-                    selected = viridis_option,
                     width = "100%"
                   )
                 )
