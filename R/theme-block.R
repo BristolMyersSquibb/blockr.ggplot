@@ -20,8 +20,8 @@
 #'   (default "auto" uses base theme default)
 #' @param legend_position Legend position: "auto", "right", "left", "top",
 #'   "bottom", "none" (default "auto" preserves upstream position)
-#' @param base_theme Base ggplot2 theme: "auto", "minimal", "classic", "gray", "bw", etc.
-#'   (default "auto" preserves upstream theme)
+#' @param base_theme Base ggplot2 theme: "auto", "minimal", "classic",
+#'   "gray", "bw", etc. (default "auto" preserves upstream theme)
 #' @param ... Forwarded to \code{\link[blockr.core]{new_transform_block}}
 #'
 #' @export
