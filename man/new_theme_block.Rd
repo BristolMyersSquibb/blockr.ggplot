@@ -44,8 +44,8 @@ new_theme_block(
 \item{legend_position}{Legend position: "auto", "right", "left", "top",
 "bottom", "none" (default "auto" preserves upstream position)}
 
-\item{base_theme}{Base ggplot2 theme: "auto", "minimal", "classic", "gray", "bw", etc.
-(default "auto" preserves upstream theme)}
+\item{base_theme}{Base ggplot2 theme: "auto", "minimal", "classic",
+"gray", "bw", etc. (default "auto" preserves upstream theme)}
 
 \item{...}{Forwarded to \code{\link[blockr.core]{new_transform_block}}}
 }
