@@ -370,7 +370,7 @@ new_theme_block <- function(
               # Start with data, optionally add base theme
               if (base_theme_func == "") {
                 # Auto mode: don't apply base theme, just pass data through
-                text <- "data"
+                text <- "(data)"
               } else {
                 # Apply selected base theme
                 text <- glue::glue("data + {base_theme_func}")
