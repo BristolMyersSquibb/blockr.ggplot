@@ -612,8 +612,8 @@ new_ggplot_block <- function(
   }
   .chart-type-selector .btn-group-toggle,
   .chart-type-selector .btn-group {
-    display: flex !important;
-    flex-wrap: wrap !important;
+    display: grid !important;
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
     gap: 5px;
     margin: 0;
     width: 100% !important;
@@ -624,9 +624,8 @@ new_ggplot_block <- function(
     flex-direction: column;
     align-items: center;
     padding: 8px 12px;
-    min-width: 80px;
-    max-width: 150px;
-    flex: 1 1 auto;
+    white-space: nowrap;
+    width: 100%;
   }
   .chart-type-selector .btn i {
     font-size: 1.2em;
@@ -634,6 +633,7 @@ new_ggplot_block <- function(
   }
   .chart-type-selector .btn span {
     font-size: 0.85em;
+    white-space: nowrap;
   }
 "
           )),
