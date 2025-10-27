@@ -660,9 +660,10 @@ new_facet_block <- function(
           # Add custom CSS for facet type selector
           tags$style(HTML(
             "
-            .facet-type-selector .btn-group-toggle {
-              display: flex;
-              flex-wrap: wrap;
+            .facet-type-selector .btn-group-toggle,
+            .facet-type-selector .btn-group {
+              display: grid !important;
+              grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
               gap: 5px;
             }
             .facet-type-selector .btn {
@@ -670,9 +671,8 @@ new_facet_block <- function(
               flex-direction: column;
               align-items: center;
               padding: 8px 12px;
-              min-width: 80px;
-              flex: 1 0 auto;
               white-space: nowrap;
+              width: 100%;
             }
             .facet-type-selector .btn i {
               font-size: 1.2em;
