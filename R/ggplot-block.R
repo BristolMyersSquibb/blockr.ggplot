@@ -626,7 +626,8 @@ new_ggplot_block <- function(
     padding: 8px 12px;
     min-width: 80px;
     max-width: 150px;
-    flex: 1;
+    flex: 1 0 auto;
+    white-space: nowrap;
   }
   .chart-type-selector .btn i {
     font-size: 1.2em;
@@ -634,6 +635,7 @@ new_ggplot_block <- function(
   }
   .chart-type-selector .btn span {
     font-size: 0.85em;
+    white-space: nowrap;
   }
 "
           )),

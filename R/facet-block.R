@@ -671,7 +671,8 @@ new_facet_block <- function(
               align-items: center;
               padding: 8px 12px;
               min-width: 80px;
-              flex: 1;
+              flex: 1 0 auto;
+              white-space: nowrap;
             }
             .facet-type-selector .btn i {
               font-size: 1.2em;
@@ -679,6 +680,7 @@ new_facet_block <- function(
             }
             .facet-type-selector .btn span {
               font-size: 0.85em;
+              white-space: nowrap;
             }
 
             /* Responsive layout for inputs and preview */
