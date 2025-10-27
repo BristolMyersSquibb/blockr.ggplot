@@ -115,3 +115,201 @@ test_that("facet_block with all options", {
     c("facet_block", "ggplot_transform_block", "transform_block", "block")
   )
 })
+
+# Server-side tests
+test_that("facet_block server input widgets update reactive values", {
+  # Create a sample ggplot object
+  sample_plot <- ggplot2::ggplot(mtcars, ggplot2::aes(x = mpg, y = hp)) +
+    ggplot2::geom_point()
+
+  testServer(
+    app = new_facet_block()$expr_server,
+    args = list(data = reactive(sample_plot)),
+    expr = {
+      # Test facet_type input
+      session$setInputs(facet_type = "grid")
+      expect_equal(facet_type(), "grid")
+
+      session$setInputs(facet_type = "wrap")
+      expect_equal(facet_type(), "wrap")
+
+      # Test facets input (for wrap)
+      session$setInputs(facets = "cyl")
+      expect_equal(facets(), "cyl")
+
+      # Test rows input (for grid)
+      session$setInputs(rows = "gear")
+      expect_equal(rows(), "gear")
+
+      # Test cols input (for grid)
+      session$setInputs(cols = "carb")
+      expect_equal(cols(), "carb")
+
+      # Test scales input
+      session$setInputs(scales = "free_x")
+      expect_equal(scales(), "free_x")
+
+      # Test labeller input
+      session$setInputs(labeller = "label_both")
+      expect_equal(labeller(), "label_both")
+    }
+  )
+})
+
+test_that("facet_block state is correctly returned", {
+  sample_plot <- ggplot2::ggplot(mtcars, ggplot2::aes(x = mpg, y = hp)) +
+    ggplot2::geom_point()
+
+  testServer(
+    app = new_facet_block()$expr_server,
+    args = list(data = reactive(sample_plot)),
+    expr = {
+      # Check default values
+      expect_equal(session$returned$state$facet_type(), "wrap")
+      expect_equal(session$returned$state$scales(), "fixed")
+      expect_equal(session$returned$state$labeller(), "label_value")
+
+      # Update inputs and check state is updated
+      session$setInputs(facet_type = "grid")
+      expect_equal(session$returned$state$facet_type(), "grid")
+
+      session$setInputs(scales = "free")
+      expect_equal(session$returned$state$scales(), "free")
+
+      session$setInputs(rows = "cyl")
+      expect_equal(session$returned$state$rows(), "cyl")
+
+      session$setInputs(cols = "gear")
+      expect_equal(session$returned$state$cols(), "gear")
+    }
+  )
+})
+
+test_that("facet_block expr evaluates correctly with facet_wrap", {
+  sample_plot <- ggplot2::ggplot(mtcars, ggplot2::aes(x = mpg, y = hp)) +
+    ggplot2::geom_point()
+
+  testServer(
+    app = new_facet_block(facet_type = "wrap", facets = "cyl")$expr_server,
+    args = list(data = reactive(sample_plot)),
+    expr = {
+      # Evaluate the expression
+      evaluated_expr <- eval(session$returned$expr())
+
+      # Check that result is a ggplot object
+      expect_s3_class(evaluated_expr, "ggplot")
+
+      # Check that faceting was applied
+      expect_true("FacetWrap" %in% class(evaluated_expr$facet))
+    }
+  )
+})
+
+test_that("facet_block expr evaluates correctly with facet_grid", {
+  sample_plot <- ggplot2::ggplot(mtcars, ggplot2::aes(x = mpg, y = hp)) +
+    ggplot2::geom_point()
+
+  testServer(
+    app = new_facet_block(
+      facet_type = "grid",
+      rows = "cyl",
+      cols = "gear"
+    )$expr_server,
+    args = list(data = reactive(sample_plot)),
+    expr = {
+      # Evaluate the expression
+      evaluated_expr <- eval(session$returned$expr())
+
+      # Check that result is a ggplot object
+      expect_s3_class(evaluated_expr, "ggplot")
+
+      # Check that faceting was applied
+      expect_true("FacetGrid" %in% class(evaluated_expr$facet))
+    }
+  )
+})
+
+test_that("facet_block expr evaluates correctly with multiple facets in wrap", {
+  sample_plot <- ggplot2::ggplot(mtcars, ggplot2::aes(x = mpg, y = hp)) +
+    ggplot2::geom_point()
+
+  testServer(
+    app = new_facet_block(
+      facet_type = "wrap",
+      facets = c("cyl", "gear")
+    )$expr_server,
+    args = list(data = reactive(sample_plot)),
+    expr = {
+      # Evaluate the expression
+      evaluated_expr <- eval(session$returned$expr())
+
+      # Check that result is a ggplot object
+      expect_s3_class(evaluated_expr, "ggplot")
+
+      # Check that faceting was applied
+      expect_true("FacetWrap" %in% class(evaluated_expr$facet))
+    }
+  )
+})
+
+test_that("facet_block expr evaluates correctly with scales option", {
+  sample_plot <- ggplot2::ggplot(mtcars, ggplot2::aes(x = mpg, y = hp)) +
+    ggplot2::geom_point()
+
+  testServer(
+    app = new_facet_block(
+      facet_type = "wrap",
+      facets = "cyl",
+      scales = "free"
+    )$expr_server,
+    args = list(data = reactive(sample_plot)),
+    expr = {
+      # Evaluate the expression
+      evaluated_expr <- eval(session$returned$expr())
+
+      # Check that result is a ggplot object
+      expect_s3_class(evaluated_expr, "ggplot")
+    }
+  )
+})
+
+test_that("facet_block expr evaluates correctly with ncol/nrow options", {
+  sample_plot <- ggplot2::ggplot(mtcars, ggplot2::aes(x = mpg, y = hp)) +
+    ggplot2::geom_point()
+
+  testServer(
+    app = new_facet_block(
+      facet_type = "wrap",
+      facets = "cyl",
+      ncol = "2"
+    )$expr_server,
+    args = list(data = reactive(sample_plot)),
+    expr = {
+      # Evaluate the expression
+      evaluated_expr <- eval(session$returned$expr())
+
+      # Check that result is a ggplot object
+      expect_s3_class(evaluated_expr, "ggplot")
+    }
+  )
+})
+
+test_that("facet_block handles empty facets gracefully", {
+  sample_plot <- ggplot2::ggplot(mtcars, ggplot2::aes(x = mpg, y = hp)) +
+    ggplot2::geom_point()
+
+  testServer(
+    app = new_facet_block(
+      facet_type = "wrap",
+      facets = character()
+    )$expr_server,
+    args = list(data = reactive(sample_plot)),
+    expr = {
+      # Evaluate the expression - should return original plot
+      evaluated_expr <- eval(session$returned$expr())
+
+      # Check that result is a ggplot object
+      expect_s3_class(evaluated_expr, "ggplot")
+    }
+  )
+})
