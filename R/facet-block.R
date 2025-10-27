@@ -671,6 +671,7 @@ new_facet_block <- function(
               align-items: center;
               padding: 8px 12px;
               min-width: 80px;
+              flex: 1;
             }
             .facet-type-selector .btn i {
               font-size: 1.2em;
