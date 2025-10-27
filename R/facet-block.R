@@ -6,6 +6,7 @@
 #' @param nrow_val Number of rows ("" for auto)
 #' @param n_rows Number of row facet levels (for grid)
 #' @param n_cols Number of column facet levels (for grid)
+#' @param dir Direction for facet_wrap: "h" (horizontal) or "v" (vertical)
 #' @return List with svg, status text, and status type
 #' @noRd
 create_facet_preview_svg <- function(
@@ -14,7 +15,8 @@ create_facet_preview_svg <- function(
   ncol_val = "",
   nrow_val = "",
   n_rows = 1,
-  n_cols = 1
+  n_cols = 1,
+  dir = "h"
 ) {
   if (facet_type == "wrap") {
     # Use ggplot2::wrap_dims for wrap layout calculation
@@ -125,42 +127,87 @@ create_facet_preview_svg <- function(
   # Create cells
   cells <- list()
   facet_idx <- 1
-  for (row in 0:(nrow_actual - 1)) {
-    for (col in 0:(ncol_actual - 1)) {
-      x <- col * cell_size + gap
-      y <- row * cell_size + gap
-      w <- cell_size - 2 * gap
-      h <- cell_size - 2 * gap
 
-      is_filled <- facet_idx <= n_levels
+  # Fill order depends on direction
+  if (dir == "h") {
+    # Horizontal: fill columns first (left to right, then top to bottom)
+    for (row in 0:(nrow_actual - 1)) {
+      for (col in 0:(ncol_actual - 1)) {
+        x <- col * cell_size + gap
+        y <- row * cell_size + gap
+        w <- cell_size - 2 * gap
+        h <- cell_size - 2 * gap
 
-      cells[[length(cells) + 1]] <- tags$rect(
-        x = x,
-        y = y,
-        width = w,
-        height = h,
-        fill = if (is_filled) fill_color else "#f5f5f5",
-        stroke = if (is_filled) stroke_color else "#ddd",
-        `stroke-width` = if (is_filled) "2" else "1",
-        rx = "3"
-      )
+        is_filled <- facet_idx <= n_levels
 
-      if (is_filled) {
-        cells[[length(cells) + 1]] <- tags$text(
-          x = x + w / 2,
-          y = y + h / 2,
-          `text-anchor` = "middle",
-          `dominant-baseline` = "middle",
-          style = sprintf(
-            "font-size: %dpx; fill: %s; font-weight: bold;",
-            as.integer(max(10, cell_size / 5)),
-            stroke_color
-          ),
-          as.character(facet_idx)
+        cells[[length(cells) + 1]] <- tags$rect(
+          x = x,
+          y = y,
+          width = w,
+          height = h,
+          fill = if (is_filled) fill_color else "#f5f5f5",
+          stroke = if (is_filled) stroke_color else "#ddd",
+          `stroke-width` = if (is_filled) "2" else "1",
+          rx = "3"
         )
-      }
 
-      facet_idx <- facet_idx + 1
+        if (is_filled) {
+          cells[[length(cells) + 1]] <- tags$text(
+            x = x + w / 2,
+            y = y + h / 2,
+            `text-anchor` = "middle",
+            `dominant-baseline` = "middle",
+            style = sprintf(
+              "font-size: %dpx; fill: %s; font-weight: bold;",
+              as.integer(max(10, cell_size / 5)),
+              stroke_color
+            ),
+            as.character(facet_idx)
+          )
+        }
+
+        facet_idx <- facet_idx + 1
+      }
+    }
+  } else {
+    # Vertical: fill rows first (top to bottom, then left to right)
+    for (col in 0:(ncol_actual - 1)) {
+      for (row in 0:(nrow_actual - 1)) {
+        x <- col * cell_size + gap
+        y <- row * cell_size + gap
+        w <- cell_size - 2 * gap
+        h <- cell_size - 2 * gap
+
+        is_filled <- facet_idx <= n_levels
+
+        cells[[length(cells) + 1]] <- tags$rect(
+          x = x,
+          y = y,
+          width = w,
+          height = h,
+          fill = if (is_filled) fill_color else "#f5f5f5",
+          stroke = if (is_filled) stroke_color else "#ddd",
+          `stroke-width` = if (is_filled) "2" else "1",
+          rx = "3"
+        )
+
+        if (is_filled) {
+          cells[[length(cells) + 1]] <- tags$text(
+            x = x + w / 2,
+            y = y + h / 2,
+            `text-anchor` = "middle",
+            `dominant-baseline` = "middle",
+            style = sprintf(
+              "font-size: %dpx; fill: %s; font-weight: bold;",
+              as.integer(max(10, cell_size / 5)),
+              stroke_color
+            ),
+            as.character(facet_idx)
+          )
+        }
+
+        facet_idx <- facet_idx + 1
+      }
     }
   }
 
@@ -412,7 +459,8 @@ new_facet_block <- function(
                 "wrap",
                 n_levels = actual_levels,
                 ncol_val = r_ncol(),
-                nrow_val = r_nrow()
+                nrow_val = r_nrow(),
+                dir = r_dir()
               )
             } else {
               # facet_grid
