@@ -431,7 +431,7 @@ new_ggplot_block <- function(
                   "position = '{r_position()}')"
                 )
               } else if (current_type == "point") {
-                geom_call <- "ggplot2::geom_point()"
+                geom_call <- "ggplot2::geom_point(size = 2)"
               } else if (current_type == "line") {
                 geom_call <- "ggplot2::geom_line()"
               } else if (current_type == "boxplot") {
