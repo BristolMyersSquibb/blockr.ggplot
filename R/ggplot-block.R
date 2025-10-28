@@ -14,6 +14,7 @@
 #' @param linetype Column for linetype aesthetic
 #' @param group Column for group aesthetic
 #' @param alpha Column for alpha aesthetic (variable transparency)
+#' @param density_alpha Fixed alpha value for density plots (default 0.8)
 #' @param position Position adjustment for certain geoms
 #' @param bins Number of bins for histogram
 #' @param donut Whether to create donut chart when type is "pie" (default FALSE)
@@ -31,6 +32,7 @@ new_ggplot_block <- function(
   linetype = character(),
   group = character(),
   alpha = character(),
+  density_alpha = 0.8,
   position = "stack",
   bins = 30,
   donut = FALSE,
@@ -65,8 +67,8 @@ new_ggplot_block <- function(
     ),
     density = list(
       required = c("x"),
-      optional = c("fill", "color", "alpha"),
-      specific = list()
+      optional = c("fill", "color", "group"),
+      specific = list(density_alpha = TRUE)
     ),
     area = list(
       required = c("x", "y"),
@@ -108,6 +110,7 @@ new_ggplot_block <- function(
           )
           r_group <- reactiveVal(if (length(group) == 0) "(none)" else group)
           r_alpha <- reactiveVal(if (length(alpha) == 0) "(none)" else alpha)
+          r_density_alpha <- reactiveVal(density_alpha)
           r_position <- reactiveVal(position)
           r_bins <- reactiveVal(bins)
           r_donut <- reactiveVal(donut)
@@ -140,6 +143,7 @@ new_ggplot_block <- function(
           observeEvent(input$linetype, r_linetype(input$linetype))
           observeEvent(input$group, r_group(input$group))
           observeEvent(input$alpha, r_alpha(input$alpha))
+          observeEvent(input$density_alpha, r_density_alpha(input$density_alpha))
           observeEvent(input$position, r_position(input$position))
           observeEvent(input$bins, r_bins(input$bins))
           observeEvent(input$donut, r_donut(input$donut))
@@ -230,10 +234,24 @@ new_ggplot_block <- function(
 
               # Hide/show aesthetic inputs based on validity
               for (aes in all_aesthetics) {
-                if (aes %in% valid_aesthetics) {
-                  shinyjs::show(aes)
+                # Special handling for alpha: density uses fixed alpha, others use variable alpha
+                if (aes == "alpha") {
+                  if (current_type == "density") {
+                    shinyjs::hide("alpha")  # Hide variable alpha selector
+                    shinyjs::show("density_alpha")  # Show fixed alpha slider
+                  } else if (aes %in% valid_aesthetics) {
+                    shinyjs::show("alpha")  # Show variable alpha selector
+                    shinyjs::hide("density_alpha")  # Hide fixed alpha slider
+                  } else {
+                    shinyjs::hide("alpha")
+                    shinyjs::hide("density_alpha")
+                  }
                 } else {
-                  shinyjs::hide(aes)
+                  if (aes %in% valid_aesthetics) {
+                    shinyjs::show(aes)
+                  } else {
+                    shinyjs::hide(aes)
+                  }
                 }
               }
 
@@ -408,7 +426,25 @@ new_ggplot_block <- function(
               if (r_group() != "(none)" && "group" %in% chart_config$optional) {
                 aes_parts <- c(aes_parts, glue::glue("group = {r_group()}"))
               }
-              if (r_alpha() != "(none)" && "alpha" %in% chart_config$optional) {
+              # For density plots, group is auto-set from colour/fill if not explicitly set
+              # This ensures proper grouping for statistical transformation
+              if (current_type == "density") {
+                # Check if group was not explicitly set
+                if (r_group() == "(none)") {
+                  # Auto-set group from colour or fill (prioritize colour)
+                  if (r_color() != "(none)") {
+                    aes_parts <- c(aes_parts, glue::glue("group = {r_color()}"))
+                  } else if (r_fill() != "(none)") {
+                    aes_parts <- c(aes_parts, glue::glue("group = {r_fill()}"))
+                  }
+                }
+              }
+              # Alpha: for density plots, use fixed alpha parameter, not aesthetic mapping
+              if (
+                current_type != "density" &&
+                  r_alpha() != "(none)" &&
+                  "alpha" %in% chart_config$optional
+              ) {
                 aes_parts <- c(aes_parts, glue::glue("alpha = {r_alpha()}"))
               }
 
@@ -439,7 +475,8 @@ new_ggplot_block <- function(
               } else if (current_type == "violin") {
                 geom_call <- "ggplot2::geom_violin()"
               } else if (current_type == "density") {
-                geom_call <- "ggplot2::geom_density()"
+                # Use fixed alpha value for density plots
+                geom_call <- glue::glue("ggplot2::geom_density(alpha = {r_density_alpha()})")
               } else if (current_type == "area") {
                 geom_call <- "ggplot2::geom_area()"
               } else if (current_type == "pie") {
@@ -525,6 +562,7 @@ new_ggplot_block <- function(
               linetype = r_linetype,
               group = r_group,
               alpha = r_alpha,
+              density_alpha = r_density_alpha,
               position = r_position,
               bins = r_bins,
               donut = r_donut
@@ -860,6 +898,19 @@ new_ggplot_block <- function(
                       label = make_aesthetic_label("Alpha By", "alpha", type),
                       choices = c("(none)", alpha),
                       selected = if (length(alpha) == 0) "(none)" else alpha,
+                      width = "100%"
+                    )
+                  ),
+                  div(
+                    id = NS(id, "density_alpha"),
+                    class = "block-input-wrapper",
+                    sliderInput(
+                      inputId = NS(id, "density_alpha"),
+                      label = "Transparency (Alpha)",
+                      min = 0,
+                      max = 1,
+                      value = density_alpha,
+                      step = 0.05,
                       width = "100%"
                     )
                   )
