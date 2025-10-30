@@ -536,12 +536,12 @@ new_ggplot_block <- function(
                 "{geom_call}"
               )
 
-              # Add theme_minimal() as default for all charts
+              # Add hrbrthemes::theme_ipsum() as default for all charts
               if (current_type == "pie") {
                 # Pie charts: add polar coordinates and theme
                 text <- glue::glue(
                   "({text}) + ggplot2::coord_polar('y', start = 0) + ",
-                  "ggplot2::theme_minimal()"
+                  "hrbrthemes::theme_ipsum()"
                 )
 
                 # Add donut hole if requested
@@ -557,8 +557,8 @@ new_ggplot_block <- function(
                   "axis.ticks = ggplot2::element_blank())"
                 )
               } else {
-                # Regular charts: apply theme_minimal()
-                text <- glue::glue("({text}) + ggplot2::theme_minimal()")
+                # Regular charts: apply hrbrthemes::theme_ipsum()
+                text <- glue::glue("({text}) + hrbrthemes::theme_ipsum()")
               }
 
               parse(text = text)[[1]]
