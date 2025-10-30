@@ -23,3 +23,10 @@ jobs:
     if: github.event_name != 'pull_request'
     uses: ./.github/workflows/check.yaml
     secrets: inherit
+
+  pkgdown:
+    needs: smoke
+    uses: ./.github/workflows/pkgdown.yaml
+    secrets: inherit
+    permissions:
+      contents: write

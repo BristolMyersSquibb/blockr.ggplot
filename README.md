@@ -35,6 +35,14 @@ This launches an interactive web interface where you can:
 - **Real-time preview** - See your visualization update as you modify settings
 - **Rich customization** - Fine-tune aesthetics, themes, and styling options
 
+## Documentation
+
+For a comprehensive showcase of all available blocks with screenshots and detailed explanations:
+
+```r
+vignette("blockr-ggplot-showcase", package = "blockr.ggplot")
+```
+
 ## The Universal ggplot Block
 
 `blockr.ggplot` provides a single, powerful block that handles all your visualization needs. No need to learn multiple blocks - just one interface that adapts to your chosen chart type.
