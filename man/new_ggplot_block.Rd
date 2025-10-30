@@ -15,6 +15,7 @@ new_ggplot_block(
   linetype = character(),
   group = character(),
   alpha = character(),
+  density_alpha = 0.8,
   position = "stack",
   bins = 30,
   donut = FALSE,
@@ -42,6 +43,8 @@ new_ggplot_block(
 \item{group}{Column for group aesthetic}
 
 \item{alpha}{Column for alpha aesthetic (variable transparency)}
+
+\item{density_alpha}{Fixed alpha value for density plots (default 0.8)}
 
 \item{position}{Position adjustment for certain geoms}
 
