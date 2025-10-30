@@ -16,7 +16,6 @@ Imports:
     colourpicker,
     ggplot2,
     glue,
-    hrbrthemes,
     patchwork,
     shiny,
     shinyjs,
