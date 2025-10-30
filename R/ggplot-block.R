@@ -271,7 +271,10 @@ new_ggplot_block <- function(
                 label = if ("x" %in% chart_config$required) {
                   tags$span(
                     tags$strong("X-axis"),
-                    tags$span("*", style = "color: #dc3545; margin-left: 2px;")
+                    tags$span(
+                      "*",
+                      style = "color: #dc3545; margin-left: 2px;"
+                    )
                   )
                 } else {
                   "X-axis"
@@ -761,7 +764,10 @@ new_ggplot_block <- function(
                 ),
                 "Mappings",
                 tags$small(
-                  tags$span("*", style = "color: #dc3545; font-weight: bold;"),
+                  tags$span(
+                    "*",
+                    style = "color: #dc3545; font-weight: bold;"
+                  ),
                   " Required field",
                   style = paste(
                     "font-size: 0.7em; color: #6c757d;",
