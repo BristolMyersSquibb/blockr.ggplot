@@ -24,6 +24,11 @@ jobs:
     uses: ./.github/workflows/check.yaml
     secrets: inherit
 
+  coverage:
+    needs: smoke
+    uses: ./.github/workflows/coverage.yaml
+    secrets: inherit
+
   pkgdown:
     needs: smoke
     uses: ./.github/workflows/pkgdown.yaml
