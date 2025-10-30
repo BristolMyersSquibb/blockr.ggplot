@@ -143,7 +143,10 @@ new_ggplot_block <- function(
           observeEvent(input$linetype, r_linetype(input$linetype))
           observeEvent(input$group, r_group(input$group))
           observeEvent(input$alpha, r_alpha(input$alpha))
-          observeEvent(input$density_alpha, r_density_alpha(input$density_alpha))
+          observeEvent(
+            input$density_alpha,
+            r_density_alpha(input$density_alpha)
+          )
           observeEvent(input$position, r_position(input$position))
           observeEvent(input$bins, r_bins(input$bins))
           observeEvent(input$donut, r_donut(input$donut))
@@ -237,11 +240,11 @@ new_ggplot_block <- function(
                 # Special handling for alpha: density uses fixed alpha, others use variable alpha
                 if (aes == "alpha") {
                   if (current_type == "density") {
-                    shinyjs::hide("alpha")  # Hide variable alpha selector
-                    shinyjs::show("density_alpha")  # Show fixed alpha slider
+                    shinyjs::hide("alpha") # Hide variable alpha selector
+                    shinyjs::show("density_alpha") # Show fixed alpha slider
                   } else if (aes %in% valid_aesthetics) {
-                    shinyjs::show("alpha")  # Show variable alpha selector
-                    shinyjs::hide("density_alpha")  # Hide fixed alpha slider
+                    shinyjs::show("alpha") # Show variable alpha selector
+                    shinyjs::hide("density_alpha") # Hide fixed alpha slider
                   } else {
                     shinyjs::hide("alpha")
                     shinyjs::hide("density_alpha")
@@ -397,7 +400,8 @@ new_ggplot_block <- function(
               if (r_fill() != "(none)" && "fill" %in% chart_config$optional) {
                 # For histograms, bars, and density, convert to factor for discrete colors
                 if (
-                  current_type %in% c("histogram", "bar", "boxplot", "violin", "density")
+                  current_type %in%
+                    c("histogram", "bar", "boxplot", "violin", "density")
                 ) {
                   aes_parts <- c(
                     aes_parts,
@@ -430,9 +434,14 @@ new_ggplot_block <- function(
               # This ensures proper grouping for statistical transformation
               if (current_type == "density") {
                 if (r_fill() != "(none)") {
-                  aes_parts <- c(aes_parts, glue::glue("group = as.factor({r_fill()})"))
+                  aes_parts <- c(
+                    aes_parts,
+                    glue::glue("group = as.factor({r_fill()})")
+                  )
                 }
-              } else if (r_group() != "(none)" && "group" %in% chart_config$optional) {
+              } else if (
+                r_group() != "(none)" && "group" %in% chart_config$optional
+              ) {
                 # For non-density plots, use user-specified group if provided
                 aes_parts <- c(aes_parts, glue::glue("group = {r_group()}"))
               }
@@ -473,7 +482,9 @@ new_ggplot_block <- function(
                 geom_call <- "ggplot2::geom_violin()"
               } else if (current_type == "density") {
                 # Use fixed alpha value for density plots
-                geom_call <- glue::glue("ggplot2::geom_density(alpha = {r_density_alpha()})")
+                geom_call <- glue::glue(
+                  "ggplot2::geom_density(alpha = {r_density_alpha()})"
+                )
               } else if (current_type == "area") {
                 geom_call <- "ggplot2::geom_area()"
               } else if (current_type == "pie") {
