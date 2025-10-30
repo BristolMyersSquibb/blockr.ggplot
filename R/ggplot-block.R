@@ -67,7 +67,7 @@ new_ggplot_block <- function(
     ),
     density = list(
       required = c("x"),
-      optional = c("fill", "color", "group"),
+      optional = c("fill", "group"),
       specific = list(density_alpha = TRUE)
     ),
     area = list(
@@ -246,6 +246,9 @@ new_ggplot_block <- function(
                     shinyjs::hide("alpha")
                     shinyjs::hide("density_alpha")
                   }
+                } else if (aes == "group" && current_type == "density") {
+                  # For density plots, hide group input (it's set automatically to match fill)
+                  shinyjs::hide("group")
                 } else {
                   if (aes %in% valid_aesthetics) {
                     shinyjs::show(aes)
@@ -392,9 +395,9 @@ new_ggplot_block <- function(
                 aes_parts <- c(aes_parts, glue::glue("colour = {r_color()}"))
               }
               if (r_fill() != "(none)" && "fill" %in% chart_config$optional) {
-                # For histograms and bars, convert to factor for discrete colors
+                # For histograms, bars, and density, convert to factor for discrete colors
                 if (
-                  current_type %in% c("histogram", "bar", "boxplot", "violin")
+                  current_type %in% c("histogram", "bar", "boxplot", "violin", "density")
                 ) {
                   aes_parts <- c(
                     aes_parts,
@@ -423,21 +426,15 @@ new_ggplot_block <- function(
                   glue::glue("linetype = {r_linetype()}")
                 )
               }
-              if (r_group() != "(none)" && "group" %in% chart_config$optional) {
-                aes_parts <- c(aes_parts, glue::glue("group = {r_group()}"))
-              }
-              # For density plots, group is auto-set from colour/fill if not explicitly set
+              # For density plots, always set group to match fill
               # This ensures proper grouping for statistical transformation
               if (current_type == "density") {
-                # Check if group was not explicitly set
-                if (r_group() == "(none)") {
-                  # Auto-set group from colour or fill (prioritize colour)
-                  if (r_color() != "(none)") {
-                    aes_parts <- c(aes_parts, glue::glue("group = {r_color()}"))
-                  } else if (r_fill() != "(none)") {
-                    aes_parts <- c(aes_parts, glue::glue("group = {r_fill()}"))
-                  }
+                if (r_fill() != "(none)") {
+                  aes_parts <- c(aes_parts, glue::glue("group = as.factor({r_fill()})"))
                 }
+              } else if (r_group() != "(none)" && "group" %in% chart_config$optional) {
+                # For non-density plots, use user-specified group if provided
+                aes_parts <- c(aes_parts, glue::glue("group = {r_group()}"))
               }
               # Alpha: for density plots, use fixed alpha parameter, not aesthetic mapping
               if (
