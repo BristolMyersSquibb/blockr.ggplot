@@ -25,6 +25,7 @@ Suggests:
     ggpubr,
     ggthemes,
     knitr,
+    pkgdown,
     rmarkdown,
     shinytest2,
     testthat (>= 3.0.0),

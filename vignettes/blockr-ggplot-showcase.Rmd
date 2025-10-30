@@ -23,7 +23,7 @@ blockr.ggplot provides interactive blocks for data visualization using ggplot2. 
 
 ---
 
-## ggplot Block: Scatter Plot
+## Scatter Plot
 
 The ggplot block creates visualizations using ggplot2. For scatter plots, use the "point" chart type to display relationships between two continuous variables.
 
@@ -37,7 +37,7 @@ knitr::include_graphics("../man/figures/block-ggplot-scatter.png")
 
 ---
 
-## ggplot Block: Bar Chart
+## Bar Chart
 
 Bar charts display categorical data with rectangular bars. Use the "bar" chart type to compare values across categories or show frequency distributions.
 
@@ -51,7 +51,7 @@ knitr::include_graphics("../man/figures/block-ggplot-bar.png")
 
 ---
 
-## ggplot Block: Line Chart
+## Line Chart
 
 Line charts connect data points to show trends over time or across ordered categories. Use the "line" chart type for time series or sequential data.
 
@@ -65,7 +65,7 @@ knitr::include_graphics("../man/figures/block-ggplot-line.png")
 
 ---
 
-## ggplot Block: Box Plot
+## Box Plot
 
 Box plots display the distribution of continuous data through quartiles. Use the "boxplot" chart type to compare distributions across groups or identify outliers.
 
@@ -79,7 +79,7 @@ knitr::include_graphics("../man/figures/block-ggplot-boxplot.png")
 
 ---
 
-## ggplot Block: Violin Plot
+## Violin Plot
 
 Violin plots combine box plots with density plots to show the full distribution shape. Use the "violin" chart type when distribution shape matters as much as summary statistics.
 
@@ -93,7 +93,7 @@ knitr::include_graphics("../man/figures/block-ggplot-violin.png")
 
 ---
 
-## ggplot Block: Density Plot
+## Density Plot
 
 Density plots smooth histograms into continuous curves showing probability distributions. Use the "density" chart type to compare distributions across groups with overlapping curves.
 
@@ -107,7 +107,7 @@ knitr::include_graphics("../man/figures/block-ggplot-density.png")
 
 ---
 
-## ggplot Block: Area Chart
+## Area Chart
 
 Area charts are filled line charts that emphasize cumulative magnitude over time. Use the "area" chart type to show how quantities accumulate or to emphasize the volume under curves.
 
@@ -121,7 +121,7 @@ knitr::include_graphics("../man/figures/block-ggplot-area.png")
 
 ---
 
-## ggplot Block: Histogram
+## Histogram
 
 Histograms bin continuous data to show frequency distributions. Use the "histogram" chart type to understand the shape, center, and spread of a single variable.
 
@@ -135,7 +135,7 @@ knitr::include_graphics("../man/figures/block-ggplot-histogram.png")
 
 ---
 
-## ggplot Block: Pie Chart
+## Pie Chart
 
 Pie charts show proportions as slices of a circle. Use the "pie" chart type to display part-to-whole relationships for categorical data.
 
@@ -149,7 +149,7 @@ knitr::include_graphics("../man/figures/block-ggplot-pie.png")
 
 ---
 
-## ggplot Block: Donut Chart
+## Donut Chart
 
 Donut charts are pie charts with a center hole, offering a modern aesthetic and space for annotations. Use the "pie" chart type with the donut_hole parameter to create this variant.
 
@@ -163,7 +163,7 @@ knitr::include_graphics("../man/figures/block-ggplot-donut.png")
 
 ---
 
-## Facet Block: Wrap Layout
+## Facet: Wrap Layout
 
 The facet block splits plots into multiple panels based on categorical variables. Use "wrap" mode for flexible grid layouts that flow naturally across rows.
 
@@ -177,7 +177,7 @@ knitr::include_graphics("../man/figures/block-facet.png")
 
 ---
 
-## Facet Block: Grid Layout
+## Facet: Grid Layout
 
 Facet grid creates a matrix of panels based on two categorical variables - one for rows and one for columns. Use "grid" mode when you want to examine combinations of two factors.
 

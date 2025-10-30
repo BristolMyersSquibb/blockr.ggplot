@@ -12,3 +12,6 @@
 ^\.\.Rcheck$
 ^\.claude$
 ^dev$
+^_pkgdown\.yml$
+^docs$
+^pkgdown$
