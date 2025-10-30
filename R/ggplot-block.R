@@ -237,7 +237,8 @@ new_ggplot_block <- function(
 
               # Hide/show aesthetic inputs based on validity
               for (aes in all_aesthetics) {
-                # Special handling for alpha: density uses fixed alpha, others use variable alpha
+                # Special handling for alpha: density uses fixed alpha,
+                # others use variable alpha
                 if (aes == "alpha") {
                   if (current_type == "density") {
                     shinyjs::hide("alpha") # Hide variable alpha selector
@@ -250,7 +251,8 @@ new_ggplot_block <- function(
                     shinyjs::hide("density_alpha")
                   }
                 } else if (aes == "group" && current_type == "density") {
-                  # For density plots, hide group input (it's set automatically to match fill)
+                  # For density plots, hide group input
+                  # (it's set automatically to match fill)
                   shinyjs::hide("group")
                 } else {
                   if (aes %in% valid_aesthetics) {
@@ -398,7 +400,8 @@ new_ggplot_block <- function(
                 aes_parts <- c(aes_parts, glue::glue("colour = {r_color()}"))
               }
               if (r_fill() != "(none)" && "fill" %in% chart_config$optional) {
-                # For histograms, bars, and density, convert to factor for discrete colors
+                # For histograms, bars, and density, convert to factor
+                # for discrete colors
                 if (
                   current_type %in%
                     c("histogram", "bar", "boxplot", "violin", "density")
@@ -445,7 +448,8 @@ new_ggplot_block <- function(
                 # For non-density plots, use user-specified group if provided
                 aes_parts <- c(aes_parts, glue::glue("group = {r_group()}"))
               }
-              # Alpha: for density plots, use fixed alpha parameter, not aesthetic mapping
+              # Alpha: for density plots, use fixed alpha parameter,
+              # not aesthetic mapping
               if (
                 current_type != "density" &&
                   r_alpha() != "(none)" &&
