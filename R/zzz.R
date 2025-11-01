@@ -4,13 +4,11 @@ register_ggplot_blocks <- function() {
     "new_ggplot_block",
     name = "ggplot",
     description = paste0(
-      "Universal ggplot2 visualization block. ",
-      "Create scatter, bar, line, box, violin, density, area, ",
-      "histogram, and pie charts with dynamic controls. ",
-      "Simply select your chart type and the interface adapts ",
-      "to show relevant aesthetics and options."
+      "Create visualizations including scatter plots, bar charts, ",
+      "line graphs, histograms, and more"
     ),
     category = "plot",
+    icon = "bar-chart-line",
     package = utils::packageName(),
     overwrite = TRUE
   )
@@ -19,13 +17,11 @@ register_ggplot_blocks <- function() {
     "new_grid_block",
     name = "Grid",
     description = paste0(
-      "Combine multiple ggplot objects into a responsive grid layout. ",
-      "Supports automatic or manual layout control (rows/columns), ",
-      "legend management, and annotations (title, subtitle, tags). ",
-      "Uses patchwork for professional plot composition with ",
-      "visual layout preview."
+      "Combine multiple ggplot objects into a grid layout ",
+      "with annotations"
     ),
     category = "plot",
+    icon = "grid-3x3",
     package = utils::packageName(),
     overwrite = TRUE
   )
@@ -34,13 +30,11 @@ register_ggplot_blocks <- function() {
     "new_theme_block",
     name = "Theme",
     description = paste0(
-      "Advanced theme customization for ggplot2 plots. ",
-      "Fine-tune backgrounds, fonts, grid lines, panel borders, ",
-      "and legend positioning. Use color pickers for backgrounds, ",
-      "sliders for font sizes, and checkboxes for grid visibility. ",
-      "Perfect for creating custom styled visualizations."
+      "Customize plot appearance including colors, fonts, backgrounds, ",
+      "and grid lines"
     ),
     category = "plot",
+    icon = "palette2",
     package = utils::packageName(),
     overwrite = TRUE
   )
@@ -49,13 +43,11 @@ register_ggplot_blocks <- function() {
     "new_facet_block",
     name = "Facet",
     description = paste0(
-      "Add faceting to ggplot objects with facet_wrap() or facet_grid(). ",
-      "Split your plot into multiple panels based on categorical variables. ",
-      "Visual preview shows layout, supports free scales, and customizable ",
-      "labels. Choose wrap for automatic grid layout or grid for explicit ",
-      "rows and columns control."
+      "Split plots into multiple panels based on ",
+      "categorical variables"
     ),
     category = "plot",
+    icon = "grid-3x2",
     package = utils::packageName(),
     overwrite = TRUE
   )
