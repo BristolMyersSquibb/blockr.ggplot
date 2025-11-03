@@ -38,3 +38,14 @@ block_ui.ggplot_transform_block <- function(id, x, ...) {
 block_output.ggplot_transform_block <- function(x, result, session) {
   renderPlot(print(result), bg = "transparent")
 }
+
+#' @export
+block_eval.ggplot_transform_block <- function(x, expr, data, ...) {
+  result <- eval(expr, data)
+
+  if (inherits(result, "ggplot")) {
+    ggplot2::ggplot_build(result)
+  }
+
+  result
+}
