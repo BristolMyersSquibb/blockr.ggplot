@@ -7,12 +7,12 @@ This folder contains internal developer documentation for blockr.ggplot. These f
 ### [blocks-core-guide.md](blocks-core-guide.md)
 **Universal guide to blockr block development (start here)**
 
-Core concepts applicable to all blockr packages. Covers:
+Core concepts applicable to all [blockr](https://github.com/BristolMyersSquibb/blockr) packages. Covers:
 - What is a block? (universal concept)
 - Block anatomy (UI, Server, Constructor)
 - Step-by-step block creation
 - Testing and validation
-- blockr.core vignette references
+- [blockr.core](https://github.com/BristolMyersSquibb/blockr.core) vignette references
 
 **Use this when:**
 - New to blockr development
@@ -23,7 +23,7 @@ Core concepts applicable to all blockr packages. Covers:
 ### [ggplot-blocks-guide.md](ggplot-blocks-guide.md)
 **ggplot2-specific patterns and extensions**
 
-Package-specific guide for blockr.ggplot. Covers:
+Package-specific guide for [blockr.ggplot](https://github.com/BristolMyersSquibb/blockr.ggplot). Covers:
 - Expression building with `parse(text = glue::glue())`
 - `"(none)"` pattern for optional aesthetics
 - `allow_empty_state` parameter usage
@@ -72,7 +72,7 @@ Comprehensive guide to building consistent, professional block UIs. Covers:
 ## Related Resources
 
 - **Quick reference:** `../CLAUDE.md` (concise patterns and fixes)
-- **Core concepts:** blockr.core vignettes (`create-block`, `extend-blockr`)
+- **Core concepts:** [blockr.core](https://github.com/BristolMyersSquibb/blockr.core) vignettes (`create-block`, `extend-blockr`)
 - **Examples:** `../inst/examples/` directory
 - **Block code:** `../R/` directory
 

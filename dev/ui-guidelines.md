@@ -1,6 +1,6 @@
 # UI Development Guidelines
 
-This guide documents the UI patterns and design principles for blockr.ggplot blocks. Follow these guidelines to create consistent, professional, and responsive block interfaces.
+This guide documents the UI patterns and design principles for [blockr.ggplot](https://github.com/BristolMyersSquibb/blockr.ggplot) blocks. Follow these guidelines to create consistent, professional, and responsive block interfaces.
 
 ## Table of Contents
 
@@ -867,98 +867,10 @@ ui <- function(id) {
 
 ---
 
-## Quick Reference
-
-### CSS Classes
-
-| Class | Purpose | Behavior |
-|-------|---------|----------|
-| `.block-container` | Outer wrapper | Padding, margins |
-| `.block-form-grid` | Main grid | Responsive columns |
-| `.block-section` | Section wrapper | `display: contents` |
-| `.block-section-grid` | Section grid | `display: contents` |
-| `.block-input-wrapper` | Input wrapper | Full width |
-| `.block-help-text` | Help text | Full width, gray |
-| `.advanced-toggle` | Toggle button | Clickable, animated |
-| `.preview-svg-container` | SVG preview | Centered |
-| `.preview-status` | Status text | Colored, padded |
-
-### Required Functions
-
-```r
-# Add responsive CSS
-block_responsive_css()
-
-# Namespace inputs
-NS(id, "input_name")
-```
-
-### Grid Behavior
-
-- **1 column**: Width < 250px
-- **2 columns**: Width 250-750px
-- **3 columns**: Width 750-1000px
-- **4 columns**: Width > 1000px
-
-### Color Reference
-
-**Buttons:** Always `status = "light"`
-
-**Status Colors:**
-- Green: `#4CAF50` / `rgba(76, 175, 80, 0.3)`
-- Blue: `#2196F3` / `rgba(33, 150, 243, 0.3)`
-- Red: `#f44336` / `rgba(244, 67, 54, 0.3)`
-
-**UI Grays:**
-- Primary: `#333`
-- Secondary: `#6c757d`
-- Help: `#666`
-- Border: `#ddd`
-- Background: `#f8f9fa`
-
-### Typography Scale
-
-- Headers: `1.1rem`, `font-weight: 600`
-- Help/Status: `0.875rem`
-- Toggle: `0.875rem`
-
-### Animation Timings
-
-- Collapse: `300ms ease-out`
-- Expand: `500ms ease-in`
-- Chevron: `200ms`
-
----
-
-## Best Practices Summary
-
-✅ **Do:**
-- Use `block_responsive_css()` for all blocks
-- Keep buttons `status = "light"`
-- Place previews below inputs
-- Use subtle colors (low opacity fills)
-- Hide advanced options by default
-- Maintain uniform input widths
-
-❌ **Don't:**
-- Use flashy button colors
-- Place previews above inputs
-- Use custom responsive code (use the grid)
-- Mix different width systems
-- Show all options at once
-- Use bright, saturated colors
-
----
-
 ## Related Documentation
 
-- **Block Development:** [writing-blocks.md](writing-blocks.md)
 - **Quick Reference:** [../CLAUDE.md](../CLAUDE.md)
 - **Example Blocks:**
   - [facet-block.R](../R/facet-block.R) - Advanced toggle + preview
   - [plot-grid-block.R](../R/plot-grid-block.R) - Grid preview
   - [ggplot-block.R](../R/ggplot-block.R) - Dynamic UI
-
----
-
-**Remember:** The goal is a clean, professional, minimalist interface that adapts gracefully to any width. Let the responsive grid system do the work!
