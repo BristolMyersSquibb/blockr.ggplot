@@ -3,7 +3,7 @@ pkgdown: 2.1.3
 pkgdown_sha: ~
 articles:
   blockr-ggplot-showcase: blockr-ggplot-showcase.html
-last_built: 2025-11-03T14:51Z
+last_built: 2025-11-03T19:41Z
 urls:
   reference: https://bristolmyerssquibb.github.io/blockr.ggplot/reference
   article: https://bristolmyerssquibb.github.io/blockr.ggplot/articles
