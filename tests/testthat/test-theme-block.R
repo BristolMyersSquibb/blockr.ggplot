@@ -2,7 +2,7 @@ test_that("build_theme_choices always includes ggplot2 themes", {
   choices <- build_theme_choices()
   
   # Check that Auto is present
-  expect_true("auto" %in% choices[["Auto (keep upstream)"]])
+  expect_equal(choices[["Auto (keep upstream)"]], "auto")
   
   # Check that ggplot2 themes are present
   ggplot2_themes <- choices[["ggplot2 (Built-in)"]]
