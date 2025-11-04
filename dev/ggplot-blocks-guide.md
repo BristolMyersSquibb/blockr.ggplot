@@ -14,7 +14,6 @@ This guide covers ggplot2-specific patterns for building visualization blocks in
 4. [Complete ggplot Example](#complete-ggplot-example)
 5. [ggplot Block Checklist](#ggplot-block-checklist)
 6. [Common ggplot Pitfalls](#common-ggplot-pitfalls)
-7. [Quick Reference](#quick-reference)
 
 ---
 
