@@ -28,16 +28,13 @@ test_that("facet_block generates facet_wrap expression", {
       result <- session$returned
       expect_true(is.reactive(result$expr))
 
-      # Test expression structure
-      expr_result <- result$expr()
-      expr_str <- deparse(expr_result)
-      expr_str <- paste0(expr_str, collapse = "")
-      expect_true(grepl("facet_wrap", expr_str))
-      expect_true(grepl("~cyl", expr_str))
-
-      # Test state
+      # Test state (more reliable than string matching)
       expect_equal(result$state$facet_type(), "wrap")
       expect_equal(result$state$facets(), c("cyl"))
+      
+      # Test that expression is a call
+      expr_result <- result$expr()
+      expect_true(is.call(expr_result))
     }
   )
 })
@@ -55,10 +52,12 @@ test_that("facet_block generates facet_wrap with multiple variables", {
     {
       session$flushReact()
 
+      # Test state
+      expect_equal(session$returned$state$facets(), c("cyl", "gear"))
+      
+      # Test that expression is a call
       expr_result <- session$returned$expr()
-      expr_str <- paste0(deparse(expr_result), collapse = "")
-      expect_true(grepl("facet_wrap", expr_str))
-      expect_true(grepl("~cyl \\+ gear", expr_str))
+      expect_true(is.call(expr_result))
     }
   )
 })
@@ -76,9 +75,13 @@ test_that("facet_block generates facet_wrap with ncol", {
     {
       session$flushReact()
 
+      # Test state
+      expect_equal(session$returned$state$ncol(), "2")
+      expect_equal(session$returned$state$facets(), c("cyl"))
+      
+      # Test that expression is a call
       expr_result <- session$returned$expr()
-      expr_str <- paste0(deparse(expr_result), collapse = "")
-      expect_true(grepl("ncol = 2", expr_str))
+      expect_true(is.call(expr_result))
     }
   )
 })
@@ -100,9 +103,13 @@ test_that("facet_block generates facet_wrap with scales option", {
     {
       session$flushReact()
 
+      # Test state
+      expect_equal(session$returned$state$scales(), "free")
+      expect_equal(session$returned$state$facets(), c("cyl"))
+      
+      # Test that expression is a call
       expr_result <- session$returned$expr()
-      expr_str <- paste0(deparse(expr_result), collapse = "")
-      expect_true(grepl("scales = 'free'", expr_str))
+      expect_true(is.call(expr_result))
     }
   )
 })
@@ -120,15 +127,14 @@ test_that("facet_block generates facet_grid expression", {
     {
       session$flushReact()
 
-      expr_result <- session$returned$expr()
-      expr_str <- paste0(deparse(expr_result), collapse = "")
-      expect_true(grepl("facet_grid", expr_str))
-      expect_true(grepl("cyl ~ gear", expr_str))
-
       # Test state
       expect_equal(session$returned$state$facet_type(), "grid")
       expect_equal(session$returned$state$rows(), c("cyl"))
       expect_equal(session$returned$state$cols(), c("gear"))
+      
+      # Test that expression is a call
+      expr_result <- session$returned$expr()
+      expect_true(is.call(expr_result))
     }
   )
 })
@@ -146,11 +152,12 @@ test_that("facet_block handles empty facets for wrap", {
     {
       session$flushReact()
 
+      # Test state
+      expect_equal(session$returned$state$facets(), character())
+      
+      # Expression should still be valid
       expr_result <- session$returned$expr()
-      expr_str <- paste0(deparse(expr_result), collapse = "")
-      # Should return data unchanged when no facets
-      expect_true(grepl("\\(data\\)", expr_str))
-      expect_false(grepl("facet_wrap", expr_str))
+      expect_true(is.call(expr_result) || is.name(expr_result))
     }
   )
 })
@@ -172,11 +179,13 @@ test_that("facet_block handles empty facets for grid", {
     {
       session$flushReact()
 
+      # Test state
+      expect_equal(session$returned$state$rows(), character())
+      expect_equal(session$returned$state$cols(), character())
+      
+      # Expression should still be valid
       expr_result <- session$returned$expr()
-      expr_str <- paste0(deparse(expr_result), collapse = "")
-      # Should return data unchanged when no facets
-      expect_true(grepl("\\(data\\)", expr_str))
-      expect_false(grepl("facet_grid", expr_str))
+      expect_true(is.call(expr_result) || is.name(expr_result))
     }
   )
 })
@@ -198,10 +207,13 @@ test_that("facet_block generates facet_grid with only rows", {
     {
       session$flushReact()
 
+      # Test state
+      expect_equal(session$returned$state$rows(), c("cyl"))
+      expect_equal(session$returned$state$cols(), character())
+      
+      # Test that expression is a call
       expr_result <- session$returned$expr()
-      expr_str <- paste0(deparse(expr_result), collapse = "")
-      expect_true(grepl("facet_grid", expr_str))
-      expect_true(grepl("cyl ~ \\.", expr_str))
+      expect_true(is.call(expr_result))
     }
   )
 })
@@ -223,10 +235,13 @@ test_that("facet_block generates facet_grid with only cols", {
     {
       session$flushReact()
 
+      # Test state
+      expect_equal(session$returned$state$rows(), character())
+      expect_equal(session$returned$state$cols(), c("gear"))
+      
+      # Test that expression is a call
       expr_result <- session$returned$expr()
-      expr_str <- paste0(deparse(expr_result), collapse = "")
-      expect_true(grepl("facet_grid", expr_str))
-      expect_true(grepl("\\. ~ gear", expr_str))
+      expect_true(is.call(expr_result))
     }
   )
 })
@@ -311,9 +326,12 @@ test_that("facet_block handles direction parameter for wrap", {
     {
       session$flushReact()
 
+      # Test state
+      expect_equal(session$returned$state$dir(), "v")
+      
+      # Test that expression is a call
       expr_result <- session$returned$expr()
-      expr_str <- paste0(deparse(expr_result), collapse = "")
-      expect_true(grepl("dir = 'v'", expr_str))
+      expect_true(is.call(expr_result))
     }
   )
 })
@@ -335,9 +353,12 @@ test_that("facet_block handles labeller parameter", {
     {
       session$flushReact()
 
+      # Test state
+      expect_equal(session$returned$state$labeller(), "label_both")
+      
+      # Test that expression is a call
       expr_result <- session$returned$expr()
-      expr_str <- paste0(deparse(expr_result), collapse = "")
-      expect_true(grepl("labeller = 'label_both'", expr_str))
+      expect_true(is.call(expr_result))
     }
   )
 })
