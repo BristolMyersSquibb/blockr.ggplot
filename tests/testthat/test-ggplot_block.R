@@ -1,6 +1,7 @@
 library(testthat)
 library(blockr.ggplot)
 library(shiny)
+library(ggplot2)
 
 # ==============================================================================
 # LAYER 1: Unit Tests (Pure Functions, No Shiny)
