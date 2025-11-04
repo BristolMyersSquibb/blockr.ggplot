@@ -410,7 +410,11 @@ test_that("facet_block switches between wrap and grid via UI", {
       expect_equal(session$returned$state$facet_type(), "wrap")
 
       # Switch to grid
-      session$setInputs(facet_type = "grid", rows = c("cyl"), cols = character())
+      session$setInputs(
+        facet_type = "grid",
+        rows = c("cyl"),
+        cols = character()
+      )
       session$flushReact()
 
       expect_equal(session$returned$state$facet_type(), "grid")
@@ -491,7 +495,11 @@ test_that("facet_block creates valid faceted plot with facet_wrap", {
 
 test_that("facet_block creates valid faceted plot with facet_grid", {
   test_plot <- ggplot(mtcars, aes(x = mpg, y = hp)) + geom_point()
-  block <- new_facet_block(facet_type = "grid", rows = c("cyl"), cols = c("gear"))
+  block <- new_facet_block(
+    facet_type = "grid",
+    rows = c("cyl"),
+    cols = c("gear")
+  )
 
   testServer(
     blockr.core:::get_s3_method("block_server", block),

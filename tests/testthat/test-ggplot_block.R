@@ -273,7 +273,7 @@ test_that("ggplot_block handles empty aesthetics with (none)", {
   blk <- new_ggplot_block(
     type = "point",
     x = "mpg",
-    y = character()  # Empty y
+    y = character() # Empty y
   )
 
   testServer(
