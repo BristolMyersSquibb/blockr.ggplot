@@ -1,6 +1,6 @@
 # ggplot2 Blocks: Package-Specific Guide
 
-**ggplot-specific patterns and extensions for blockr.ggplot**
+**ggplot-specific patterns and extensions for [blockr.ggplot](https://github.com/BristolMyersSquibb/blockr.ggplot)**
 
 > **📚 Prerequisites:** Read [blocks-core-guide.md](blocks-core-guide.md) first for universal block concepts
 
@@ -14,7 +14,6 @@ This guide covers ggplot2-specific patterns for building visualization blocks in
 4. [Complete ggplot Example](#complete-ggplot-example)
 5. [ggplot Block Checklist](#ggplot-block-checklist)
 6. [Common ggplot Pitfalls](#common-ggplot-pitfalls)
-7. [Quick Reference](#quick-reference)
 
 ---
 
@@ -39,7 +38,7 @@ expr = reactive({
 
 ### Why parse/glue?
 
-1. **Ecosystem Consistency**: All blockr packages use this pattern
+1. **Ecosystem Consistency**: All [blockr](https://github.com/BristolMyersSquibb/blockr) packages use this pattern
 2. **More Readable**: Code looks like actual R code
 3. **Easier Conditionals**: Simple if/else for building expressions
 4. **Better Debugging**: Can `print()` or `cat()` the generated text
@@ -140,7 +139,7 @@ new_my_block(..., allow_empty_state = c("color", "fill", "size"))
 
 **Why it's critical:**
 
-blockr.core blocks block evaluation when ANY state field is empty or invalid. The `allow_empty_state` parameter tells blockr which fields are allowed to be `"(none)"`.
+[blockr.core](https://github.com/BristolMyersSquibb/blockr.core) blocks block evaluation when ANY state field is empty or invalid. The `allow_empty_state` parameter tells [blockr](https://github.com/BristolMyersSquibb/blockr) which fields are allowed to be `"(none)"`.
 
 ```r
 new_my_ggplot_block <- function(
@@ -450,89 +449,9 @@ observeEvent(colnames(data()), {
 
 ---
 
-## Quick Reference
-
-### ggplot Block Template
-
-```r
-new_my_ggplot_block <- function(x = character(), color = character(), ...) {
-  ui <- function(id) {
-    tagList(
-      block_responsive_css(),
-      div(class = "block-container",
-        div(class = "block-form-grid",
-          div(class = "block-section",
-            tags$h4("Configuration"),
-            div(class = "block-section-grid",
-              div(class = "block-input-wrapper",
-                  selectInput(NS(id, "x"), "X", choices = x)
-              ),
-              div(class = "block-input-wrapper",
-                  selectInput(NS(id, "color"), "Color",
-                             choices = c("(none)", color),
-                             selected = if (length(color) == 0) "(none)" else color)
-              )
-            )
-          )
-        )
-      )
-    )
-  }
-
-  server <- function(id, data) {
-    moduleServer(id, function(input, output, session) {
-      r_x <- reactiveVal(x)
-      r_color <- reactiveVal(if (length(color) == 0) "(none)" else color)
-
-      observeEvent(input$x, r_x(input$x))
-      observeEvent(input$color, r_color(input$color))
-
-      observeEvent(colnames(data()), {
-        cols <- colnames(data())
-        updateSelectInput(session, "x", choices = cols, selected = r_x())
-        updateSelectInput(session, "color",
-                         choices = c("(none)", cols), selected = r_color())
-      })
-
-      list(
-        expr = reactive({
-          aes_parts <- c(glue::glue("x = {r_x()}"))
-          if (r_color() != "(none)") {
-            aes_parts <- c(aes_parts, glue::glue("colour = {r_color()}"))
-          }
-          aes_text <- paste(aes_parts, collapse = ", ")
-
-          text <- glue::glue("ggplot2::ggplot(data, ggplot2::aes({aes_text})) + ggplot2::geom_point()")
-          parse(text = text)[[1]]
-        }),
-        state = list(x = r_x, color = r_color)
-      )
-    })
-  }
-
-  new_ggplot_block(server, ui, class = "my_ggplot_block",
-                  allow_empty_state = c("color"), ...)
-}
-```
-
-### Key ggplot Rules
-
-1. **Expression:** `parse(text = glue::glue())` only
-2. **Optional aesthetics:** `"(none)"` + `allow_empty_state`
-3. **Check before use:** `if (r_color() != "(none)")`
-4. **Column updates:** Only in `observeEvent(colnames(data()))`
-5. **No filtering:** Use all `colnames(data())`
-6. **State:** Include ALL constructor params
-
----
-
 ## Additional Resources
 
 - **Core concepts:** [blocks-core-guide.md](blocks-core-guide.md)
 - **UI patterns:** [ui-guidelines.md](ui-guidelines.md)
 - **Quick tips:** [../CLAUDE.md](../CLAUDE.md)
 - **Examples:** `../R/ggplot-block.R`, individual geom blocks
-
----
-
-**Happy ggplot block building!** 📊✨

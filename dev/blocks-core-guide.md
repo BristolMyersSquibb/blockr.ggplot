@@ -1,8 +1,8 @@
 # Block Development Guide: Core Concepts
 
-**Universal guide for developing blocks in the blockr ecosystem**
+**Universal guide for developing blocks in the [blockr](https://github.com/BristolMyersSquibb/blockr) ecosystem**
 
-This document contains core concepts applicable to all blockr packages (blockr.ggplot, blockr.dplyr, blockr.io, etc.). For package-specific patterns, see your package's additional guides.
+This document contains core concepts applicable to all [blockr](https://github.com/BristolMyersSquibb/blockr) packages ([blockr.ggplot](https://github.com/BristolMyersSquibb/blockr.ggplot), [blockr.dplyr](https://github.com/BristolMyersSquibb/blockr.dplyr), [blockr.io](https://github.com/BristolMyersSquibb/blockr.io), etc.). For package-specific patterns, see your package's additional guides.
 
 ## Table of Contents
 
@@ -26,7 +26,7 @@ Blocks can be connected in a **DAG** (directed acyclic graph) to create powerful
 - Self-contained: UI + Server + Constructor
 - Composable: Can be linked with other blocks
 
-**Block types in blockr.core:**
+**Block types in [blockr.core](https://github.com/BristolMyersSquibb/blockr.core):**
 - **Data blocks**: Load or generate data (e.g., `new_dataset_block()`)
 - **Transform blocks**: Modify data (e.g., filter, select, mutate)
 - **Plot blocks**: Visualize data
@@ -336,7 +336,7 @@ devtools::test(filter = "my_block") # Run specific test file
 
 ## Additional Resources
 
-### blockr.core Documentation
+### [blockr.core](https://github.com/BristolMyersSquibb/blockr.core) Documentation
 
 - **Create block vignette:** `vignette("create-block", package = "blockr.core")`
 - **Extend blockr vignette:** `vignette("extend-blockr", package = "blockr.core")`
@@ -345,45 +345,9 @@ devtools::test(filter = "my_block") # Run specific test file
 ### Package-Specific Guides
 
 After understanding these core concepts, consult your package's specific guide:
-- **blockr.ggplot:** See `ggplot-blocks-guide.md` for ggplot2 patterns
-- **blockr.dplyr:** See package-specific guide for dplyr patterns
-- **blockr.io:** See package-specific guide for I/O patterns
-
-### Quick Reference
-
-**Block Constructor Pattern:**
-```r
-new_my_block <- function(param1 = default1, param2 = default2, ...) {
-  ui <- function(id) {
-    tagList(
-      selectInput(NS(id, "param1"), "Label", choices = param1, selected = param1)
-    )
-  }
-
-  server <- function(id, data) {
-    moduleServer(id, function(input, output, session) {
-      r_param1 <- reactiveVal(param1)
-      observeEvent(input$param1, r_param1(input$param1))
-
-      list(
-        expr = reactive({
-          # Build expression
-        }),
-        state = list(param1 = r_param1)
-      )
-    })
-  }
-
-  new_transform_block(server, ui, class = "my_block", ...)
-}
-```
-
-**Key Rules:**
-1. All constructor params → state list
-2. Use `NS()` for input IDs
-3. Return `expr` + `state` from server
-4. Forward `...` to parent constructor
-5. Write tests for all blocks
+- **[blockr.ggplot](https://github.com/BristolMyersSquibb/blockr.ggplot):** See `ggplot-blocks-guide.md` for ggplot2 patterns
+- **[blockr.dplyr](https://github.com/BristolMyersSquibb/blockr.dplyr):** See package-specific guide for dplyr patterns
+- **[blockr.io](https://github.com/BristolMyersSquibb/blockr.io):** See package-specific guide for I/O patterns
 
 ---
 
@@ -394,5 +358,3 @@ new_my_block <- function(param1 = default1, param2 = default2, ...) {
 3. 🎨 Review UI guidelines for consistent design
 4. 🧪 Write comprehensive tests
 5. ✨ Validate with screenshot testing
-
-**Happy block building!** 🎉
