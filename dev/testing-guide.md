@@ -29,9 +29,6 @@ This guide is adapted from blockr.dplyr and applies the same principles to ggplo
 
 ### Layer 1: Unit Tests (Pure Functions, No Shiny)
 
-**Files**: Portions of test files for helper functions
-**Speed**: ⚡⚡⚡ Very fast (~0.1-0.3s per test)
-
 **What it CAN test**:
 - ✅ Pure functions (helper functions, expression parsers, SVG generators)
 - ✅ Constructor validation
@@ -46,43 +43,9 @@ This guide is adapted from blockr.dplyr and applies the same principles to ggplo
 - ❌ UI rendering or user interactions
 - ❌ State management across reactive updates
 
-**Example for blockr.ggplot**:
-```r
-test_that("ggplot_block constructor creates correct block class", {
-  blk <- new_ggplot_block()
-  expect_s3_class(blk, c("ggplot_block", "ggplot_block", "plot_block", "block"))
-})
-
-test_that("ggplot_block constructor with all parameters", {
-  blk <- new_ggplot_block(
-    type = "point",
-    x = "mpg",
-    y = "hp",
-    color = "cyl",
-    fill = "gear"
-  )
-  expect_s3_class(blk, c("ggplot_block", "ggplot_block", "plot_block", "block"))
-})
-
-test_that("facet_block handles empty inputs", {
-  blk <- new_facet_block(
-    facets = character(),
-    rows = character(),
-    cols = character()
-  )
-  expect_s3_class(
-    blk,
-    c("facet_block", "ggplot_transform_block", "transform_block", "block")
-  )
-})
-```
-
 ---
 
 ### Layer 2: testServer (ALL Shiny Interactions - USE THIS)
-
-**Files**: `test-ggplot_block.R`, `test-facet_block.R`, and other test files
-**Speed**: ⚡⚡ Fast (~0.2-0.5s per test)
 
 **What it CAN test**:
 - ✅ Ggplot block reactive logic
@@ -124,6 +87,7 @@ test_that("ggplot_block generates scatter plot expression", {
       # Test expression structure
       expr_result <- result$expr()
       expr_str <- deparse(expr_result)
+      expr_str <- paste0(expr_str, collapse = "")
       expect_true(grepl("ggplot2::ggplot", expr_str))
       expect_true(grepl("geom_point", expr_str))
       expect_true(grepl("x = mpg", expr_str))
@@ -172,68 +136,6 @@ test_that("ggplot_block creates valid scatter plot - testServer", {
 })
 ```
 
-**Pattern 3: Testing UI Interactions**
-```r
-test_that("ggplot_block updates chart type dynamically", {
-  input_data <- reactive(mtcars)
-  blk <- new_ggplot_block(type = "point", x = "mpg", y = "hp")
-
-  testServer(
-    blk$expr_server,
-    args = list(data = input_data),
-    {
-      session$flushReact()
-
-      # Initially point chart
-      expr_str <- deparse(session$returned$expr())
-      expect_true(grepl("geom_point", expr_str))
-
-      # Change to bar chart via UI interaction
-      session$setInputs(type = "bar")
-      session$flushReact()
-
-      # Verify expression updated
-      expr_str <- deparse(session$returned$expr())
-      expect_true(grepl("geom_bar|geom_col", expr_str))
-      expect_false(grepl("geom_point", expr_str))
-
-      # Verify state updated
-      expect_equal(session$returned$state$type(), "bar")
-    }
-  )
-})
-
-test_that("facet_block switches between wrap and grid", {
-  input_data <- reactive({
-    ggplot2::ggplot(mtcars, ggplot2::aes(x = mpg, y = hp))
-  })
-
-  blk <- new_facet_block(facet_type = "wrap", facets = "cyl")
-
-  testServer(
-    blk$expr_server,
-    args = list(data = input_data),
-    {
-      session$flushReact()
-
-      # Initially facet_wrap
-      expr_str <- deparse(session$returned$expr())
-      expect_true(grepl("facet_wrap", expr_str))
-
-      # Switch to grid
-      session$setInputs(facet_type = "grid")
-      session$setInputs(rows = "cyl")
-      session$flushReact()
-
-      # Verify expression updated
-      expr_str <- deparse(session$returned$expr())
-      expect_true(grepl("facet_grid", expr_str))
-      expect_false(grepl("facet_wrap", expr_str))
-    }
-  )
-})
-```
-
 **When to use each pattern**:
 - **Use expr_server** when testing expression generation, reactive state updates, or UI logic
 - **Use block_server** when testing actual plot rendering behavior (PREFERRED for plot correctness tests)
@@ -244,54 +146,6 @@ test_that("facet_block switches between wrap and grid", {
 - `block_server` uses different args format: `list(x = block, data = list(data = function() df))`
 - `block_server` is the same pattern used by the framework internally, so it's more reliable
 - **DO NOT use manual `eval()`** - use `block_server` pattern instead when testing plot output
-
-**Testing dynamic UI visibility**:
-```r
-test_that("ggplot_block hides y-axis for histogram", {
-  input_data <- reactive(mtcars)
-  blk <- new_ggplot_block(type = "histogram", x = "mpg")
-
-  testServer(
-    blk$expr_server,
-    args = list(data = input_data),
-    {
-      session$flushReact()
-
-      # Histogram should not require y-axis
-      expr_str <- deparse(session$returned$expr())
-      expect_true(grepl("geom_histogram", expr_str))
-      expect_false(grepl("y = ", expr_str))
-
-      # Verify y is "(none)" in state
-      expect_equal(session$returned$state$y(), "(none)")
-    }
-  )
-})
-
-test_that("ggplot_block shows density_alpha for density plots", {
-  input_data <- reactive(mtcars)
-  blk <- new_ggplot_block(
-    type = "density",
-    x = "mpg",
-    density_alpha = 0.7
-  )
-
-  testServer(
-    blk$expr_server,
-    args = list(data = input_data),
-    {
-      session$flushReact()
-
-      # Density should use fixed alpha parameter
-      expr_str <- deparse(session$returned$expr())
-      expect_true(grepl("geom_density\\(alpha = 0.7\\)", expr_str))
-
-      # Verify state
-      expect_equal(session$returned$state$density_alpha(), 0.7)
-    }
-  )
-})
-```
 
 ---
 
@@ -381,7 +235,7 @@ test_that("ggplot_block generates scatter plot", {
 
   testServer(blk$expr_server, args = list(data = input_data), {
     session$flushReact()
-    expr_str <- deparse(session$returned$expr())
+    expr_str <- paste0(deparse(session$returned$expr()), collapse = "")
     expect_true(grepl("geom_point", expr_str))
   })
 })
@@ -414,20 +268,9 @@ test_that("ggplot_block switches chart types", {
     session$setInputs(type = "bar")
     session$flushReact()
 
-    expr_str <- deparse(session$returned$expr())
+    expr_str <- paste0(deparse(session$returned$expr()), collapse = "")
     expect_true(grepl("geom_bar|geom_col", expr_str))
     expect_equal(session$returned$state$type(), "bar")
   })
 })
 ```
-
----
-
-## Summary
-
-- **99% of tests should use testServer** - It handles all Shiny reactivity and UI interactions
-- **Constructor tests are unit tests** - Fast validation of block creation
-- **Never use shinytest2** unless you have a very specific visual/JS requirement
-- **Use block_server pattern** for testing actual plot output (preferred over eval)
-- **Test dynamic UI behavior** via session$setInputs() in testServer
-- **Speed is critical** - Keep tests fast to maintain developer productivity
