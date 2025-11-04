@@ -378,9 +378,26 @@ new_boxplot_block <- function(
 - [ ] Reactive values use `r_*` prefix
 - [ ] State list includes ALL constructor parameters
 
-### UI Standards
+### Aesthetic Standards
 
-See [ui-guidelines.md](ui-guidelines.md) for complete UI development guidelines.
+**Core aesthetics by geom:**
+
+| Geom | Required | Optional |
+|------|----------|----------|
+| geom_point | x, y | color, shape, size, alpha, fill |
+| geom_col/bar | x | y, fill, color, alpha, position |
+| geom_line | x, y | color, linetype, alpha, group |
+| geom_boxplot | x, y | fill, color, alpha |
+| geom_violin | x, y | fill, color, alpha |
+| geom_density | x | fill, color, alpha |
+| geom_area | x, y | fill, color, alpha |
+
+### UI Standards (see ui-guidelines.md)
+
+- [ ] Use responsive grid layout (`block_responsive_css()`)
+- [ ] Bootstrap classes for sections
+- [ ] Light/gray button colors (`status = "light"`)
+- [ ] Professional, minimalist styling
 
 ---
 
