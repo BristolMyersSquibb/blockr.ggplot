@@ -156,7 +156,7 @@ get_theme_function <- function(theme_name) {
   }
 
   # Default fallback for unknown themes
-  return("ggplot2::theme_minimal()")
+  "ggplot2::theme_minimal()"
 }
 
 #' Theme customization block for ggplot2 plots
