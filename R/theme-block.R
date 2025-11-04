@@ -16,7 +16,7 @@ build_theme_choices <- function() {
       "Void" = "void"
     )
   )
-  
+
   # Add cowplot themes if available
   if (requireNamespace("cowplot", quietly = TRUE)) {
     choices[["cowplot (Publication)"]] <- list(
@@ -26,7 +26,7 @@ build_theme_choices <- function() {
       "Minimal V-Grid" = "minimal_vgrid"
     )
   }
-  
+
   # Add ggthemes if available
   if (requireNamespace("ggthemes", quietly = TRUE)) {
     choices[["ggthemes (Publications)"]] <- list(
@@ -36,7 +36,7 @@ build_theme_choices <- function() {
       "Wall Street Journal" = "wsj"
     )
   }
-  
+
   # Add hrbrthemes if available
   if (requireNamespace("hrbrthemes", quietly = TRUE)) {
     choices[["hrbrthemes (Typography)"]] <- list(
@@ -47,7 +47,7 @@ build_theme_choices <- function() {
       "Modern RC" = "modern_rc"
     )
   }
-  
+
   # Add ggpubr themes if available
   if (requireNamespace("ggpubr", quietly = TRUE)) {
     choices[["ggpubr (Scientific)"]] <- list(
@@ -55,7 +55,7 @@ build_theme_choices <- function() {
       "Publication Clean" = "pubclean"
     )
   }
-  
+
   choices
 }
 
@@ -72,7 +72,7 @@ get_theme_function <- function(theme_name) {
   if (theme_name == "auto") {
     return("")
   }
-  
+
   # Built-in ggplot2 themes (always available)
   builtin_themes <- c(
     minimal = "ggplot2::theme_minimal()",
@@ -83,11 +83,11 @@ get_theme_function <- function(theme_name) {
     dark = "ggplot2::theme_dark()",
     void = "ggplot2::theme_void()"
   )
-  
+
   if (theme_name %in% names(builtin_themes)) {
     return(builtin_themes[[theme_name]])
   }
-  
+
   # cowplot themes (check availability)
   cowplot_themes <- c(
     cowplot = "cowplot::theme_cowplot()",
@@ -95,7 +95,7 @@ get_theme_function <- function(theme_name) {
     minimal_hgrid = "cowplot::theme_minimal_hgrid()",
     minimal_vgrid = "cowplot::theme_minimal_vgrid()"
   )
-  
+
   if (theme_name %in% names(cowplot_themes)) {
     if (requireNamespace("cowplot", quietly = TRUE)) {
       return(cowplot_themes[[theme_name]])
@@ -104,7 +104,7 @@ get_theme_function <- function(theme_name) {
       return("ggplot2::theme_minimal()")
     }
   }
-  
+
   # ggthemes (check availability)
   ggthemes_themes <- c(
     economist = "ggthemes::theme_economist()",
@@ -112,7 +112,7 @@ get_theme_function <- function(theme_name) {
     tufte = "ggthemes::theme_tufte()",
     wsj = "ggthemes::theme_wsj()"
   )
-  
+
   if (theme_name %in% names(ggthemes_themes)) {
     if (requireNamespace("ggthemes", quietly = TRUE)) {
       return(ggthemes_themes[[theme_name]])
@@ -121,7 +121,7 @@ get_theme_function <- function(theme_name) {
       return("ggplot2::theme_minimal()")
     }
   }
-  
+
   # hrbrthemes (check availability)
   hrbrthemes_themes <- c(
     ipsum = "hrbrthemes::theme_ipsum()",
@@ -130,7 +130,7 @@ get_theme_function <- function(theme_name) {
     ft_rc = "hrbrthemes::theme_ft_rc()",
     modern_rc = "hrbrthemes::theme_modern_rc()"
   )
-  
+
   if (theme_name %in% names(hrbrthemes_themes)) {
     if (requireNamespace("hrbrthemes", quietly = TRUE)) {
       return(hrbrthemes_themes[[theme_name]])
@@ -139,13 +139,13 @@ get_theme_function <- function(theme_name) {
       return("ggplot2::theme_minimal()")
     }
   }
-  
+
   # ggpubr themes (check availability)
   ggpubr_themes <- c(
     pubr = "ggpubr::theme_pubr()",
     pubclean = "ggpubr::theme_pubclean()"
   )
-  
+
   if (theme_name %in% names(ggpubr_themes)) {
     if (requireNamespace("ggpubr", quietly = TRUE)) {
       return(ggpubr_themes[[theme_name]])
@@ -154,7 +154,7 @@ get_theme_function <- function(theme_name) {
       return("ggplot2::theme_minimal()")
     }
   }
-  
+
   # Default fallback for unknown themes
   return("ggplot2::theme_minimal()")
 }
