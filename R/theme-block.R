@@ -1,3 +1,164 @@
+#' Build theme choices list based on available packages
+#'
+#' @return A named list of theme choices for selectInput
+#' @keywords internal
+build_theme_choices <- function() {
+  # Start with base choices (always available)
+  choices <- list(
+    "Auto (keep upstream)" = "auto",
+    "ggplot2 (Built-in)" = list(
+      "Minimal" = "minimal",
+      "Classic" = "classic",
+      "Gray" = "gray",
+      "Black & White" = "bw",
+      "Light" = "light",
+      "Dark" = "dark",
+      "Void" = "void"
+    )
+  )
+  
+  # Add cowplot themes if available
+  if (requireNamespace("cowplot", quietly = TRUE)) {
+    choices[["cowplot (Publication)"]] <- list(
+      "Cowplot" = "cowplot",
+      "Minimal Grid" = "minimal_grid",
+      "Minimal H-Grid" = "minimal_hgrid",
+      "Minimal V-Grid" = "minimal_vgrid"
+    )
+  }
+  
+  # Add ggthemes if available
+  if (requireNamespace("ggthemes", quietly = TRUE)) {
+    choices[["ggthemes (Publications)"]] <- list(
+      "The Economist" = "economist",
+      "FiveThirtyEight" = "fivethirtyeight",
+      "Tufte" = "tufte",
+      "Wall Street Journal" = "wsj"
+    )
+  }
+  
+  # Add hrbrthemes if available
+  if (requireNamespace("hrbrthemes", quietly = TRUE)) {
+    choices[["hrbrthemes (Typography)"]] <- list(
+      "Ipsum" = "ipsum",
+      "Ipsum RC" = "ipsum_rc",
+      "Ipsum PS" = "ipsum_ps",
+      "Financial Times" = "ft_rc",
+      "Modern RC" = "modern_rc"
+    )
+  }
+  
+  # Add ggpubr themes if available
+  if (requireNamespace("ggpubr", quietly = TRUE)) {
+    choices[["ggpubr (Scientific)"]] <- list(
+      "Publication Ready" = "pubr",
+      "Publication Clean" = "pubclean"
+    )
+  }
+  
+  choices
+}
+
+#' Get theme function call for a given theme name
+#'
+#' Maps theme names to their corresponding ggplot2 function calls.
+#' Returns a fallback theme if the requested theme's package is not available.
+#'
+#' @param theme_name Character string naming the theme
+#' @return Character string with the theme function call
+#' @keywords internal
+get_theme_function <- function(theme_name) {
+  # Handle auto mode
+  if (theme_name == "auto") {
+    return("")
+  }
+  
+  # Built-in ggplot2 themes (always available)
+  builtin_themes <- c(
+    minimal = "ggplot2::theme_minimal()",
+    classic = "ggplot2::theme_classic()",
+    gray = "ggplot2::theme_gray()",
+    bw = "ggplot2::theme_bw()",
+    light = "ggplot2::theme_light()",
+    dark = "ggplot2::theme_dark()",
+    void = "ggplot2::theme_void()"
+  )
+  
+  if (theme_name %in% names(builtin_themes)) {
+    return(builtin_themes[[theme_name]])
+  }
+  
+  # cowplot themes (check availability)
+  cowplot_themes <- c(
+    cowplot = "cowplot::theme_cowplot()",
+    minimal_grid = "cowplot::theme_minimal_grid()",
+    minimal_hgrid = "cowplot::theme_minimal_hgrid()",
+    minimal_vgrid = "cowplot::theme_minimal_vgrid()"
+  )
+  
+  if (theme_name %in% names(cowplot_themes)) {
+    if (requireNamespace("cowplot", quietly = TRUE)) {
+      return(cowplot_themes[[theme_name]])
+    } else {
+      # Fallback to minimal if cowplot not available
+      return("ggplot2::theme_minimal()")
+    }
+  }
+  
+  # ggthemes (check availability)
+  ggthemes_themes <- c(
+    economist = "ggthemes::theme_economist()",
+    fivethirtyeight = "ggthemes::theme_fivethirtyeight()",
+    tufte = "ggthemes::theme_tufte()",
+    wsj = "ggthemes::theme_wsj()"
+  )
+  
+  if (theme_name %in% names(ggthemes_themes)) {
+    if (requireNamespace("ggthemes", quietly = TRUE)) {
+      return(ggthemes_themes[[theme_name]])
+    } else {
+      # Fallback to minimal if ggthemes not available
+      return("ggplot2::theme_minimal()")
+    }
+  }
+  
+  # hrbrthemes (check availability)
+  hrbrthemes_themes <- c(
+    ipsum = "hrbrthemes::theme_ipsum()",
+    ipsum_rc = "hrbrthemes::theme_ipsum_rc()",
+    ipsum_ps = "hrbrthemes::theme_ipsum_ps()",
+    ft_rc = "hrbrthemes::theme_ft_rc()",
+    modern_rc = "hrbrthemes::theme_modern_rc()"
+  )
+  
+  if (theme_name %in% names(hrbrthemes_themes)) {
+    if (requireNamespace("hrbrthemes", quietly = TRUE)) {
+      return(hrbrthemes_themes[[theme_name]])
+    } else {
+      # Fallback to minimal if hrbrthemes not available
+      return("ggplot2::theme_minimal()")
+    }
+  }
+  
+  # ggpubr themes (check availability)
+  ggpubr_themes <- c(
+    pubr = "ggpubr::theme_pubr()",
+    pubclean = "ggpubr::theme_pubclean()"
+  )
+  
+  if (theme_name %in% names(ggpubr_themes)) {
+    if (requireNamespace("ggpubr", quietly = TRUE)) {
+      return(ggpubr_themes[[theme_name]])
+    } else {
+      # Fallback to minimal if ggpubr not available
+      return("ggplot2::theme_minimal()")
+    }
+  }
+  
+  # Default fallback for unknown themes
+  return("ggplot2::theme_minimal()")
+}
+
 #' Theme customization block for ggplot2 plots
 #'
 #' A block that applies advanced theme customizations to ggplot2 objects.
@@ -333,39 +494,7 @@ new_theme_block <- function(
 
               # Build the complete expression
               # Start with base theme (unless "auto" - keep upstream)
-              base_theme_func <- switch(
-                r_base_theme(),
-                # Auto: keep upstream theme (don't apply any base theme)
-                auto = "",
-                # Built-in ggplot2 themes
-                minimal = "ggplot2::theme_minimal()",
-                classic = "ggplot2::theme_classic()",
-                gray = "ggplot2::theme_gray()",
-                bw = "ggplot2::theme_bw()",
-                light = "ggplot2::theme_light()",
-                dark = "ggplot2::theme_dark()",
-                void = "ggplot2::theme_void()",
-                # cowplot themes
-                cowplot = "cowplot::theme_cowplot()",
-                minimal_grid = "cowplot::theme_minimal_grid()",
-                minimal_hgrid = "cowplot::theme_minimal_hgrid()",
-                minimal_vgrid = "cowplot::theme_minimal_vgrid()",
-                # ggthemes
-                economist = "ggthemes::theme_economist()",
-                fivethirtyeight = "ggthemes::theme_fivethirtyeight()",
-                tufte = "ggthemes::theme_tufte()",
-                wsj = "ggthemes::theme_wsj()",
-                # hrbrthemes
-                ipsum = "hrbrthemes::theme_ipsum()",
-                ipsum_rc = "hrbrthemes::theme_ipsum_rc()",
-                ipsum_ps = "hrbrthemes::theme_ipsum_ps()",
-                ft_rc = "hrbrthemes::theme_ft_rc()",
-                modern_rc = "hrbrthemes::theme_modern_rc()",
-                # ggpubr
-                pubr = "ggpubr::theme_pubr()",
-                pubclean = "ggpubr::theme_pubclean()",
-                "ggplot2::theme_minimal()" # fallback
-              )
+              base_theme_func <- get_theme_function(r_base_theme())
 
               # Start with data, optionally add base theme
               if (base_theme_func == "") {
@@ -491,41 +620,7 @@ new_theme_block <- function(
                   selectInput(
                     inputId = NS(id, "base_theme"),
                     label = "Base Theme",
-                    choices = list(
-                      "Auto (keep upstream)" = "auto",
-                      "ggplot2 (Built-in)" = list(
-                        "Minimal" = "minimal",
-                        "Classic" = "classic",
-                        "Gray" = "gray",
-                        "Black & White" = "bw",
-                        "Light" = "light",
-                        "Dark" = "dark",
-                        "Void" = "void"
-                      ),
-                      "cowplot (Publication)" = list(
-                        "Cowplot" = "cowplot",
-                        "Minimal Grid" = "minimal_grid",
-                        "Minimal H-Grid" = "minimal_hgrid",
-                        "Minimal V-Grid" = "minimal_vgrid"
-                      ),
-                      "ggthemes (Publications)" = list(
-                        "The Economist" = "economist",
-                        "FiveThirtyEight" = "fivethirtyeight",
-                        "Tufte" = "tufte",
-                        "Wall Street Journal" = "wsj"
-                      ),
-                      "hrbrthemes (Typography)" = list(
-                        "Ipsum" = "ipsum",
-                        "Ipsum RC" = "ipsum_rc",
-                        "Ipsum PS" = "ipsum_ps",
-                        "Financial Times" = "ft_rc",
-                        "Modern RC" = "modern_rc"
-                      ),
-                      "ggpubr (Scientific)" = list(
-                        "Publication Ready" = "pubr",
-                        "Publication Clean" = "pubclean"
-                      )
-                    ),
+                    choices = build_theme_choices(),
                     selected = base_theme,
                     width = "100%"
                   )
