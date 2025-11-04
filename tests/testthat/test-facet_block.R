@@ -1,6 +1,9 @@
 test_that("facet_block constructor creates valid object", {
   blk <- new_facet_block()
-  expect_s3_class(blk, c("facet_block", "ggplot_transform_block", "plot_block", "block"))
+  expect_s3_class(
+    blk,
+    c("facet_block", "ggplot_transform_block", "plot_block", "block")
+  )
 })
 
 test_that("facet_block constructor accepts parameters", {
@@ -85,7 +88,11 @@ test_that("facet_block generates facet_wrap with scales option", {
     ggplot2::ggplot(mtcars, ggplot2::aes(x = mpg, y = hp)) +
       ggplot2::geom_point()
   })
-  blk <- new_facet_block(facet_type = "wrap", facets = c("cyl"), scales = "free")
+  blk <- new_facet_block(
+    facet_type = "wrap",
+    facets = c("cyl"),
+    scales = "free"
+  )
 
   testServer(
     blk$expr_server,
@@ -153,7 +160,11 @@ test_that("facet_block handles empty facets for grid", {
     ggplot2::ggplot(mtcars, ggplot2::aes(x = mpg, y = hp)) +
       ggplot2::geom_point()
   })
-  blk <- new_facet_block(facet_type = "grid", rows = character(), cols = character())
+  blk <- new_facet_block(
+    facet_type = "grid",
+    rows = character(),
+    cols = character()
+  )
 
   testServer(
     blk$expr_server,
@@ -175,7 +186,11 @@ test_that("facet_block generates facet_grid with only rows", {
     ggplot2::ggplot(mtcars, ggplot2::aes(x = mpg, y = hp)) +
       ggplot2::geom_point()
   })
-  blk <- new_facet_block(facet_type = "grid", rows = c("cyl"), cols = character())
+  blk <- new_facet_block(
+    facet_type = "grid",
+    rows = c("cyl"),
+    cols = character()
+  )
 
   testServer(
     blk$expr_server,
@@ -196,7 +211,11 @@ test_that("facet_block generates facet_grid with only cols", {
     ggplot2::ggplot(mtcars, ggplot2::aes(x = mpg, y = hp)) +
       ggplot2::geom_point()
   })
-  blk <- new_facet_block(facet_type = "grid", rows = character(), cols = c("gear"))
+  blk <- new_facet_block(
+    facet_type = "grid",
+    rows = character(),
+    cols = c("gear")
+  )
 
   testServer(
     blk$expr_server,
@@ -259,7 +278,11 @@ test_that("facet_block creates valid faceted plot using block_server", {
 test_that("facet_block creates valid facet_grid plot using block_server", {
   input_plot <- ggplot2::ggplot(mtcars, ggplot2::aes(x = mpg, y = hp)) +
     ggplot2::geom_point()
-  block <- new_facet_block(facet_type = "grid", rows = c("cyl"), cols = c("gear"))
+  block <- new_facet_block(
+    facet_type = "grid",
+    rows = c("cyl"),
+    cols = c("gear")
+  )
 
   testServer(
     blockr.core:::get_s3_method("block_server", block),
@@ -300,7 +323,11 @@ test_that("facet_block handles labeller parameter", {
     ggplot2::ggplot(mtcars, ggplot2::aes(x = mpg, y = hp)) +
       ggplot2::geom_point()
   })
-  blk <- new_facet_block(facet_type = "wrap", facets = c("cyl"), labeller = "label_both")
+  blk <- new_facet_block(
+    facet_type = "wrap",
+    facets = c("cyl"),
+    labeller = "label_both"
+  )
 
   testServer(
     blk$expr_server,

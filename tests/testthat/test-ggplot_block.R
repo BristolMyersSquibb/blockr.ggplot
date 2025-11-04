@@ -1,6 +1,9 @@
 test_that("ggplot_block constructor creates valid object", {
   blk <- new_ggplot_block()
-  expect_s3_class(blk, c("ggplot_block", "ggplot_transform_block", "plot_block", "block"))
+  expect_s3_class(
+    blk,
+    c("ggplot_block", "ggplot_transform_block", "plot_block", "block")
+  )
 })
 
 test_that("ggplot_block constructor accepts parameters", {
@@ -119,7 +122,12 @@ test_that("ggplot_block switches chart types via UI interaction", {
 
 test_that("ggplot_block handles optional aesthetics with (none)", {
   input_data <- reactive(mtcars)
-  blk <- new_ggplot_block(type = "point", x = "mpg", y = "hp", color = character())
+  blk <- new_ggplot_block(
+    type = "point",
+    x = "mpg",
+    y = "hp",
+    color = character()
+  )
 
   testServer(
     blk$expr_server,

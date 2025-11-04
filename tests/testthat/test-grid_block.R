@@ -1,6 +1,15 @@
 test_that("grid_block constructor creates valid object", {
   blk <- new_grid_block()
-  expect_s3_class(blk, c("grid_block", "rbind_block", "ggplot_transform_block", "plot_block", "block"))
+  expect_s3_class(
+    blk,
+    c(
+      "grid_block",
+      "rbind_block",
+      "ggplot_transform_block",
+      "plot_block",
+      "block"
+    )
+  )
 })
 
 test_that("grid_block constructor accepts parameters", {

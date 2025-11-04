@@ -1,6 +1,9 @@
 test_that("theme_block constructor creates valid object", {
   blk <- new_theme_block()
-  expect_s3_class(blk, c("theme_block", "ggplot_transform_block", "plot_block", "block"))
+  expect_s3_class(
+    blk,
+    c("theme_block", "ggplot_transform_block", "plot_block", "block")
+  )
 })
 
 test_that("theme_block constructor accepts parameters", {
@@ -175,7 +178,9 @@ test_that("theme_block hides major grid lines", {
 
       expr_result <- session$returned$expr()
       expr_str <- paste0(deparse(expr_result), collapse = "")
-      expect_true(grepl("panel.grid.major = ggplot2::element_blank\\(\\)", expr_str))
+      expect_true(
+        grepl("panel.grid.major = ggplot2::element_blank\\(\\)", expr_str)
+      )
     }
   )
 })
@@ -195,7 +200,9 @@ test_that("theme_block shows minor grid lines", {
 
       expr_result <- session$returned$expr()
       expr_str <- paste0(deparse(expr_result), collapse = "")
-      expect_true(grepl("panel.grid.minor = ggplot2::element_line\\(\\)", expr_str))
+      expect_true(
+        grepl("panel.grid.minor = ggplot2::element_line\\(\\)", expr_str)
+      )
     }
   )
 })
@@ -256,7 +263,9 @@ test_that("theme_block hides panel border", {
 
       expr_result <- session$returned$expr()
       expr_str <- paste0(deparse(expr_result), collapse = "")
-      expect_true(grepl("panel.border = ggplot2::element_blank\\(\\)", expr_str))
+      expect_true(
+        grepl("panel.border = ggplot2::element_blank\\(\\)", expr_str)
+      )
     }
   )
 })
