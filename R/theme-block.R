@@ -739,6 +739,33 @@ new_theme_block <- function(
             ignoreNULL = FALSE
           )
 
+          # Update palette choices based on detected scale types
+          observe({
+            # Detect scale types from incoming plot
+            fill_scale_type <- detect_scale_type(data(), "fill")
+            colour_scale_type <- detect_scale_type(data(), "colour")
+
+            # Update fill palette choices if aesthetic is used
+            if (fill_scale_type != "none") {
+              updateSelectInput(
+                session,
+                "palette_fill",
+                choices = build_palette_choices(fill_scale_type),
+                selected = r_palette_fill()
+              )
+            }
+
+            # Update colour palette choices if aesthetic is used
+            if (colour_scale_type != "none") {
+              updateSelectInput(
+                session,
+                "palette_colour",
+                choices = build_palette_choices(colour_scale_type),
+                selected = r_palette_colour()
+              )
+            }
+          })
+
           list(
             expr = reactive({
               # Build theme customization code
