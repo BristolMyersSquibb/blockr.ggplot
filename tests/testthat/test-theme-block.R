@@ -313,8 +313,13 @@ test_that("detect_scale_type detects discrete scales", {
 
   expect_equal(detect_scale_type(p, "colour"), "discrete")
 
-  # Plot with few unique numeric values (treated as discrete)
-  p2 <- ggplot2::ggplot(mtcars, ggplot2::aes(x = wt, y = mpg, colour = cyl)) +
+  # Plot with character variable (discrete)
+  mtcars_char <- mtcars
+  mtcars_char$gear_char <- as.character(mtcars_char$gear)
+  p2 <- ggplot2::ggplot(
+    mtcars_char,
+    ggplot2::aes(x = wt, y = mpg, colour = gear_char)
+  ) +
     ggplot2::geom_point()
 
   expect_equal(detect_scale_type(p2, "colour"), "discrete")
@@ -328,4 +333,12 @@ test_that("detect_scale_type detects continuous scales", {
     ggplot2::geom_point()
 
   expect_equal(detect_scale_type(p, "colour"), "continuous")
+
+  # Plot with few unique numeric values (still continuous in ggplot2)
+  # cyl has only 3 values (4, 6, 8) but it's numeric, so ggplot2 treats it
+  # as continuous unless explicitly converted to factor
+  p2 <- ggplot2::ggplot(mtcars, ggplot2::aes(x = wt, y = mpg, colour = cyl)) +
+    ggplot2::geom_point()
+
+  expect_equal(detect_scale_type(p2, "colour"), "continuous")
 })

@@ -163,7 +163,7 @@ get_theme_function <- function(theme_name) {
 #'
 #' Examines a ggplot object to determine if a particular aesthetic
 #' is using a discrete or continuous scale. This is based on the
-#' actual data type used in the plot, not the original data type.
+#' actual data type used in the plot as ggplot2 sees it.
 #'
 #' @param plot A ggplot object
 #' @param aesthetic Character: "fill" or "colour"
@@ -218,31 +218,10 @@ detect_scale_type <- function(plot, aesthetic = "fill") {
             return("discrete")
           }
 
-          # If it's numeric, check if it's being used as discrete or continuous
-          # by looking at whether the values are evenly spaced integers
+          # If it's numeric and NOT a factor, ggplot2 treats it as continuous
+          # We should match ggplot2's behavior, not guess based on unique values
           if (is.numeric(var_data)) {
-            unique_vals <- unique(var_data[!is.na(var_data)])
-
-            # If there are very few unique values (<=6), likely categorical
-            # This handles cases like cyl (4,6,8), gear (3,4,5), etc.
-            if (length(unique_vals) <= 6) {
-              return("discrete")
-            }
-
-            # If all values are integers and there are gaps in the sequence,
-            # it's likely categorical (e.g., 4, 6, 8 for cylinders)
-            if (all(unique_vals == floor(unique_vals))) {
-              sorted_vals <- sort(unique_vals)
-              if (length(sorted_vals) > 1) {
-                gaps <- diff(sorted_vals)
-                # If there are gaps > 1, it's likely categorical
-                if (any(gaps > 1)) {
-                  return("discrete")
-                }
-              }
-            }
-
-            # Otherwise, treat as continuous
+            # Numeric data is continuous in ggplot2 unless explicitly factored
             return("continuous")
           }
 

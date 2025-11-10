@@ -22,8 +22,9 @@ board1 <- new_board(
 )
 
 # Test 2: Multiple palettes - viridis inferno for fill, plasma for colour
-# Note: cyl is numeric in mtcars, so palette will auto-detect and use
-# continuous version (plasma_c). gear is discrete (factor).
+# Note: Both cyl and gear are numeric in mtcars, so they are treated as
+# continuous by ggplot2. The palette will auto-detect this and use
+# continuous versions (inferno_c for fill, plasma_c for colour).
 board2 <- new_board(
   blocks = c(
     data = new_dataset_block("mtcars", package = "datasets"),
