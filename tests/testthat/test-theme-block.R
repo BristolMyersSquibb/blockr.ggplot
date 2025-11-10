@@ -265,3 +265,67 @@ test_that("get_palette_function handles wesanderson continuous appropriately", {
     )
   }
 })
+
+test_that("get_palette_function auto-converts palette based on scale_type", {
+  # Test discrete to continuous conversion
+  result <- get_palette_function("viridis", "fill", scale_type = "continuous")
+  expect_equal(result, 'ggplot2::scale_fill_viridis_c(option = "viridis")')
+
+  result <- get_palette_function("magma", "colour", scale_type = "continuous")
+  expect_equal(result, 'ggplot2::scale_colour_viridis_c(option = "magma")')
+
+  # Test continuous to discrete conversion
+  result <- get_palette_function("viridis_c", "fill", scale_type = "discrete")
+  expect_equal(result, 'ggplot2::scale_fill_viridis_d(option = "viridis")')
+
+  result <- get_palette_function("plasma_c", "colour", scale_type = "discrete")
+  expect_equal(result, 'ggplot2::scale_colour_viridis_d(option = "plasma")')
+
+  # Test okabe_ito fallback for continuous
+  result <- get_palette_function(
+    "okabe_ito",
+    "fill",
+    scale_type = "continuous"
+  )
+  expect_equal(result, 'ggplot2::scale_fill_viridis_c(option = "viridis")')
+})
+
+test_that("detect_scale_type returns 'none' for unused aesthetics", {
+  skip_if_not_installed("ggplot2")
+
+  # Plot without fill or colour aesthetics
+  p <- ggplot2::ggplot(mtcars, ggplot2::aes(x = wt, y = mpg)) +
+    ggplot2::geom_point()
+
+  expect_equal(detect_scale_type(p, "fill"), "none")
+  expect_equal(detect_scale_type(p, "colour"), "none")
+})
+
+test_that("detect_scale_type detects discrete scales", {
+  skip_if_not_installed("ggplot2")
+
+  # Plot with factor variable (discrete)
+  p <- ggplot2::ggplot(
+    mtcars,
+    ggplot2::aes(x = wt, y = mpg, colour = as.factor(cyl))
+  ) +
+    ggplot2::geom_point()
+
+  expect_equal(detect_scale_type(p, "colour"), "discrete")
+
+  # Plot with few unique numeric values (treated as discrete)
+  p2 <- ggplot2::ggplot(mtcars, ggplot2::aes(x = wt, y = mpg, colour = cyl)) +
+    ggplot2::geom_point()
+
+  expect_equal(detect_scale_type(p2, "colour"), "discrete")
+})
+
+test_that("detect_scale_type detects continuous scales", {
+  skip_if_not_installed("ggplot2")
+
+  # Plot with many unique numeric values (continuous)
+  p <- ggplot2::ggplot(mtcars, ggplot2::aes(x = wt, y = mpg, colour = hp)) +
+    ggplot2::geom_point()
+
+  expect_equal(detect_scale_type(p, "colour"), "continuous")
+})

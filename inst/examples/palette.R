@@ -22,6 +22,8 @@ board1 <- new_board(
 )
 
 # Test 2: Multiple palettes - viridis inferno for fill, plasma for colour
+# Note: cyl is numeric in mtcars, so palette will auto-detect and use
+# continuous version (plasma_c). gear is discrete (factor).
 board2 <- new_board(
   blocks = c(
     data = new_dataset_block("mtcars", package = "datasets"),

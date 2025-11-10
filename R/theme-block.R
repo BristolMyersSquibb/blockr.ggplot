@@ -159,6 +159,107 @@ get_theme_function <- function(theme_name) {
   "ggplot2::theme_minimal()"
 }
 
+#' Detect if a ggplot object uses discrete or continuous scales
+#'
+#' Examines a ggplot object to determine if a particular aesthetic
+#' is using a discrete or continuous scale. This is based on the
+#' actual data type used in the plot, not the original data type.
+#'
+#' @param plot A ggplot object
+#' @param aesthetic Character: "fill" or "colour"
+#' @return Character: "discrete", "continuous", or "none" if aesthetic not used
+#' @keywords internal
+detect_scale_type <- function(plot, aesthetic = "fill") {
+  # Check if plot is a ggplot object
+  if (!inherits(plot, "ggplot")) {
+    return("discrete")  # Default to discrete
+  }
+
+  # Try to build the plot to access scales
+  tryCatch({
+    # Normalize aesthetic name (colour vs color)
+    aes_name <- if (aesthetic %in% c("colour", "color")) "colour" else aesthetic
+
+    # Check if the aesthetic is used in any layer or global mapping
+    aes_used <- FALSE
+
+    # Check global mapping
+    if (aes_name %in% names(plot$mapping)) {
+      aes_used <- TRUE
+    }
+
+    # Check layer mappings
+    if (!aes_used && !is.null(plot$layers)) {
+      for (layer in plot$layers) {
+        if (!is.null(layer$mapping) && aes_name %in% names(layer$mapping)) {
+          aes_used <- TRUE
+          break
+        }
+      }
+    }
+
+    # If aesthetic not used, return "none"
+    if (!aes_used) {
+      return("none")
+    }
+
+    # Build the plot to get the processed data
+    built <- ggplot2::ggplot_build(plot)
+
+    # Check the built data to determine scale type
+    # Look at the first layer that has this aesthetic
+    if (!is.null(built$data) && length(built$data) > 0) {
+      for (layer_data in built$data) {
+        if (aes_name %in% names(layer_data)) {
+          var_data <- layer_data[[aes_name]]
+
+          # If it's a factor or character, it's discrete
+          if (is.factor(var_data) || is.character(var_data)) {
+            return("discrete")
+          }
+
+          # If it's numeric, check if it's being used as discrete or continuous
+          # by looking at whether the values are evenly spaced integers
+          if (is.numeric(var_data)) {
+            unique_vals <- unique(var_data[!is.na(var_data)])
+
+            # If there are very few unique values (<=6), likely categorical
+            # This handles cases like cyl (4,6,8), gear (3,4,5), etc.
+            if (length(unique_vals) <= 6) {
+              return("discrete")
+            }
+
+            # If all values are integers and there are gaps in the sequence,
+            # it's likely categorical (e.g., 4, 6, 8 for cylinders)
+            if (all(unique_vals == floor(unique_vals))) {
+              sorted_vals <- sort(unique_vals)
+              if (length(sorted_vals) > 1) {
+                gaps <- diff(sorted_vals)
+                # If there are gaps > 1, it's likely categorical
+                if (any(gaps > 1)) {
+                  return("discrete")
+                }
+              }
+            }
+
+            # Otherwise, treat as continuous
+            return("continuous")
+          }
+
+          # Default to discrete for other types
+          return("discrete")
+        }
+      }
+    }
+
+    # Default to discrete if we can't determine
+    "discrete"
+  }, error = function(e) {
+    # If any error, default to discrete
+    "discrete"
+  })
+}
+
 #' Build palette choices list based on available packages
 #'
 #' @param scale_type Character: "discrete" or "continuous"
@@ -254,9 +355,14 @@ build_palette_choices <- function(scale_type = "discrete") {
 #'
 #' @param palette_name Character string naming the palette
 #' @param aesthetic Character: "fill" or "colour"
+#' @param scale_type Character: "discrete" or "continuous" (auto-detected if NULL)
 #' @return Character string with the scale function call
 #' @keywords internal
-get_palette_function <- function(palette_name, aesthetic = "fill") {
+get_palette_function <- function(
+  palette_name,
+  aesthetic = "fill",
+  scale_type = NULL
+) {
   # Handle none - no palette override
   if (palette_name == "none" || palette_name == "(none)") {
     return("")
@@ -264,6 +370,35 @@ get_palette_function <- function(palette_name, aesthetic = "fill") {
 
   # Determine if this is a continuous palette (ends with _c)
   is_continuous <- grepl("_c$", palette_name)
+
+  # If scale_type is provided, adjust the palette name if needed
+  if (!is.null(scale_type)) {
+    if (scale_type == "continuous" && !is_continuous) {
+      # User selected discrete palette but data is continuous
+      # Try to convert to continuous version
+      if (palette_name %in% c(
+        "viridis", "magma", "inferno", "plasma",
+        "cividis", "rocket", "mako", "turbo"
+      )) {
+        palette_name <- paste0(palette_name, "_c")
+        is_continuous <- TRUE
+      } else if (grepl("^wes_", palette_name)) {
+        # For wesanderson, add _c suffix
+        palette_name <- paste0(palette_name, "_c")
+        is_continuous <- TRUE
+      }
+      # ggokabeito only supports discrete, so we'll fall back to viridis
+      else if (palette_name == "okabe_ito") {
+        palette_name <- "viridis_c"
+        is_continuous <- TRUE
+      }
+    } else if (scale_type == "discrete" && is_continuous) {
+      # User selected continuous palette but data is discrete
+      # Remove _c suffix
+      palette_name <- sub("_c$", "", palette_name)
+      is_continuous <- FALSE
+    }
+  }
 
   # viridis palettes (built into ggplot2)
   viridis_discrete <- c(
@@ -793,22 +928,31 @@ new_theme_block <- function(
               }
 
               # Add palette scales if specified
-              # Note: We default to discrete scales for now
-              # TODO: detect if scale should be continuous based on data
-              palette_fill_func <- get_palette_function(
-                r_palette_fill(),
-                "fill"
-              )
-              if (palette_fill_func != "") {
-                text <- glue::glue("({text}) + {palette_fill_func}")
+              # Detect scale type from the incoming plot
+              fill_scale_type <- detect_scale_type(data(), "fill")
+              colour_scale_type <- detect_scale_type(data(), "colour")
+
+              # Only add palette if the aesthetic is actually used
+              if (fill_scale_type != "none") {
+                palette_fill_func <- get_palette_function(
+                  r_palette_fill(),
+                  "fill",
+                  fill_scale_type
+                )
+                if (palette_fill_func != "") {
+                  text <- glue::glue("({text}) + {palette_fill_func}")
+                }
               }
 
-              palette_colour_func <- get_palette_function(
-                r_palette_colour(),
-                "colour"
-              )
-              if (palette_colour_func != "") {
-                text <- glue::glue("({text}) + {palette_colour_func}")
+              if (colour_scale_type != "none") {
+                palette_colour_func <- get_palette_function(
+                  r_palette_colour(),
+                  "colour",
+                  colour_scale_type
+                )
+                if (palette_colour_func != "") {
+                  text <- glue::glue("({text}) + {palette_colour_func}")
+                }
               }
 
               parse(text = text)[[1]]
