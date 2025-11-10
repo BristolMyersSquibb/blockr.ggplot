@@ -439,10 +439,12 @@ get_palette_function <- function(palette_name, aesthetic = "fill") {
 #' @param base_theme Base ggplot2 theme: "auto", "minimal", "classic",
 #'   "gray", "bw", etc. (default "auto" preserves upstream theme)
 #' @param palette_fill Color palette for fill aesthetic: "(none)", viridis
-#'   options, ggokabeito, or wesanderson palettes
+#'   options, ggokabeito, or wesanderson palettes. Currently defaults to
+#'   discrete scales which work best with categorical data.
 #'   (default "(none)" preserves upstream colors)
 #' @param palette_colour Color palette for colour aesthetic: "(none)", viridis
-#'   options, ggokabeito, or wesanderson palettes
+#'   options, ggokabeito, or wesanderson palettes. Currently defaults to
+#'   discrete scales which work best with categorical data.
 #'   (default "(none)" preserves upstream colors)
 #' @param ... Forwarded to \code{\link[blockr.core]{new_transform_block}}
 #'
