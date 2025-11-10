@@ -98,3 +98,170 @@ test_that("get_theme_function handles ggpubr themes appropriately", {
     expect_equal(result, "ggplot2::theme_minimal()")
   }
 })
+
+# Palette function tests
+test_that("build_palette_choices always includes viridis palettes", {
+  discrete_choices <- build_palette_choices("discrete")
+  continuous_choices <- build_palette_choices("continuous")
+
+  # Check that (none) is present
+  expect_equal(discrete_choices[["(none)"]], "none")
+  expect_equal(continuous_choices[["(none)"]], "none")
+
+  # Check that viridis palettes are present
+  viridis_discrete <- discrete_choices[["viridis (Built-in)"]]
+  expect_true("viridis" %in% viridis_discrete)
+  expect_true("magma" %in% viridis_discrete)
+  expect_true("inferno" %in% viridis_discrete)
+  expect_true("plasma" %in% viridis_discrete)
+
+  viridis_continuous <- continuous_choices[["viridis (Built-in)"]]
+  expect_true("viridis_c" %in% viridis_continuous)
+  expect_true("magma_c" %in% viridis_continuous)
+  expect_true("inferno_c" %in% viridis_continuous)
+  expect_true("plasma_c" %in% viridis_continuous)
+})
+
+test_that("build_palette_choices only includes ggokabeito when available", {
+  discrete_choices <- build_palette_choices("discrete")
+
+  has_ggokabeito <- requireNamespace("ggokabeito", quietly = TRUE)
+  has_ggokabeito_section <-
+    "ggokabeito (Colorblind-friendly)" %in% names(discrete_choices)
+
+  # Should match package availability
+  expect_equal(has_ggokabeito, has_ggokabeito_section)
+})
+
+test_that("build_palette_choices includes ggokabeito only for discrete", {
+  discrete_choices <- build_palette_choices("discrete")
+  continuous_choices <- build_palette_choices("continuous")
+
+  # ggokabeito should never be in continuous choices
+  has_ggokabeito_continuous <-
+    "ggokabeito (Colorblind-friendly)" %in% names(continuous_choices)
+  expect_false(has_ggokabeito_continuous)
+})
+
+test_that("build_palette_choices only includes wesanderson when available", {
+  discrete_choices <- build_palette_choices("discrete")
+  continuous_choices <- build_palette_choices("continuous")
+
+  has_wesanderson <- requireNamespace("wesanderson", quietly = TRUE)
+  has_wes_discrete <-
+    "wesanderson (Movie-inspired)" %in% names(discrete_choices)
+  has_wes_continuous <-
+    "wesanderson (Movie-inspired)" %in% names(continuous_choices)
+
+  # Should match package availability
+  expect_equal(has_wesanderson, has_wes_discrete)
+  expect_equal(has_wesanderson, has_wes_continuous)
+})
+
+test_that("get_palette_function returns empty string for none", {
+  result <- get_palette_function("none", "fill")
+  expect_equal(result, "")
+
+  result <- get_palette_function("(none)", "colour")
+  expect_equal(result, "")
+})
+
+test_that("get_palette_function returns correct viridis discrete palettes", {
+  result <- get_palette_function("viridis", "fill")
+  expect_equal(result, 'ggplot2::scale_fill_viridis_d(option = "viridis")')
+
+  result <- get_palette_function("magma", "colour")
+  expect_equal(result, 'ggplot2::scale_colour_viridis_d(option = "magma")')
+
+  result <- get_palette_function("inferno", "fill")
+  expect_equal(result, 'ggplot2::scale_fill_viridis_d(option = "inferno")')
+})
+
+test_that("get_palette_function returns correct viridis continuous palettes", {
+  result <- get_palette_function("viridis_c", "fill")
+  expect_equal(result, 'ggplot2::scale_fill_viridis_c(option = "viridis")')
+
+  result <- get_palette_function("magma_c", "colour")
+  expect_equal(result, 'ggplot2::scale_colour_viridis_c(option = "magma")')
+
+  result <- get_palette_function("plasma_c", "fill")
+  expect_equal(result, 'ggplot2::scale_fill_viridis_c(option = "plasma")')
+})
+
+test_that("get_palette_function handles ggokabeito appropriately", {
+  has_ggokabeito <- requireNamespace("ggokabeito", quietly = TRUE)
+
+  result_fill <- get_palette_function("okabe_ito", "fill")
+  result_colour <- get_palette_function("okabe_ito", "colour")
+
+  if (has_ggokabeito) {
+    expect_equal(result_fill, "ggokabeito::scale_fill_okabe_ito()")
+    expect_equal(result_colour, "ggokabeito::scale_colour_okabe_ito()")
+  } else {
+    # Should fallback to viridis if ggokabeito not available
+    expect_equal(
+      result_fill,
+      'ggplot2::scale_fill_viridis_d(option = "viridis")'
+    )
+    expect_equal(
+      result_colour,
+      'ggplot2::scale_colour_viridis_d(option = "viridis")'
+    )
+  }
+})
+
+test_that("get_palette_function handles wesanderson discrete appropriately", {
+  has_wesanderson <- requireNamespace("wesanderson", quietly = TRUE)
+
+  result_fill <- get_palette_function("wes_royal1", "fill")
+  result_colour <- get_palette_function("wes_zissou1", "colour")
+
+  if (has_wesanderson) {
+    expect_match(
+      result_fill,
+      "ggplot2::scale_fill_manual\\(values = wesanderson::wes_palette"
+    )
+    expect_match(
+      result_colour,
+      "ggplot2::scale_colour_manual\\(values = wesanderson::wes_palette"
+    )
+  } else {
+    # Should fallback to viridis if wesanderson not available
+    expect_equal(
+      result_fill,
+      'ggplot2::scale_fill_viridis_d(option = "viridis")'
+    )
+    expect_equal(
+      result_colour,
+      'ggplot2::scale_colour_viridis_d(option = "viridis")'
+    )
+  }
+})
+
+test_that("get_palette_function handles wesanderson continuous appropriately", {
+  has_wesanderson <- requireNamespace("wesanderson", quietly = TRUE)
+
+  result_fill <- get_palette_function("wes_royal1_c", "fill")
+  result_colour <- get_palette_function("wes_zissou1_c", "colour")
+
+  if (has_wesanderson) {
+    expect_match(
+      result_fill,
+      "ggplot2::scale_fill_gradientn\\(colors = wesanderson::wes_palette"
+    )
+    expect_match(
+      result_colour,
+      "ggplot2::scale_colour_gradientn\\(colors = wesanderson::wes_palette"
+    )
+  } else {
+    # Should fallback to viridis if wesanderson not available
+    expect_equal(
+      result_fill,
+      'ggplot2::scale_fill_viridis_c(option = "viridis")'
+    )
+    expect_equal(
+      result_colour,
+      'ggplot2::scale_colour_viridis_c(option = "viridis")'
+    )
+  }
+})
