@@ -159,6 +159,261 @@ get_theme_function <- function(theme_name) {
   "ggplot2::theme_minimal()"
 }
 
+#' Build palette choices list based on available packages
+#'
+#' @param scale_type Character: "discrete" or "continuous"
+#' @return A named list of palette choices for selectInput
+#' @keywords internal
+build_palette_choices <- function(scale_type = "discrete") {
+  # Start with base choices
+  choices <- list(
+    "(none)" = "none"
+  )
+
+  # viridis palettes (always available via ggplot2)
+  if (scale_type == "discrete") {
+    choices[["viridis (Built-in)"]] <- list(
+      "Viridis" = "viridis",
+      "Magma" = "magma",
+      "Inferno" = "inferno",
+      "Plasma" = "plasma",
+      "Cividis" = "cividis",
+      "Rocket" = "rocket",
+      "Mako" = "mako",
+      "Turbo" = "turbo"
+    )
+  } else {
+    # continuous scales
+    choices[["viridis (Built-in)"]] <- list(
+      "Viridis" = "viridis_c",
+      "Magma" = "magma_c",
+      "Inferno" = "inferno_c",
+      "Plasma" = "plasma_c",
+      "Cividis" = "cividis_c",
+      "Rocket" = "rocket_c",
+      "Mako" = "mako_c",
+      "Turbo" = "turbo_c"
+    )
+  }
+
+  # ggokabeito palettes (only discrete)
+  if (scale_type == "discrete" &&
+      requireNamespace("ggokabeito", quietly = TRUE)) {
+    choices[["ggokabeito (Colorblind-friendly)"]] <- list(
+      "Okabe-Ito" = "okabe_ito"
+    )
+  }
+
+  # wesanderson palettes
+  if (requireNamespace("wesanderson", quietly = TRUE)) {
+    if (scale_type == "discrete") {
+      choices[["wesanderson (Movie-inspired)"]] <- list(
+        "BottleRocket1" = "wes_bottlerocket1",
+        "BottleRocket2" = "wes_bottlerocket2",
+        "Rushmore1" = "wes_rushmore1",
+        "Rushmore" = "wes_rushmore",
+        "Royal1" = "wes_royal1",
+        "Royal2" = "wes_royal2",
+        "Zissou1" = "wes_zissou1",
+        "Darjeeling1" = "wes_darjeeling1",
+        "Darjeeling2" = "wes_darjeeling2",
+        "Chevalier1" = "wes_chevalier1",
+        "FantasticFox1" = "wes_fantasticfox1",
+        "Moonrise1" = "wes_moonrise1",
+        "Moonrise2" = "wes_moonrise2",
+        "Moonrise3" = "wes_moonrise3",
+        "Cavalcanti1" = "wes_cavalcanti1",
+        "GrandBudapest1" = "wes_grandbudapest1",
+        "GrandBudapest2" = "wes_grandbudapest2",
+        "IsleofDogs1" = "wes_isleofdogs1",
+        "IsleofDogs2" = "wes_isleofdogs2"
+      )
+    } else {
+      # continuous - these will be interpolated
+      choices[["wesanderson (Movie-inspired)"]] <- list(
+        "BottleRocket1" = "wes_bottlerocket1_c",
+        "Rushmore1" = "wes_rushmore1_c",
+        "Royal1" = "wes_royal1_c",
+        "Zissou1" = "wes_zissou1_c",
+        "Darjeeling1" = "wes_darjeeling1_c",
+        "FantasticFox1" = "wes_fantasticfox1_c",
+        "Moonrise1" = "wes_moonrise1_c",
+        "GrandBudapest1" = "wes_grandbudapest1_c",
+        "IsleofDogs1" = "wes_isleofdogs1_c"
+      )
+    }
+  }
+
+  choices
+}
+
+#' Get palette function call for a given palette name and aesthetic
+#'
+#' Maps palette names to their corresponding ggplot2 scale function calls.
+#' Returns empty string for "(none)".
+#'
+#' @param palette_name Character string naming the palette
+#' @param aesthetic Character: "fill" or "colour"
+#' @return Character string with the scale function call
+#' @keywords internal
+get_palette_function <- function(palette_name, aesthetic = "fill") {
+  # Handle none - no palette override
+  if (palette_name == "none" || palette_name == "(none)") {
+    return("")
+  }
+
+  # Determine if this is a continuous palette (ends with _c)
+  is_continuous <- grepl("_c$", palette_name)
+
+  # viridis palettes (built into ggplot2)
+  viridis_discrete <- c(
+    viridis = "viridis",
+    magma = "magma",
+    inferno = "inferno",
+    plasma = "plasma",
+    cividis = "cividis",
+    rocket = "rocket",
+    mako = "mako",
+    turbo = "turbo"
+  )
+
+  viridis_continuous <- c(
+    viridis_c = "viridis",
+    magma_c = "magma",
+    inferno_c = "inferno",
+    plasma_c = "plasma",
+    cividis_c = "cividis",
+    rocket_c = "rocket",
+    mako_c = "mako",
+    turbo_c = "turbo"
+  )
+
+  if (palette_name %in% names(viridis_discrete)) {
+    option <- viridis_discrete[[palette_name]]
+    if (aesthetic == "fill") {
+      return(glue::glue('ggplot2::scale_fill_viridis_d(option = "{option}")'))
+    } else {
+      return(glue::glue(
+        'ggplot2::scale_colour_viridis_d(option = "{option}")'
+      ))
+    }
+  }
+
+  if (palette_name %in% names(viridis_continuous)) {
+    option <- viridis_continuous[[palette_name]]
+    if (aesthetic == "fill") {
+      return(glue::glue('ggplot2::scale_fill_viridis_c(option = "{option}")'))
+    } else {
+      return(glue::glue(
+        'ggplot2::scale_colour_viridis_c(option = "{option}")'
+      ))
+    }
+  }
+
+  # ggokabeito palette (discrete only)
+  if (palette_name == "okabe_ito") {
+    if (requireNamespace("ggokabeito", quietly = TRUE)) {
+      if (aesthetic == "fill") {
+        return("ggokabeito::scale_fill_okabe_ito()")
+      } else {
+        return("ggokabeito::scale_colour_okabe_ito()")
+      }
+    } else {
+      # Fallback to viridis if package not available
+      if (aesthetic == "fill") {
+        return('ggplot2::scale_fill_viridis_d(option = "viridis")')
+      } else {
+        return('ggplot2::scale_colour_viridis_d(option = "viridis")')
+      }
+    }
+  }
+
+  # wesanderson palettes
+  wes_palettes <- list(
+    # Discrete palettes
+    wes_bottlerocket1 = "BottleRocket1",
+    wes_bottlerocket2 = "BottleRocket2",
+    wes_rushmore1 = "Rushmore1",
+    wes_rushmore = "Rushmore",
+    wes_royal1 = "Royal1",
+    wes_royal2 = "Royal2",
+    wes_zissou1 = "Zissou1",
+    wes_darjeeling1 = "Darjeeling1",
+    wes_darjeeling2 = "Darjeeling2",
+    wes_chevalier1 = "Chevalier1",
+    wes_fantasticfox1 = "FantasticFox1",
+    wes_moonrise1 = "Moonrise1",
+    wes_moonrise2 = "Moonrise2",
+    wes_moonrise3 = "Moonrise3",
+    wes_cavalcanti1 = "Cavalcanti1",
+    wes_grandbudapest1 = "GrandBudapest1",
+    wes_grandbudapest2 = "GrandBudapest2",
+    wes_isleofdogs1 = "IsleofDogs1",
+    wes_isleofdogs2 = "IsleofDogs2",
+    # Continuous palettes (interpolated)
+    wes_bottlerocket1_c = "BottleRocket1",
+    wes_rushmore1_c = "Rushmore1",
+    wes_royal1_c = "Royal1",
+    wes_zissou1_c = "Zissou1",
+    wes_darjeeling1_c = "Darjeeling1",
+    wes_fantasticfox1_c = "FantasticFox1",
+    wes_moonrise1_c = "Moonrise1",
+    wes_grandbudapest1_c = "GrandBudapest1",
+    wes_isleofdogs1_c = "IsleofDogs1"
+  )
+
+  if (palette_name %in% names(wes_palettes)) {
+    if (requireNamespace("wesanderson", quietly = TRUE)) {
+      pal_name <- wes_palettes[[palette_name]]
+      if (is_continuous) {
+        # For continuous, we need to interpolate the palette
+        if (aesthetic == "fill") {
+          return(glue::glue(
+            'ggplot2::scale_fill_gradientn(colors = ',
+            'wesanderson::wes_palette("{pal_name}", 100, type = "continuous"))'
+          ))
+        } else {
+          return(glue::glue(
+            'ggplot2::scale_colour_gradientn(colors = ',
+            'wesanderson::wes_palette("{pal_name}", 100, type = "continuous"))'
+          ))
+        }
+      } else {
+        # For discrete, use scale_*_manual with the palette
+        if (aesthetic == "fill") {
+          return(glue::glue(
+            'ggplot2::scale_fill_manual(values = ',
+            'wesanderson::wes_palette("{pal_name}"))'
+          ))
+        } else {
+          return(glue::glue(
+            'ggplot2::scale_colour_manual(values = ',
+            'wesanderson::wes_palette("{pal_name}"))'
+          ))
+        }
+      }
+    } else {
+      # Fallback to viridis if wesanderson not available
+      if (is_continuous) {
+        if (aesthetic == "fill") {
+          return('ggplot2::scale_fill_viridis_c(option = "viridis")')
+        } else {
+          return('ggplot2::scale_colour_viridis_c(option = "viridis")')
+        }
+      } else {
+        if (aesthetic == "fill") {
+          return('ggplot2::scale_fill_viridis_d(option = "viridis")')
+        } else {
+          return('ggplot2::scale_colour_viridis_d(option = "viridis")')
+        }
+      }
+    }
+  }
+
+  # Default: return empty string (no palette)
+  ""
+}
+
 #' Theme customization block for ggplot2 plots
 #'
 #' A block that applies advanced theme customizations to ggplot2 objects.
@@ -183,6 +438,12 @@ get_theme_function <- function(theme_name) {
 #'   "bottom", "none" (default "auto" preserves upstream position)
 #' @param base_theme Base ggplot2 theme: "auto", "minimal", "classic",
 #'   "gray", "bw", etc. (default "auto" preserves upstream theme)
+#' @param palette_fill Color palette for fill aesthetic: "(none)", viridis
+#'   options, ggokabeito, or wesanderson palettes
+#'   (default "(none)" preserves upstream colors)
+#' @param palette_colour Color palette for colour aesthetic: "(none)", viridis
+#'   options, ggokabeito, or wesanderson palettes
+#'   (default "(none)" preserves upstream colors)
 #' @param ... Forwarded to \code{\link[blockr.core]{new_transform_block}}
 #'
 #' @export
@@ -197,6 +458,8 @@ new_theme_block <- function(
   show_panel_border = "auto",
   legend_position = "auto",
   base_theme = "auto",
+  palette_fill = "none",
+  palette_colour = "none",
   ...
 ) {
   new_ggplot_transform_block(
@@ -215,6 +478,8 @@ new_theme_block <- function(
           r_show_panel_border <- reactiveVal(show_panel_border)
           r_legend_position <- reactiveVal(legend_position)
           r_base_theme <- reactiveVal(base_theme)
+          r_palette_fill <- reactiveVal(palette_fill)
+          r_palette_colour <- reactiveVal(palette_colour)
 
           # Observe input changes
           # (convert "transparent" or "#00000000" to empty string for colors)
@@ -319,6 +584,20 @@ new_theme_block <- function(
             input$base_theme,
             {
               r_base_theme(input$base_theme %||% "minimal")
+            },
+            ignoreNULL = FALSE
+          )
+          observeEvent(
+            input$palette_fill,
+            {
+              r_palette_fill(input$palette_fill %||% "none")
+            },
+            ignoreNULL = FALSE
+          )
+          observeEvent(
+            input$palette_colour,
+            {
+              r_palette_colour(input$palette_colour %||% "none")
             },
             ignoreNULL = FALSE
           )
@@ -511,6 +790,25 @@ new_theme_block <- function(
                 text <- glue::glue("({text}) + ggplot2::theme({theme_call})")
               }
 
+              # Add palette scales if specified
+              # Note: We default to discrete scales for now
+              # TODO: detect if scale should be continuous based on data
+              palette_fill_func <- get_palette_function(
+                r_palette_fill(),
+                "fill"
+              )
+              if (palette_fill_func != "") {
+                text <- glue::glue("({text}) + {palette_fill_func}")
+              }
+
+              palette_colour_func <- get_palette_function(
+                r_palette_colour(),
+                "colour"
+              )
+              if (palette_colour_func != "") {
+                text <- glue::glue("({text}) + {palette_colour_func}")
+              }
+
               parse(text = text)[[1]]
             }),
             state = list(
@@ -523,7 +821,9 @@ new_theme_block <- function(
               grid_color = r_grid_color,
               show_panel_border = r_show_panel_border,
               legend_position = r_legend_position,
-              base_theme = r_base_theme
+              base_theme = r_base_theme,
+              palette_fill = r_palette_fill,
+              palette_colour = r_palette_colour
             )
           )
         }
@@ -639,6 +939,26 @@ new_theme_block <- function(
                       "None" = "none"
                     ),
                     selected = legend_position,
+                    width = "100%"
+                  )
+                ),
+                div(
+                  class = "block-input-wrapper",
+                  selectInput(
+                    inputId = NS(id, "palette_fill"),
+                    label = "Fill Palette",
+                    choices = build_palette_choices("discrete"),
+                    selected = palette_fill,
+                    width = "100%"
+                  )
+                ),
+                div(
+                  class = "block-input-wrapper",
+                  selectInput(
+                    inputId = NS(id, "palette_colour"),
+                    label = "Colour Palette",
+                    choices = build_palette_choices("discrete"),
+                    selected = palette_colour,
                     width = "100%"
                   )
                 )
@@ -816,7 +1136,9 @@ new_theme_block <- function(
       "base_size",
       "base_family",
       "grid_color",
-      "legend_position"
+      "legend_position",
+      "palette_fill",
+      "palette_colour"
     ),
     ...
   )
