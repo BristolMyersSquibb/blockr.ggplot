@@ -404,7 +404,8 @@ new_ggplot_block <- function(
                 # for discrete colors
                 if (
                   current_type %in%
-                    c("histogram", "bar", "boxplot", "violin", "density")
+                    c("histogram", "bar", "boxplot", "violin", "density") &&
+                    isTruthy(r_fill())
                 ) {
                   aes_parts <- c(
                     aes_parts,
@@ -417,7 +418,10 @@ new_ggplot_block <- function(
               if (r_size() != "(none)" && "size" %in% chart_config$optional) {
                 aes_parts <- c(aes_parts, glue::glue("size = {r_size()}"))
               }
-              if (r_shape() != "(none)" && "shape" %in% chart_config$optional) {
+              if (
+                r_shape() != "(none)" && "shape" %in% chart_config$optional
+                  && isTruthy(r_shape())
+              ) {
                 # Shape requires discrete/factor variables
                 aes_parts <- c(
                   aes_parts,
@@ -436,7 +440,7 @@ new_ggplot_block <- function(
               # For density plots, always set group to match fill
               # This ensures proper grouping for statistical transformation
               if (current_type == "density") {
-                if (r_fill() != "(none)") {
+                if (r_fill() != "(none)" && isTruthy(r_fill())) {
                   aes_parts <- c(
                     aes_parts,
                     glue::glue("group = as.factor({r_fill()})")
