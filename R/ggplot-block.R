@@ -39,9 +39,8 @@ new_ggplot_block <- function(
   ...
 ) {
   ui <- function(id) {
-    # Need shinyjs for dynamic UI
     tagList(
-      shinyjs::useShinyjs(),
+      shinyjs::useShinyjs(), # Need shinyjs for dynamic UI
       block_collapisble_section_css(id),
       div(
         class = "block-container",
@@ -131,8 +130,7 @@ new_ggplot_block <- function(
                 selectInput(
                   inputId = NS(id, "x"),
                   label = make_aesthetic_label("X-axis", "x", type),
-                  choices = x,
-                  selected = x,
+                  choices = NULL,
                   width = "100%"
                 )
               ),
@@ -142,8 +140,7 @@ new_ggplot_block <- function(
                 selectInput(
                   inputId = NS(id, "y"),
                   label = make_aesthetic_label("Y-axis", "y", type),
-                  choices = c("(none)", y),
-                  selected = if (length(y) == 0) "(none)" else y,
+                  choices = NULL,
                   width = "100%"
                 )
               ),
@@ -154,8 +151,7 @@ new_ggplot_block <- function(
                 selectInput(
                   inputId = NS(id, "color"),
                   label = make_aesthetic_label("Color By", "color", type),
-                  choices = c("(none)", color),
-                  selected = if (length(color) == 0) "(none)" else color,
+                  choices = NULL,
                   width = "100%"
                 )
               ),
@@ -165,8 +161,7 @@ new_ggplot_block <- function(
                 selectInput(
                   inputId = NS(id, "fill"),
                   label = make_aesthetic_label("Fill By", "fill", type),
-                  choices = c("(none)", fill),
-                  selected = if (length(fill) == 0) "(none)" else fill,
+                  choices = NULL,
                   width = "100%"
                 )
               ),
@@ -176,8 +171,7 @@ new_ggplot_block <- function(
                 selectInput(
                   inputId = NS(id, "size"),
                   label = make_aesthetic_label("Size By", "size", type),
-                  choices = c("(none)", size),
-                  selected = if (length(size) == 0) "(none)" else size,
+                  choices = NULL,
                   width = "100%"
                 )
               )
@@ -203,8 +197,7 @@ new_ggplot_block <- function(
                   selectInput(
                     inputId = NS(id, "shape"),
                     label = make_aesthetic_label("Shape By", "shape", type),
-                    choices = c("(none)", shape),
-                    selected = if (length(shape) == 0) "(none)" else shape,
+                    choices = NULL,
                     width = "100%"
                   )
                 ),
@@ -218,12 +211,7 @@ new_ggplot_block <- function(
                       "linetype",
                       type
                     ),
-                    choices = c("(none)", linetype),
-                    selected = if (length(linetype) == 0) {
-                      "(none)"
-                    } else {
-                      linetype
-                    },
+                    choices = NULL,
                     width = "100%"
                   )
                 ),
@@ -233,8 +221,7 @@ new_ggplot_block <- function(
                   selectInput(
                     inputId = NS(id, "group"),
                     label = make_aesthetic_label("Group By", "group", type),
-                    choices = c("(none)", group),
-                    selected = if (length(group) == 0) "(none)" else group,
+                    choices = NULL,
                     width = "100%"
                   )
                 ),
@@ -244,8 +231,7 @@ new_ggplot_block <- function(
                   selectInput(
                     inputId = NS(id, "alpha"),
                     label = make_aesthetic_label("Alpha By", "alpha", type),
-                    choices = c("(none)", alpha),
-                    selected = if (length(alpha) == 0) "(none)" else alpha,
+                    choices = NULL,
                     width = "100%"
                   )
                 ),
@@ -306,9 +292,9 @@ new_ggplot_block <- function(
               )
             )
           )
-        ) # Close block-form-grid div
-      ) # Close block-container div
-    ) # Close tagList
+        )
+      )
+    )
   }
 
   server <- function(id, data) {
@@ -317,124 +303,57 @@ new_ggplot_block <- function(
       function(input, output, session) {
         cols <- reactive(colnames(data()))
 
-        # Initialize reactive values
-        r_type <- reactiveVal(type)
-        r_x <- reactiveVal(x)
-        r_y <- reactiveVal(if (length(y) == 0) "(none)" else y)
-        r_color <- reactiveVal(color)
-        r_fill <- reactiveVal(if (length(fill) == 0) "(none)" else fill)
-        r_size <- reactiveVal(if (length(size) == 0) "(none)" else size)
-        r_shape <- reactiveVal(if (length(shape) == 0) "(none)" else shape)
-        r_linetype <- reactiveVal(
-          if (length(linetype) == 0) "(none)" else linetype
-        )
-        r_group <- reactiveVal(if (length(group) == 0) "(none)" else group)
-        r_alpha <- reactiveVal(if (length(alpha) == 0) "(none)" else alpha)
-        r_density_alpha <- reactiveVal(density_alpha)
-        r_position <- reactiveVal(position)
-        r_bins <- reactiveVal(bins)
-        r_donut <- reactiveVal(donut)
-
-        # Observe input changes
-        observeEvent(input$type, {
-          r_type(input$type)
-          # Clear statistical chart selection when main chart is selected
-          shinyWidgets::updateRadioGroupButtons(
+        observeEvent(cols(), {
+          updateSelectInput(
             session,
-            inputId = "type_stat",
-            selected = character(0)
+            inputId = "x",
+            choices = cols()
+          )
+          updateSelectInput(
+            session,
+            inputId = "y",
+            choices = c("(none)", cols())
+          )
+          updateSelectInput(
+            session,
+            inputId = "color",
+            choices = c("(none)", cols())
+          )
+          updateSelectInput(
+            session,
+            inputId = "fill",
+            choices = c("(none)", cols())
+          )
+          updateSelectInput(
+            session,
+            inputId = "size",
+            choices = c("(none)", cols())
+          )
+          updateSelectInput(
+            session,
+            inputId = "shape",
+            choices = c("(none)", cols())
+          )
+          updateSelectInput(
+            session,
+            inputId = "linetype",
+            choices = c("(none)", cols())
+          )
+          updateSelectInput(
+            session,
+            inputId = "group",
+            choices = c("(none)", cols())
+          )
+          updateSelectInput(
+            session,
+            inputId = "alpha",
+            choices = c("(none)", cols())
           )
         })
-        observeEvent(input$type_stat, {
-          r_type(input$type_stat)
-          # Clear main chart selection when statistical chart is selected
-          shinyWidgets::updateRadioGroupButtons(
-            session,
-            inputId = "type",
-            selected = character(0)
-          )
-        })
-        observeEvent(input$x, r_x(input$x))
-        observeEvent(input$y, r_y(input$y))
-        observeEvent(input$color, r_color(input$color))
-        observeEvent(input$fill, r_fill(input$fill))
-        observeEvent(input$size, r_size(input$size))
-        observeEvent(input$shape, r_shape(input$shape))
-        observeEvent(input$linetype, r_linetype(input$linetype))
-        observeEvent(input$group, r_group(input$group))
-        observeEvent(input$alpha, r_alpha(input$alpha))
-        observeEvent(
-          input$density_alpha,
-          r_density_alpha(input$density_alpha)
-        )
-        observeEvent(input$position, r_position(input$position))
-        observeEvent(input$bins, r_bins(input$bins))
-        observeEvent(input$donut, r_donut(input$donut))
-
-        # Update column-dependent inputs
-        observeEvent(
-          cols(),
-          {
-            updateSelectInput(
-              session,
-              inputId = "x",
-              choices = cols(),
-              selected = r_x()
-            )
-            updateSelectInput(
-              session,
-              inputId = "y",
-              choices = c("(none)", cols()),
-              selected = r_y()
-            )
-            updateSelectInput(
-              session,
-              inputId = "color",
-              choices = c("(none)", cols()),
-              selected = r_color()
-            )
-            updateSelectInput(
-              session,
-              inputId = "fill",
-              choices = c("(none)", cols()),
-              selected = r_fill()
-            )
-            updateSelectInput(
-              session,
-              inputId = "size",
-              choices = c("(none)", cols()),
-              selected = r_size()
-            )
-            updateSelectInput(
-              session,
-              inputId = "shape",
-              choices = c("(none)", cols()),
-              selected = r_shape()
-            )
-            updateSelectInput(
-              session,
-              inputId = "linetype",
-              choices = c("(none)", cols()),
-              selected = r_linetype()
-            )
-            updateSelectInput(
-              session,
-              inputId = "group",
-              choices = c("(none)", cols()),
-              selected = r_group()
-            )
-            updateSelectInput(
-              session,
-              inputId = "alpha",
-              choices = c("(none)", cols()),
-              selected = r_alpha()
-            )
-          }
-        )
 
         # Dynamic UI visibility based on chart type
         observe({
-          current_type <- r_type()
+          current_type <- input$type
           chart_config <- chart_aesthetics()[[current_type]]
 
           if (!is.null(chart_config)) {
@@ -564,7 +483,7 @@ new_ggplot_block <- function(
                 session,
                 inputId = "position",
                 choices = chart_config$specific$position,
-                selected = r_position()
+                selected = input$position
               )
             } else {
               shinyjs::hide("position")
@@ -587,11 +506,11 @@ new_ggplot_block <- function(
 
         list(
           expr = reactive({
-            current_type <- r_type()
+            current_type <- input$type
             chart_config <- chart_aesthetics()[[current_type]]
 
             # Validate required fields
-            if (!isTruthy(r_x()) || length(r_x()) == 0) {
+            if (!isTruthy(input$x) || length(input$x) == 0) {
               return(quote(ggplot2::ggplot() + ggplot2::geom_blank()))
             }
 
@@ -599,107 +518,107 @@ new_ggplot_block <- function(
             if (
               "y" %in%
                 chart_config$required &&
-                (r_y() == "(none)" || !isTruthy(r_y()))
+                (input$y == "(none)" || !isTruthy(input$y))
             ) {
               return(quote(ggplot2::ggplot() + ggplot2::geom_blank()))
             }
 
             # Build aesthetics
-            aes_parts <- c(glue::glue("x = {r_x()}"))
+            aes_parts <- c(glue::glue("x = {input$x}"))
 
             # Add y if not "(none)" and valid for this chart
             if (
-              r_y() != "(none)" &&
+              input$y != "(none)" &&
                 "y" %in% c(chart_config$required, chart_config$optional)
             ) {
-              aes_parts <- c(aes_parts, glue::glue("y = {r_y()}"))
+              aes_parts <- c(aes_parts, glue::glue("y = {input$y}"))
             }
 
             # Add optional aesthetics if valid and not "(none)"
-            if (r_color() != "(none)" && "color" %in% chart_config$optional) {
-              aes_parts <- c(aes_parts, glue::glue("colour = {r_color()}"))
+            if (input$color != "(none)" && "color" %in% chart_config$optional) {
+              aes_parts <- c(aes_parts, glue::glue("colour = {input$color}"))
             }
-            if (r_fill() != "(none)" && "fill" %in% chart_config$optional) {
+            if (input$fill != "(none)" && "fill" %in% chart_config$optional) {
               # For histograms, bars, and density, convert to factor
               # for discrete colors
               if (
                 current_type %in%
                   c("histogram", "bar", "boxplot", "violin", "density") &&
-                  isTruthy(r_fill())
+                  isTruthy(input$fill)
               ) {
                 aes_parts <- c(
                   aes_parts,
-                  glue::glue("fill = as.factor({r_fill()})")
+                  glue::glue("fill = as.factor({input$fill})")
                 )
               } else {
-                aes_parts <- c(aes_parts, glue::glue("fill = {r_fill()}"))
+                aes_parts <- c(aes_parts, glue::glue("fill = {input$fill}"))
               }
             }
-            if (r_size() != "(none)" && "size" %in% chart_config$optional) {
-              aes_parts <- c(aes_parts, glue::glue("size = {r_size()}"))
+            if (input$size != "(none)" && "size" %in% chart_config$optional) {
+              aes_parts <- c(aes_parts, glue::glue("size = {input$size}"))
             }
             if (
-              r_shape() != "(none)" &&
+              input$shape != "(none)" &&
                 "shape" %in% chart_config$optional &&
-                isTruthy(r_shape())
+                isTruthy(input$shape)
             ) {
               # Shape requires discrete/factor variables
               aes_parts <- c(
                 aes_parts,
-                glue::glue("shape = as.factor({r_shape()})")
+                glue::glue("shape = as.factor({input$shape})")
               )
             }
             if (
-              r_linetype() != "(none)" &&
+              input$linetype != "(none)" &&
                 "linetype" %in% chart_config$optional
             ) {
               aes_parts <- c(
                 aes_parts,
-                glue::glue("linetype = {r_linetype()}")
+                glue::glue("linetype = {input$linetype}")
               )
             }
             # For density plots, always set group to match fill
             # This ensures proper grouping for statistical transformation
             if (current_type == "density") {
-              if (r_fill() != "(none)" && isTruthy(r_fill())) {
+              if (input$fill != "(none)" && isTruthy(input$fill)) {
                 aes_parts <- c(
                   aes_parts,
-                  glue::glue("group = as.factor({r_fill()})")
+                  glue::glue("group = as.factor({input$fill})")
                 )
               }
             } else if (
-              r_group() != "(none)" && "group" %in% chart_config$optional
+              input$group != "(none)" && "group" %in% chart_config$optional
             ) {
               # For non-density plots, use user-specified group if provided
-              aes_parts <- c(aes_parts, glue::glue("group = {r_group()}"))
+              aes_parts <- c(aes_parts, glue::glue("group = {input$group}"))
             }
             # Alpha: for density plots, use fixed alpha parameter,
             # not aesthetic mapping
             if (
               current_type != "density" &&
-                r_alpha() != "(none)" &&
+                input$alpha != "(none)" &&
                 "alpha" %in% chart_config$optional
             ) {
-              aes_parts <- c(aes_parts, glue::glue("alpha = {r_alpha()}"))
+              aes_parts <- c(aes_parts, glue::glue("alpha = {input$alpha}"))
             }
 
             aes_text <- paste(aes_parts, collapse = ", ")
 
             # Build chart-specific call
             if (current_type == "bar") {
-              if (r_y() == "(none)") {
+              if (input$y == "(none)") {
                 geom_call <- glue::glue(
-                  "ggplot2::geom_bar(position = '{r_position()}')"
+                  "ggplot2::geom_bar(position = '{input$position}')"
                 )
               } else {
                 geom_call <- glue::glue(
-                  "ggplot2::geom_col(position = '{r_position()}')"
+                  "ggplot2::geom_col(position = '{input$position}')"
                 )
               }
             } else if (current_type == "histogram") {
               geom_call <- glue::glue(
-                "ggplot2::geom_histogram(bins = {r_bins()}, ",
-                "position = '{r_position()}')"
+                "ggplot2::geom_histogram(bins = {input$bins}, ",
+                "position = '{input$position}')"
               )
             } else if (current_type == "point") {
               geom_call <- "ggplot2::geom_point()"
@@ -712,7 +631,7 @@ new_ggplot_block <- function(
             } else if (current_type == "density") {
               # Use fixed alpha value for density plots
               geom_call <- glue::glue(
-                "ggplot2::geom_density(alpha = {r_density_alpha()})"
+                "ggplot2::geom_density(alpha = {input$density_alpha})"
               )
             } else if (current_type == "area") {
               geom_call <- "ggplot2::geom_area()"
@@ -720,7 +639,7 @@ new_ggplot_block <- function(
               # PIE CHART: Special handling required
 
               # Override x aesthetic: empty string for pie, numeric for donut
-              if (r_donut()) {
+              if (input$donut) {
                 # Numeric for donut (allows xlim)
                 aes_parts[1] <- "x = 2"
               } else {
@@ -739,14 +658,14 @@ new_ggplot_block <- function(
               }
               if (!fill_added) {
                 # Use x column for fill if no fill aesthetic specified
-                aes_parts <- c(aes_parts, glue::glue("fill = {r_x()}"))
+                aes_parts <- c(aes_parts, glue::glue("fill = {input$x}"))
               }
 
               # Rebuild aes_text with modified parts
               aes_text <- paste(aes_parts, collapse = ", ")
 
               # Choose geom based on y
-              if (r_y() != "(none)") {
+              if (input$y != "(none)") {
                 geom_call <- "ggplot2::geom_col(width = 1)"
               } else {
                 geom_call <- "ggplot2::geom_bar(width = 1)"
@@ -770,7 +689,7 @@ new_ggplot_block <- function(
               )
 
               # Add donut hole if requested
-              if (r_donut()) {
+              if (input$donut) {
                 text <- glue::glue("({text}) + ggplot2::xlim(c(0.2, 2.5))")
               }
 
@@ -789,20 +708,20 @@ new_ggplot_block <- function(
             parse(text = text)[[1]]
           }),
           state = list(
-            type = r_type,
-            x = r_x,
-            y = r_y,
-            color = r_color,
-            fill = r_fill,
-            size = r_size,
-            shape = r_shape,
-            linetype = r_linetype,
-            group = r_group,
-            alpha = r_alpha,
-            density_alpha = r_density_alpha,
-            position = r_position,
-            bins = r_bins,
-            donut = r_donut
+            type = reactive(input$type),
+            x = reactive(input$x),
+            y = reactive(input$y),
+            color = reactive(input$color),
+            fill = reactive(input$fill),
+            size = reactive(input$size),
+            shape = reactive(input$shape),
+            linetype = reactive(input$linetype),
+            group = reactive(input$group),
+            alpha = reactive(input$alpha),
+            density_alpha = reactive(input$density_alpha),
+            position = reactive(input$position),
+            bins = reactive(input$bins),
+            donut = reactive(input$donut)
           )
         )
       }
