@@ -42,48 +42,7 @@ new_ggplot_block <- function(
     # Need shinyjs for dynamic UI
     tagList(
       shinyjs::useShinyjs(),
-
-      # CSS for collapsible section
-      tags$style(HTML(sprintf(
-        "
-          #%s-advanced-options {
-            max-height: 0;
-            overflow: hidden;
-            transition: max-height 0.3s ease-out;
-            grid-column: 1 / -1;
-            display: grid;
-            grid-template-columns: subgrid;
-            gap: 15px;
-          }
-          #%s-advanced-options.expanded {
-            max-height: 2000px;
-            overflow: visible;
-            transition: max-height 0.5s ease-in;
-          }
-          .advanced-toggle {
-            cursor: pointer;
-            user-select: none;
-            padding: 8px 0;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            grid-column: 1 / -1;
-            color: #6c757d;
-            font-size: 0.875rem;
-          }
-          .advanced-toggle .chevron {
-            transition: transform 0.2s;
-            display: inline-block;
-            font-size: 14px;
-            font-weight: bold;
-          }
-          .advanced-toggle .chevron.rotated {
-            transform: rotate(90deg);
-          }
-        ",
-        id,
-        id
-      ))),
+      block_collapisble_section_css(id),
 
       div(
         class = "block-container",
