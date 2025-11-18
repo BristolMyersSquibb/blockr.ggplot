@@ -58,6 +58,35 @@ chart_aesthetics <- function() {
   )
 }
 
+#' Create aesthetic label with required field indicator
+#'
+#' Generates a label for aesthetic inputs that shows an asterisk for required
+#' fields based on the chart type configuration.
+#'
+#' @param name Character string, the display name for the aesthetic (e.g.,
+#'   "X-axis")
+#' @param field_id Character string, the aesthetic field identifier (e.g., "x",
+#'   "y")
+#' @param chart_type Character string, the chart type (e.g., "point", "bar")
+#'
+#' @return A character string or HTML tag object. Returns a styled HTML span
+#'   with asterisk for required fields, otherwise returns the name unchanged.
+#'
+#' @keywords internal
+make_aesthetic_label <- function(name, field_id, chart_type) {
+  chart_config <- chart_aesthetics()[[chart_type]]
+  if (!is.null(chart_config)) {
+    is_required <- field_id %in% chart_config$required
+    if (is_required) {
+      return(tags$span(
+        tags$strong(name),
+        tags$span("*", style = "color: #dc3545; margin-left: 2px;")
+      ))
+    }
+  }
+  name
+}
+
 #' Generate responsive CSS for blockr blocks
 #'
 #' Creates CSS for responsive grid layout using 'block-' prefix.

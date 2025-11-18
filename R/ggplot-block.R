@@ -39,22 +39,6 @@ new_ggplot_block <- function(
   ...
 ) {
   ui <- function(id) {
-    # Helper function to create aesthetic labels with required indicators
-    make_aesthetic_label <- function(name, field_id, chart_type) {
-      chart_config <- chart_aesthetics()[[chart_type]]
-      if (!is.null(chart_config)) {
-        # Check if field is required for this chart type
-        is_required <- field_id %in% chart_config$required
-        if (is_required) {
-          return(tags$span(
-            tags$strong(name),
-            tags$span("*", style = "color: #dc3545; margin-left: 2px;")
-          ))
-        }
-      }
-      name
-    }
-
     # Need shinyjs for dynamic UI
     tagList(
       shinyjs::useShinyjs(),
