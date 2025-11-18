@@ -315,9 +315,6 @@ new_ggplot_block <- function(
     moduleServer(
       id,
       function(input, output, session) {
-        observe({
-          print(r_color())
-        })
         cols <- reactive(colnames(data()))
 
         # Initialize reactive values
