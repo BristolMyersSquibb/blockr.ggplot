@@ -419,8 +419,9 @@ new_ggplot_block <- function(
                 aes_parts <- c(aes_parts, glue::glue("size = {r_size()}"))
               }
               if (
-                r_shape() != "(none)" && "shape" %in% chart_config$optional
-                  && isTruthy(r_shape())
+                r_shape() != "(none)" &&
+                  "shape" %in% chart_config$optional &&
+                  isTruthy(r_shape())
               ) {
                 # Shape requires discrete/factor variables
                 aes_parts <- c(
@@ -657,40 +658,7 @@ new_ggplot_block <- function(
           block_responsive_css(),
 
           # Add custom CSS for chart type selector
-          tags$style(HTML(
-            "
-  .chart-type-selector {
-    margin-top: 0 !important;
-    padding-top: 0 !important;
-    width: 100%;
-  }
-  .chart-type-selector .btn-group-toggle,
-  .chart-type-selector .btn-group {
-    display: grid !important;
-    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
-    gap: 5px;
-    margin: 0;
-    width: 100% !important;
-    max-width: 100%;
-  }
-  .chart-type-selector .btn {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 8px 12px;
-    white-space: nowrap;
-    width: 100%;
-  }
-  .chart-type-selector .btn i {
-    font-size: 1.2em;
-    margin-bottom: 4px;
-  }
-  .chart-type-selector .btn span {
-    font-size: 0.85em;
-    white-space: nowrap;
-  }
-"
-          )),
+          block_chart_type_css(),
 
           # Set container query context
           block_container_script(),
