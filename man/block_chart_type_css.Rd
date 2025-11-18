@@ -12,3 +12,4 @@ HTML style tag with CSS to control chart type buttons
 \description{
 Control chart type buttons via CSS
 }
+\keyword{internal}

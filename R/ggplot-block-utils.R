@@ -64,6 +64,7 @@ chart_aesthetics <- function() {
 #' Can be reused across different blockr packages.
 #'
 #' @return HTML style tag with responsive CSS
+#' @keywords internal
 block_responsive_css <- function() {
   tags$style(HTML(
     "
@@ -126,6 +127,7 @@ block_responsive_css <- function() {
 #' Control chart type buttons via CSS
 #'
 #' @return HTML style tag with CSS to control chart type buttons
+#' @keywords internal
 block_chart_type_css <- function() {
   tags$style(HTML(
     "
@@ -168,6 +170,7 @@ block_chart_type_css <- function() {
 #' Sets up container queries if supported by the browser.
 #'
 #' @return HTML script tag
+#' @keywords internal
 block_container_script <- function() {
   tags$script(HTML(
     "

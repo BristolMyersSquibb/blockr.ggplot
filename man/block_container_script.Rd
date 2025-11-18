@@ -12,3 +12,4 @@ HTML script tag
 \description{
 Sets up container queries if supported by the browser.
 }
+\keyword{internal}

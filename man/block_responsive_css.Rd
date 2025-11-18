@@ -13,3 +13,4 @@ HTML style tag with responsive CSS
 Creates CSS for responsive grid layout using 'block-' prefix.
 Can be reused across different blockr packages.
 }
+\keyword{internal}
