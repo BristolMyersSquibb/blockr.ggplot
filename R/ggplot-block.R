@@ -25,7 +25,7 @@ new_ggplot_block <- function(
   type = "point",
   x = character(),
   y = character(),
-  color = "(none)",
+  color = character(),
   fill = character(),
   size = character(),
   shape = character(),
@@ -359,14 +359,7 @@ new_ggplot_block <- function(
         })
         observeEvent(input$x, r_x(input$x))
         observeEvent(input$y, r_y(input$y))
-        observeEvent(
-          input$color,
-          {
-            browser()
-            r_color(input$color)
-          },
-          # ignoreInit = TRUE
-        )
+        observeEvent(input$color, r_color(input$color))
         observeEvent(input$fill, r_fill(input$fill))
         observeEvent(input$size, r_size(input$size))
         observeEvent(input$shape, r_shape(input$shape))
