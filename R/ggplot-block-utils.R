@@ -1,3 +1,63 @@
+#' Get chart aesthetic configurations
+#'
+#' Returns a list defining the aesthetic mappings available for each ggplot2
+#' chart type. This includes which aesthetics are required, optional, and
+#' any chart-specific parameters.
+#'
+#' @keywords internal
+chart_aesthetics <- function() {
+  list(
+    point = list(
+      required = c("x", "y"),
+      optional = c("color", "shape", "size", "alpha", "fill"),
+      specific = list()
+    ),
+    bar = list(
+      required = c("x"),
+      optional = c("y", "fill", "color", "alpha"),
+      specific = list(position = c("stack", "dodge", "fill"))
+    ),
+    line = list(
+      required = c("x", "y"),
+      optional = c("color", "linetype", "alpha", "group"),
+      specific = list()
+    ),
+    boxplot = list(
+      required = c("x", "y"),
+      optional = c("fill", "color", "alpha"),
+      specific = list()
+    ),
+    violin = list(
+      required = c("x", "y"),
+      optional = c("fill", "color", "alpha"),
+      specific = list()
+    ),
+    density = list(
+      required = c("x"),
+      optional = c("fill", "group"),
+      specific = list(density_alpha = TRUE)
+    ),
+    area = list(
+      required = c("x", "y"),
+      optional = c("fill", "alpha"),
+      specific = list()
+    ),
+    histogram = list(
+      required = c("x"),
+      optional = c("fill", "color", "alpha"),
+      specific = list(
+        bins = TRUE,
+        position = c("stack", "identity", "dodge")
+      )
+    ),
+    pie = list(
+      required = c("x"), # x is categories, but rendered as x = ""
+      optional = c("y", "fill", "alpha"),
+      specific = list() # Could add donut = TRUE/FALSE later
+    )
+  )
+}
+
 #' Generate responsive CSS for blockr blocks
 #'
 #' Creates CSS for responsive grid layout using 'block-' prefix.

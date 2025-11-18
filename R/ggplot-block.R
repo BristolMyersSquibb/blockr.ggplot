@@ -38,62 +38,10 @@ new_ggplot_block <- function(
   donut = FALSE,
   ...
 ) {
-  # Define which aesthetics are valid for each chart type
-  chart_aesthetics <- list(
-    point = list(
-      required = c("x", "y"),
-      optional = c("color", "shape", "size", "alpha", "fill"),
-      specific = list()
-    ),
-    bar = list(
-      required = c("x"),
-      optional = c("y", "fill", "color", "alpha"),
-      specific = list(position = c("stack", "dodge", "fill"))
-    ),
-    line = list(
-      required = c("x", "y"),
-      optional = c("color", "linetype", "alpha", "group"),
-      specific = list()
-    ),
-    boxplot = list(
-      required = c("x", "y"),
-      optional = c("fill", "color", "alpha"),
-      specific = list()
-    ),
-    violin = list(
-      required = c("x", "y"),
-      optional = c("fill", "color", "alpha"),
-      specific = list()
-    ),
-    density = list(
-      required = c("x"),
-      optional = c("fill", "group"),
-      specific = list(density_alpha = TRUE)
-    ),
-    area = list(
-      required = c("x", "y"),
-      optional = c("fill", "alpha"),
-      specific = list()
-    ),
-    histogram = list(
-      required = c("x"),
-      optional = c("fill", "color", "alpha"),
-      specific = list(
-        bins = TRUE,
-        position = c("stack", "identity", "dodge")
-      )
-    ),
-    pie = list(
-      required = c("x"), # x is categories, but rendered as x = ""
-      optional = c("y", "fill", "alpha"),
-      specific = list() # Could add donut = TRUE/FALSE later
-    )
-  )
-
   ui <- function(id) {
     # Helper function to create aesthetic labels with required indicators
     make_aesthetic_label <- function(name, field_id, chart_type) {
-      chart_config <- chart_aesthetics[[chart_type]]
+      chart_config <- chart_aesthetics()[[chart_type]]
       if (!is.null(chart_config)) {
         # Check if field is required for this chart type
         is_required <- field_id %in% chart_config$required
@@ -573,7 +521,7 @@ new_ggplot_block <- function(
         # Dynamic UI visibility based on chart type
         observe({
           current_type <- r_type()
-          chart_config <- chart_aesthetics[[current_type]]
+          chart_config <- chart_aesthetics()[[current_type]]
 
           if (!is.null(chart_config)) {
             all_aesthetics <- c(
@@ -726,7 +674,7 @@ new_ggplot_block <- function(
         list(
           expr = reactive({
             current_type <- r_type()
-            chart_config <- chart_aesthetics[[current_type]]
+            chart_config <- chart_aesthetics()[[current_type]]
 
             # Validate required fields
             if (!isTruthy(r_x()) || length(r_x()) == 0) {
