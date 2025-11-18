@@ -264,3 +264,35 @@ block_collapisble_section_css <- function(id) {
     id
   )))
 }
+
+#' Create collapsible section toggle button
+#'
+#' Generates a clickable toggle that expands/collapses an advanced options
+#' section with an animated chevron indicator.
+#'
+#' @param id Character string, the module namespace ID
+#'
+#' @return A \code{div} containing the clickable toggle with chevron icon
+#'
+#' @keywords internal
+block_collapsible_section_div <- function(id) {
+  div(
+    class = "block-section",
+    div(
+      class = "advanced-toggle text-muted",
+      id = NS(id, "advanced-toggle"),
+      onclick = sprintf(
+        "
+        const section = document.getElementById('%s');
+        const chevron = document.querySelector('#%s .chevron');
+        section.classList.toggle('expanded');
+        chevron.classList.toggle('rotated');
+        ",
+        NS(id, "advanced-options"),
+        NS(id, "advanced-toggle")
+      ),
+      tags$span(class = "chevron", "\u203A"),
+      "Show advanced options"
+    )
+  )
+}

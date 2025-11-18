@@ -8,7 +8,7 @@ new_ggplot_block(
   type = "point",
   x = character(),
   y = character(),
-  color = character(),
+  color = "(none)",
   fill = character(),
   size = character(),
   shape = character(),

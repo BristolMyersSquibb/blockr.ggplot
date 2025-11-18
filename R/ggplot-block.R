@@ -25,7 +25,7 @@ new_ggplot_block <- function(
   type = "point",
   x = character(),
   y = character(),
-  color = character(),
+  color = "(none)",
   fill = character(),
   size = character(),
   shape = character(),
@@ -185,25 +185,7 @@ new_ggplot_block <- function(
           ),
 
           # Advanced Options Toggle
-          div(
-            class = "block-section",
-            div(
-              class = "advanced-toggle text-muted",
-              id = NS(id, "advanced-toggle"),
-              onclick = sprintf(
-                "
-                  const section = document.getElementById('%s');
-                  const chevron = document.querySelector('#%s .chevron');
-                  section.classList.toggle('expanded');
-                  chevron.classList.toggle('rotated');
-                ",
-                NS(id, "advanced-options"),
-                NS(id, "advanced-toggle")
-              ),
-              tags$span(class = "chevron", "\u203A"),
-              "Show advanced options"
-            )
-          ),
+          block_collapsible_section_div(id),
 
           # Advanced Options Section (Collapsible)
           div(
@@ -333,13 +315,16 @@ new_ggplot_block <- function(
     moduleServer(
       id,
       function(input, output, session) {
+        observe({
+          print(r_color())
+        })
         cols <- reactive(colnames(data()))
 
         # Initialize reactive values
         r_type <- reactiveVal(type)
         r_x <- reactiveVal(x)
         r_y <- reactiveVal(if (length(y) == 0) "(none)" else y)
-        r_color <- reactiveVal(if (length(color) == 0) "(none)" else color)
+        r_color <- reactiveVal(color)
         r_fill <- reactiveVal(if (length(fill) == 0) "(none)" else fill)
         r_size <- reactiveVal(if (length(size) == 0) "(none)" else size)
         r_shape <- reactiveVal(if (length(shape) == 0) "(none)" else shape)
@@ -374,7 +359,14 @@ new_ggplot_block <- function(
         })
         observeEvent(input$x, r_x(input$x))
         observeEvent(input$y, r_y(input$y))
-        observeEvent(input$color, r_color(input$color))
+        observeEvent(
+          input$color,
+          {
+            browser()
+            r_color(input$color)
+          },
+          # ignoreInit = TRUE
+        )
         observeEvent(input$fill, r_fill(input$fill))
         observeEvent(input$size, r_size(input$size))
         observeEvent(input$shape, r_shape(input$shape))
