@@ -43,24 +43,13 @@ new_ggplot_block <- function(
     tagList(
       shinyjs::useShinyjs(),
       block_collapisble_section_css(id),
-
       div(
         class = "block-container",
-
-        # Add responsive CSS
         block_responsive_css(),
-
-        # Add custom CSS for chart type selector
         block_chart_type_css(),
-
-        # Set container query context
         block_container_script(),
-
-        # Form inputs
         div(
           class = "block-form-grid",
-
-          # Chart Type Selection Section (always visible)
           div(
             class = "block-section",
             tags$h4("Chart Type"),
