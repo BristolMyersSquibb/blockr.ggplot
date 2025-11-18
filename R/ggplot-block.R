@@ -307,47 +307,56 @@ new_ggplot_block <- function(
           updateSelectInput(
             session,
             inputId = "x",
-            choices = cols()
+            choices = cols(),
+            selected = if (length(x) == 0) cols()[1] else x
           )
           updateSelectInput(
             session,
             inputId = "y",
-            choices = c("(none)", cols())
+            choices = c("(none)", cols()),
+            selected = if (length(y) == 0) "(none)" else y
           )
           updateSelectInput(
             session,
             inputId = "color",
-            choices = c("(none)", cols())
+            choices = c("(none)", cols()),
+            selected = if (length(color) == 0) "(none)" else color
           )
           updateSelectInput(
             session,
             inputId = "fill",
-            choices = c("(none)", cols())
+            choices = c("(none)", cols()),
+            selected = if (length(fill) == 0) "(none)" else fill
           )
           updateSelectInput(
             session,
             inputId = "size",
-            choices = c("(none)", cols())
+            choices = c("(none)", cols()),
+            selected = if (length(size) == 0) "(none)" else size
           )
           updateSelectInput(
             session,
             inputId = "shape",
-            choices = c("(none)", cols())
+            choices = c("(none)", cols()),
+            selected = if (length(shape) == 0) "(none)" else shape
           )
           updateSelectInput(
             session,
             inputId = "linetype",
-            choices = c("(none)", cols())
+            choices = c("(none)", cols()),
+            selected = if (length(linetype) == 0) "(none)" else linetype
           )
           updateSelectInput(
             session,
             inputId = "group",
-            choices = c("(none)", cols())
+            choices = c("(none)", cols()),
+            selected = if (length(group) == 0) "(none)" else group
           )
           updateSelectInput(
             session,
             inputId = "alpha",
-            choices = c("(none)", cols())
+            choices = c("(none)", cols()),
+            selected = if (length(alpha) == 0) "(none)" else alpha
           )
         })
 
