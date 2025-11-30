@@ -517,12 +517,14 @@ new_facet_block <- function(
                   return(parse(text = "(data)")[[1]])
                 }
 
-                # Build facets formula
+                # Build facets formula (use backticks for non-syntactic names)
                 if (length(facet_vars) == 1) {
-                  facets_formula <- glue::glue("~{facet_vars[1]}")
+                  facets_formula <- glue::glue(
+                    "~{backtick_if_needed(facet_vars[1])}"
+                  )
                 } else {
                   facets_formula <- glue::glue(
-                    "~{paste(facet_vars, collapse = ' + ')}"
+                    "~{paste(backtick_if_needed(facet_vars), collapse = ' + ')}"
                   )
                 }
 
@@ -581,22 +583,28 @@ new_facet_block <- function(
                   return(parse(text = "(data)")[[1]])
                 }
 
-                # Build rows formula
+                # Build rows formula (use backticks for non-syntactic names)
                 if (length(row_vars) == 0) {
                   rows_part <- "."
                 } else if (length(row_vars) == 1) {
-                  rows_part <- row_vars[1]
+                  rows_part <- backtick_if_needed(row_vars[1])
                 } else {
-                  rows_part <- paste(row_vars, collapse = " + ")
+                  rows_part <- paste(
+                    backtick_if_needed(row_vars),
+                    collapse = " + "
+                  )
                 }
 
-                # Build cols formula
+                # Build cols formula (use backticks for non-syntactic names)
                 if (length(col_vars) == 0) {
                   cols_part <- "."
                 } else if (length(col_vars) == 1) {
-                  cols_part <- col_vars[1]
+                  cols_part <- backtick_if_needed(col_vars[1])
                 } else {
-                  cols_part <- paste(col_vars, collapse = " + ")
+                  cols_part <- paste(
+                    backtick_if_needed(col_vars),
+                    collapse = " + "
+                  )
                 }
 
                 grid_formula <- glue::glue("{rows_part} ~ {cols_part}")
@@ -674,7 +682,7 @@ new_facet_block <- function(
             overflow: visible;
             transition: max-height 0.5s ease-in;
           }
-          .advanced-toggle {
+          .block-advanced-toggle {
             cursor: pointer;
             user-select: none;
             padding: 8px 0;
@@ -685,13 +693,13 @@ new_facet_block <- function(
             color: #6c757d;
             font-size: 0.875rem;
           }
-          .advanced-toggle .chevron {
+          .block-advanced-toggle .block-chevron {
             transition: transform 0.2s;
             display: inline-block;
             font-size: 14px;
             font-weight: bold;
           }
-          .advanced-toggle .chevron.rotated {
+          .block-advanced-toggle .block-chevron.rotated {
             transform: rotate(90deg);
           }
         ",
@@ -969,19 +977,19 @@ new_facet_block <- function(
                 div(
                   class = "block-section",
                   div(
-                    class = "advanced-toggle text-muted",
+                    class = "block-advanced-toggle text-muted",
                     id = NS(id, "advanced-toggle"),
                     onclick = sprintf(
                       "
                   const section = document.getElementById('%s');
-                  const chevron = document.querySelector('#%s .chevron');
+                  const chevron = document.querySelector('#%s .block-chevron');
                   section.classList.toggle('expanded');
                   chevron.classList.toggle('rotated');
                 ",
                       NS(id, "advanced-options"),
                       NS(id, "advanced-toggle")
                     ),
-                    tags$span(class = "chevron", "\u203A"),
+                    tags$span(class = "block-chevron", "\u203A"),
                     "Show advanced options"
                   )
                 ),

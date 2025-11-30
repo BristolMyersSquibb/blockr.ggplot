@@ -384,39 +384,52 @@ new_ggplot_block <- function(
                 return(quote(ggplot2::ggplot() + ggplot2::geom_blank()))
               }
 
-              # Build aesthetics
-              aes_parts <- c(glue::glue("x = {r_x()}"))
+              # Build aesthetics (use backticks for non-syntactic column names)
+              aes_parts <- c(glue::glue("x = {backtick_if_needed(r_x())}"))
 
               # Add y if not "(none)" and valid for this chart
               if (
                 r_y() != "(none)" &&
                   "y" %in% c(chart_config$required, chart_config$optional)
               ) {
-                aes_parts <- c(aes_parts, glue::glue("y = {r_y()}"))
+                aes_parts <- c(
+                  aes_parts,
+                  glue::glue("y = {backtick_if_needed(r_y())}")
+                )
               }
 
               # Add optional aesthetics if valid and not "(none)"
               if (r_color() != "(none)" && "color" %in% chart_config$optional) {
-                aes_parts <- c(aes_parts, glue::glue("colour = {r_color()}"))
+                aes_parts <- c(
+                  aes_parts,
+                  glue::glue("colour = {backtick_if_needed(r_color())}")
+                )
               }
               if (r_fill() != "(none)" && "fill" %in% chart_config$optional) {
-                # For histograms, bars, and density, convert to factor
-                # for discrete colors
-                if (
-                  current_type %in%
-                    c("histogram", "bar", "boxplot", "violin", "density") &&
-                    isTruthy(r_fill())
-                ) {
+                # For histograms, bars, pie, etc., convert to factor
+                # for discrete colors (stat_count needs grouping)
+                stat_types <- c(
+                  "histogram", "bar", "boxplot", "violin", "density", "pie"
+                )
+                if (current_type %in% stat_types && isTruthy(r_fill())) {
                   aes_parts <- c(
                     aes_parts,
-                    glue::glue("fill = as.factor({r_fill()})")
+                    glue::glue(
+                      "fill = as.factor({backtick_if_needed(r_fill())})"
+                    )
                   )
                 } else {
-                  aes_parts <- c(aes_parts, glue::glue("fill = {r_fill()}"))
+                  aes_parts <- c(
+                    aes_parts,
+                    glue::glue("fill = {backtick_if_needed(r_fill())}")
+                  )
                 }
               }
               if (r_size() != "(none)" && "size" %in% chart_config$optional) {
-                aes_parts <- c(aes_parts, glue::glue("size = {r_size()}"))
+                aes_parts <- c(
+                  aes_parts,
+                  glue::glue("size = {backtick_if_needed(r_size())}")
+                )
               }
               if (
                 r_shape() != "(none)" && "shape" %in% chart_config$optional
@@ -425,16 +438,21 @@ new_ggplot_block <- function(
                 # Shape requires discrete/factor variables
                 aes_parts <- c(
                   aes_parts,
-                  glue::glue("shape = as.factor({r_shape()})")
+                  glue::glue(
+                    "shape = as.factor({backtick_if_needed(r_shape())})"
+                  )
                 )
               }
               if (
                 r_linetype() != "(none)" &&
                   "linetype" %in% chart_config$optional
               ) {
+                # Linetype requires discrete/factor variables
                 aes_parts <- c(
                   aes_parts,
-                  glue::glue("linetype = {r_linetype()}")
+                  glue::glue(
+                    "linetype = as.factor({backtick_if_needed(r_linetype())})"
+                  )
                 )
               }
               # For density plots, always set group to match fill
@@ -443,14 +461,19 @@ new_ggplot_block <- function(
                 if (r_fill() != "(none)" && isTruthy(r_fill())) {
                   aes_parts <- c(
                     aes_parts,
-                    glue::glue("group = as.factor({r_fill()})")
+                    glue::glue(
+                      "group = as.factor({backtick_if_needed(r_fill())})"
+                    )
                   )
                 }
               } else if (
                 r_group() != "(none)" && "group" %in% chart_config$optional
               ) {
                 # For non-density plots, use user-specified group if provided
-                aes_parts <- c(aes_parts, glue::glue("group = {r_group()}"))
+                aes_parts <- c(
+                  aes_parts,
+                  glue::glue("group = {backtick_if_needed(r_group())}")
+                )
               }
               # Alpha: for density plots, use fixed alpha parameter,
               # not aesthetic mapping
@@ -459,7 +482,10 @@ new_ggplot_block <- function(
                   r_alpha() != "(none)" &&
                   "alpha" %in% chart_config$optional
               ) {
-                aes_parts <- c(aes_parts, glue::glue("alpha = {r_alpha()}"))
+                aes_parts <- c(
+                  aes_parts,
+                  glue::glue("alpha = {backtick_if_needed(r_alpha())}")
+                )
               }
 
               aes_text <- paste(aes_parts, collapse = ", ")
@@ -518,7 +544,11 @@ new_ggplot_block <- function(
                 }
                 if (!fill_added) {
                   # Use x column for fill if no fill aesthetic specified
-                  aes_parts <- c(aes_parts, glue::glue("fill = {r_x()}"))
+                  # Wrap in as.factor() so stat_count knows it's grouping
+                  aes_parts <- c(
+                    aes_parts,
+                    glue::glue("fill = as.factor({backtick_if_needed(r_x())})")
+                  )
                 }
 
                 # Rebuild aes_text with modified parts
@@ -625,7 +655,7 @@ new_ggplot_block <- function(
             overflow: visible;
             transition: max-height 0.5s ease-in;
           }
-          .advanced-toggle {
+          .block-advanced-toggle {
             cursor: pointer;
             user-select: none;
             padding: 8px 0;
@@ -636,13 +666,13 @@ new_ggplot_block <- function(
             color: #6c757d;
             font-size: 0.875rem;
           }
-          .advanced-toggle .chevron {
+          .block-advanced-toggle .block-chevron {
             transition: transform 0.2s;
             display: inline-block;
             font-size: 14px;
             font-weight: bold;
           }
-          .advanced-toggle .chevron.rotated {
+          .block-advanced-toggle .block-chevron.rotated {
             transform: rotate(90deg);
           }
         ",
@@ -838,19 +868,19 @@ new_ggplot_block <- function(
             div(
               class = "block-section",
               div(
-                class = "advanced-toggle text-muted",
+                class = "block-advanced-toggle text-muted",
                 id = NS(id, "advanced-toggle"),
                 onclick = sprintf(
                   "
                   const section = document.getElementById('%s');
-                  const chevron = document.querySelector('#%s .chevron');
+                  const chevron = document.querySelector('#%s .block-chevron');
                   section.classList.toggle('expanded');
                   chevron.classList.toggle('rotated');
                 ",
                   NS(id, "advanced-options"),
                   NS(id, "advanced-toggle")
                 ),
-                tags$span(class = "chevron", "\u203A"),
+                tags$span(class = "block-chevron", "\u203A"),
                 "Show advanced options"
               )
             ),

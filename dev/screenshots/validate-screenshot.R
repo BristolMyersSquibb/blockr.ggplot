@@ -13,6 +13,18 @@
 #' @param delay Seconds to wait for app to load (default: 5)
 #' @param expand_advanced Logical. If TRUE, attempts to click "advanced options"
 #'   toggle before taking screenshot (default: FALSE)
+#' @param use_dock Logical. If TRUE, uses blockr.dock for improved styling
+#'   and automatically crops to the block panel (default: TRUE)
+#' @param dataset Character. Name of the dataset to use in dock mode
+#'   (default: "mtcars"). Must be a dataset available via data().
+#' @param dataset_package Character. Package containing the dataset
+#'   (default: "datasets").
+#' @param upstream_ggplot List with ggplot block parameters (type, x, y, etc.)
+#'   for blocks that need a ggplot object as input (facet, theme blocks).
+#'   When provided, creates: dataset → ggplot → test_block chain.
+#' @param upstream_ggplots List of lists, each with ggplot block parameters,
+#'   for blocks that need multiple ggplot inputs (grid blocks).
+#'   Creates: dataset → ggplot1, ggplot2, ... → test_block chain.
 #' @param verbose Print progress messages (default: TRUE)
 #'
 #' @return A list with components:
@@ -32,7 +44,9 @@
 #' result <- validate_block_screenshot(
 #'   new_ggplot_block(chart_type = "bar", x = "Species"),
 #'   data = iris,
-#'   filename = "iris-bar.png"
+#'   filename = "iris-bar.png",
+#'   dataset = "iris",
+#'   dataset_package = "datasets"
 #' )
 #'
 #' # With advanced options expanded
@@ -59,6 +73,11 @@ validate_block_screenshot <- function(
   height = 600,
   delay = 5,
   expand_advanced = FALSE,
+  use_dock = TRUE,
+  dataset = "mtcars",
+  dataset_package = "datasets",
+  upstream_ggplot = NULL,
+  upstream_ggplots = NULL,
   verbose = TRUE
 ) {
   # Set NOT_CRAN environment variable for shinytest2
@@ -93,6 +112,19 @@ validate_block_screenshot <- function(
       success = FALSE,
       path = NULL,
       error = "blockr.core package is required",
+      filename = filename
+    ))
+  }
+
+  # Check for magick package if using dock mode (needed for cropping)
+  if (use_dock && !requireNamespace("magick", quietly = TRUE)) {
+    return(list(
+      success = FALSE,
+      path = NULL,
+      error = paste(
+        "magick package is required for dock mode cropping.",
+        "Install with: install.packages('magick')"
+      ),
       filename = filename
     ))
   }
@@ -152,9 +184,187 @@ validate_block_screenshot <- function(
       # Save block to RDS file to avoid deparse issues
       saveRDS(block, file.path(temp_dir, "block.rds"))
 
-      # Create minimal app.R file
-      app_content <- sprintf(
-        '
+      # Create app.R file - different content based on use_dock
+      if (use_dock) {
+        # Check if we need multiple upstream ggplot blocks (for grid)
+        if (!is.null(upstream_ggplots)) {
+          # Multi-block chain: dataset → ggplot1, ggplot2, ... → grid_block
+          n_plots <- length(upstream_ggplots)
+
+          # Build ggplot block definitions
+          ggplot_blocks <- sapply(seq_along(upstream_ggplots), function(i) {
+            gg_params <- upstream_ggplots[[i]]
+            ggplot_args <- paste(
+              sapply(names(gg_params), function(n) {
+                val <- gg_params[[n]]
+                if (is.character(val)) {
+                  sprintf('%s = "%s"', n, val)
+                } else {
+                  sprintf("%s = %s", n, val)
+                }
+              }),
+              collapse = ", "
+            )
+            # Use letters for block names: b, c, d, etc.
+            sprintf(
+              '      %s = blockr.ggplot::new_ggplot_block(%s)',
+              letters[i + 1],
+              ggplot_args
+            )
+          })
+
+          # Build links: a→b, a→c, ... and b→z, c→z, ...
+          # Where z is the grid block (last letter used)
+          grid_block_letter <- letters[n_plots + 2]
+          from_links <- c(
+            rep("a", n_plots), # dataset to all ggplots
+            letters[2:(n_plots + 1)] # all ggplots to grid
+          )
+          to_links <- c(
+            letters[2:(n_plots + 1)], # ggplots
+            rep(grid_block_letter, n_plots) # grid block
+          )
+          input_links <- c(
+            rep("data", n_plots), # data input to ggplots
+            as.character(1:n_plots) # numbered inputs to grid
+          )
+
+          app_content <- sprintf(
+            '
+library(blockr.core)
+library(blockr.dock)
+
+# Load the blockr.ggplot package
+tryCatch(
+  devtools::load_all("%s"),
+  error = function(e) library(blockr.ggplot)
+)
+
+# Load block (grid block that needs multiple ggplot inputs)
+block <- readRDS("block.rds")
+
+# Run the app with multi-ggplot chain: dataset → ggplot1, ggplot2 → grid
+blockr.core::serve(
+  blockr.dock::new_dock_board(
+    blocks = c(
+      a = blockr.core::new_dataset_block("%s", package = "%s"),
+%s,
+      %s = block
+    ),
+    links = list(
+      from = c(%s),
+      to = c(%s),
+      input = c(%s)
+    )
+  )
+)
+            ',
+            normalizePath("."),
+            dataset,
+            dataset_package,
+            paste(ggplot_blocks, collapse = ",\n"),
+            grid_block_letter,
+            paste(sprintf('"%s"', from_links), collapse = ", "),
+            paste(sprintf('"%s"', to_links), collapse = ", "),
+            paste(sprintf('"%s"', input_links), collapse = ", ")
+          )
+        } else if (!is.null(upstream_ggplot)) {
+          # Three-block chain: dataset → ggplot → test_block
+          # Build ggplot block constructor call
+          ggplot_args <- paste(
+            sapply(names(upstream_ggplot), function(n) {
+              val <- upstream_ggplot[[n]]
+              if (is.character(val)) {
+                sprintf('%s = "%s"', n, val)
+              } else {
+                sprintf("%s = %s", n, val)
+              }
+            }),
+            collapse = ", "
+          )
+
+          app_content <- sprintf(
+            '
+library(blockr.core)
+library(blockr.dock)
+
+# Load the blockr.ggplot package
+# Try to load from development first, fall back to installed version
+tryCatch(
+  devtools::load_all("%s"),
+  error = function(e) {
+    library(blockr.ggplot)
+  }
+)
+
+# Load block (facet/theme/grid block that needs ggplot input)
+block <- readRDS("block.rds")
+
+# Run the app using dock board with three-block chain:
+# dataset → ggplot → facet/theme/grid
+blockr.core::serve(
+  blockr.dock::new_dock_board(
+    blocks = c(
+      a = blockr.core::new_dataset_block("%s", package = "%s"),
+      b = blockr.ggplot::new_ggplot_block(%s),
+      c = block
+    ),
+    links = list(
+      from = c("a", "b"),
+      to = c("b", "c"),
+      input = c("data", "data")
+    )
+  )
+)
+            ',
+            normalizePath("."),
+            dataset,
+            dataset_package,
+            ggplot_args
+          )
+        } else {
+          # Standard two-block chain: dataset → test_block
+          app_content <- sprintf(
+            '
+library(blockr.core)
+library(blockr.dock)
+
+# Load the blockr.ggplot package
+# Try to load from development first, fall back to installed version
+tryCatch(
+  devtools::load_all("%s"),
+  error = function(e) {
+    library(blockr.ggplot)
+  }
+)
+
+# Load data and block
+data <- readRDS("data.rds")
+block <- readRDS("block.rds")
+
+# Run the app using dock board with default layout
+# serve() is from blockr.core, dock_board is from blockr.dock
+# Default layout: extensions on left, blocks on right
+# We will crop to the right panel (blocks) after taking screenshot
+blockr.core::serve(
+  blockr.dock::new_dock_board(
+    blocks = c(
+      a = blockr.core::new_dataset_block("%s", package = "%s"),
+      b = block
+    ),
+    links = list(from = "a", to = "b", input = "data")
+  )
+)
+            ',
+            normalizePath("."),
+            dataset,
+            dataset_package
+          )
+        }
+      } else {
+        # Use blockr.core directly (original behavior)
+        app_content <- sprintf(
+          '
 library(blockr.core)
 
 # Load the blockr.ggplot package
@@ -175,9 +385,10 @@ blockr.core::serve(
   block,
   data = data
 )
-        ',
-        normalizePath(".")
-      )
+          ',
+          normalizePath(".")
+        )
+      }
 
       writeLines(app_content, file.path(temp_dir, "app.R"))
 
@@ -198,30 +409,17 @@ blockr.core::serve(
       if (expand_advanced) {
         tryCatch(
           {
-            # Try to find and click the advanced toggle
-            # The selector may vary, try common patterns
-            advanced_selectors <- c(
-              ".advanced-toggle",
-              "[id$='advanced-toggle']",
-              "[onclick*='advanced']"
+            # Click all advanced toggles on the page
+            app$run_js(
+              "
+              var toggles = document.querySelectorAll('.block-advanced-toggle');
+              toggles.forEach(function(toggle) {
+                toggle.click();
+              });
+              "
             )
-
-            for (selector in advanced_selectors) {
-              tryCatch(
-                {
-                  app$run_js(sprintf(
-                    "document.querySelector('%s')?.click();",
-                    selector
-                  ))
-                  # Wait for animation/expansion
-                  Sys.sleep(0.5)
-                  break
-                },
-                error = function(e) {
-                  # Try next selector
-                }
-              )
-            }
+            # Wait for animation/expansion
+            Sys.sleep(0.5)
           },
           error = function(e) {
             # Block doesn't have advanced options - that's fine
@@ -239,6 +437,97 @@ blockr.core::serve(
 
       # Take screenshot
       app$get_screenshot(output_path)
+
+      # If using dock mode, crop to just the panel content
+      if (use_dock && file.exists(output_path)) {
+        # Get the bounding box of the panel using JavaScript
+        # Try multiple selectors in order of preference
+        # Note: use get_js instead of run_js to get the return value
+        panel_bounds <- tryCatch(
+          {
+            app$get_js(
+              "
+              (function() {
+                // Find the panel that contains actual block content (the right panel)
+                // In default dock layout: left = extensions (empty), right = blocks
+                var groupViews = document.querySelectorAll('.dv-groupview');
+
+                // Find the groupview that contains block content
+                // Look for the one with actual shiny content inside
+                for (var i = 0; i < groupViews.length; i++) {
+                  var panel = groupViews[i];
+                  // Check if this panel has actual content (not just empty toolbar)
+                  var hasContent = panel.querySelector('.shiny-html-output') ||
+                                   panel.querySelector('.block-container') ||
+                                   panel.querySelector('[class*=\"blockr\"]') ||
+                                   panel.querySelector('.form-group') ||
+                                   panel.querySelector('.selectize-control');
+
+                  if (hasContent && panel.offsetWidth > 100) {
+                    var rect = panel.getBoundingClientRect();
+                    return {
+                      x: Math.round(rect.left),
+                      y: Math.round(rect.top),
+                      width: Math.round(rect.width),
+                      height: Math.round(rect.height),
+                      selector: '.dv-groupview (with content)'
+                    };
+                  }
+                }
+
+                // Fallback: get the last (rightmost) groupview
+                if (groupViews.length > 0) {
+                  var lastPanel = groupViews[groupViews.length - 1];
+                  var rect = lastPanel.getBoundingClientRect();
+                  return {
+                    x: Math.round(rect.left),
+                    y: Math.round(rect.top),
+                    width: Math.round(rect.width),
+                    height: Math.round(rect.height),
+                    selector: '.dv-groupview (last)'
+                  };
+                }
+
+                return null;
+              })()
+              "
+            )
+          },
+          error = function(e) NULL
+        )
+
+        if (!is.null(panel_bounds) && !is.null(panel_bounds$width)) {
+          if (verbose) {
+            selector_info <- if (!is.null(panel_bounds$selector)) {
+              paste0(" (selector: ", panel_bounds$selector, ")")
+            } else {
+              ""
+            }
+            cat(sprintf(
+              "  Cropping to panel bounds: x=%d, y=%d, w=%d, h=%d%s\n",
+              panel_bounds$x, panel_bounds$y,
+              panel_bounds$width, panel_bounds$height,
+              selector_info
+            ))
+          }
+
+          # Use magick to crop the image
+          img <- magick::image_read(output_path)
+          # Add small padding around the panel
+          padding <- 0
+          crop_geometry <- sprintf(
+            "%dx%d+%d+%d",
+            panel_bounds$width + padding * 2,
+            panel_bounds$height + padding * 2,
+            max(0, panel_bounds$x - padding),
+            max(0, panel_bounds$y - padding)
+          )
+          img_cropped <- magick::image_crop(img, crop_geometry)
+          magick::image_write(img_cropped, output_path)
+        } else if (verbose) {
+          cat("  Warning: Could not detect panel bounds for cropping\n")
+        }
+      }
 
       # Stop the app and cleanup
       app$stop()

@@ -11,6 +11,8 @@ Description: Provides comprehensive blocks for plotting with blockr using
     (boxplots, histograms, density plots, violin plots, heatmaps) with
     rich customization options and intuitive user interfaces.
 License: GPL (>= 3)
+URL: https://bristolmyerssquibb.github.io/blockr.ggplot/
+BugReports: https://github.com/BristolMyersSquibb/blockr.ggplot/issues
 Imports:
     blockr.core (>= 0.1.1),
     colourpicker,
@@ -27,9 +29,9 @@ Suggests:
     knitr,
     pkgdown,
     rmarkdown,
+    rlang,
     shinytest2,
-    testthat (>= 3.0.0),
-    webshot2
+    testthat (>= 3.0.0)
 VignetteBuilder: knitr
 Config/testthat/edition: 3
 Encoding: UTF-8

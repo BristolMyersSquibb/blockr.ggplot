@@ -36,6 +36,20 @@ Package-specific guide for [blockr.ggplot](https://github.com/BristolMyersSquibb
 - Understanding ggplot-specific patterns
 - Debugging ggplot block issues
 
+### [state-management-patterns.md](state-management-patterns.md)
+**Why reactiveVal pattern is required**
+
+Architectural comparison of state management approaches in blockr blocks. Covers:
+- Pattern A: reactiveVal (recommended, used by blockr.core/dplyr)
+- Pattern B: Direct Input (not recommended)
+- Critical issues: headless execution, performance, bugs
+- Reference implementation from blockr.core
+
+**Use this when:**
+- Understanding blockr's state management architecture
+- Deciding on patterns for new blocks
+- Reviewing or refactoring existing blocks
+
 ### [ui-guidelines.md](ui-guidelines.md)
 **UI development guidelines and design patterns**
 
@@ -82,6 +96,7 @@ This documentation is optimized for both human developers and AI code assistants
 
 - **[blocks-core-guide.md](blocks-core-guide.md)** - Universal patterns (reusable across blockr packages)
 - **[ggplot-blocks-guide.md](ggplot-blocks-guide.md)** - ggplot-specific patterns
+- **[state-management-patterns.md](state-management-patterns.md)** - Why reactiveVal pattern is required
 - **[ui-guidelines.md](ui-guidelines.md)** - UI design patterns
 
 Each guide contains:

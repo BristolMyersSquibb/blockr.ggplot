@@ -37,17 +37,6 @@ build_theme_choices <- function() {
     )
   }
 
-  # Add hrbrthemes if available
-  if (requireNamespace("hrbrthemes", quietly = TRUE)) {
-    choices[["hrbrthemes (Typography)"]] <- list(
-      "Ipsum" = "ipsum",
-      "Ipsum RC" = "ipsum_rc",
-      "Ipsum PS" = "ipsum_ps",
-      "Financial Times" = "ft_rc",
-      "Modern RC" = "modern_rc"
-    )
-  }
-
   # Add ggpubr themes if available
   if (requireNamespace("ggpubr", quietly = TRUE)) {
     choices[["ggpubr (Scientific)"]] <- list(
@@ -118,24 +107,6 @@ get_theme_function <- function(theme_name) {
       return(ggthemes_themes[[theme_name]])
     } else {
       # Fallback to minimal if ggthemes not available
-      return("ggplot2::theme_minimal()")
-    }
-  }
-
-  # hrbrthemes (check availability)
-  hrbrthemes_themes <- c(
-    ipsum = "hrbrthemes::theme_ipsum()",
-    ipsum_rc = "hrbrthemes::theme_ipsum_rc()",
-    ipsum_ps = "hrbrthemes::theme_ipsum_ps()",
-    ft_rc = "hrbrthemes::theme_ft_rc()",
-    modern_rc = "hrbrthemes::theme_modern_rc()"
-  )
-
-  if (theme_name %in% names(hrbrthemes_themes)) {
-    if (requireNamespace("hrbrthemes", quietly = TRUE)) {
-      return(hrbrthemes_themes[[theme_name]])
-    } else {
-      # Fallback to minimal if hrbrthemes not available
       return("ggplot2::theme_minimal()")
     }
   }
@@ -574,7 +545,7 @@ new_theme_block <- function(
             overflow: visible;
             transition: max-height 0.5s ease-in;
           }
-          .advanced-toggle {
+          .block-advanced-toggle {
             cursor: pointer;
             user-select: none;
             padding: 8px 0;
@@ -584,13 +555,13 @@ new_theme_block <- function(
             grid-column: 1 / -1;
             color: #6c757d;
           }
-          .advanced-toggle .chevron {
+          .block-advanced-toggle .block-chevron {
             transition: transform 0.2s;
             display: inline-block;
             font-size: 14px;
             font-weight: bold;
           }
-          .advanced-toggle .chevron.rotated {
+          .block-advanced-toggle .block-chevron.rotated {
             transform: rotate(90deg);
           }
         ",
@@ -649,12 +620,12 @@ new_theme_block <- function(
             div(
               class = "block-section",
               div(
-                class = "advanced-toggle text-muted",
+                class = "block-advanced-toggle text-muted",
                 id = NS(id, "advanced-toggle"),
                 onclick = sprintf(
                   "
                   const section = document.getElementById('%s');
-                  const chevron = document.querySelector('#%s .chevron');
+                  const chevron = document.querySelector('#%s .block-chevron');
                   section.classList.toggle('expanded');
                   chevron.classList.toggle('rotated');
                 ",
@@ -662,7 +633,7 @@ new_theme_block <- function(
                   NS(id, "advanced-toggle")
                 ),
                 # Single right-pointing angle quotation mark (prettier chevron)
-                tags$span(class = "chevron", "\u203A"),
+                tags$span(class = "block-chevron", "\u203A"),
                 "Show advanced options"
               )
             ),

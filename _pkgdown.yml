@@ -28,8 +28,6 @@ reference:
   - block_container_script
   - block_responsive_css
   - new_ggplot_transform_block
-  - validate_block_screenshot
-  - validate_blocks_batch
   - has_keyword("internal")
 
 articles:
