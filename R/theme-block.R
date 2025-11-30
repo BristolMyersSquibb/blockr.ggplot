@@ -574,7 +574,7 @@ new_theme_block <- function(
             overflow: visible;
             transition: max-height 0.5s ease-in;
           }
-          .advanced-toggle {
+          .block-advanced-toggle {
             cursor: pointer;
             user-select: none;
             padding: 8px 0;
@@ -584,13 +584,13 @@ new_theme_block <- function(
             grid-column: 1 / -1;
             color: #6c757d;
           }
-          .advanced-toggle .chevron {
+          .block-advanced-toggle .block-chevron {
             transition: transform 0.2s;
             display: inline-block;
             font-size: 14px;
             font-weight: bold;
           }
-          .advanced-toggle .chevron.rotated {
+          .block-advanced-toggle .block-chevron.rotated {
             transform: rotate(90deg);
           }
         ",
@@ -649,12 +649,12 @@ new_theme_block <- function(
             div(
               class = "block-section",
               div(
-                class = "advanced-toggle text-muted",
+                class = "block-advanced-toggle text-muted",
                 id = NS(id, "advanced-toggle"),
                 onclick = sprintf(
                   "
                   const section = document.getElementById('%s');
-                  const chevron = document.querySelector('#%s .chevron');
+                  const chevron = document.querySelector('#%s .block-chevron');
                   section.classList.toggle('expanded');
                   chevron.classList.toggle('rotated');
                 ",
@@ -662,7 +662,7 @@ new_theme_block <- function(
                   NS(id, "advanced-toggle")
                 ),
                 # Single right-pointing angle quotation mark (prettier chevron)
-                tags$span(class = "chevron", "\u203A"),
+                tags$span(class = "block-chevron", "\u203A"),
                 "Show advanced options"
               )
             ),
