@@ -154,6 +154,12 @@ get_theme_function <- function(theme_name) {
 #'   "bottom", "none" (default "auto" preserves upstream position)
 #' @param base_theme Base ggplot2 theme: "auto", "minimal", "classic",
 #'   "gray", "bw", etc. (default "auto" preserves upstream theme)
+#' @param palette_fill Color palette for fill aesthetic: "auto" (keep upstream),
+#'   "viridis", "magma", "plasma", "inferno", "cividis", or "ggplot2"
+#'   (default "auto" preserves upstream palette)
+#' @param palette_colour Color palette for colour aesthetic: "auto" (keep
+#'   upstream), "viridis", "magma", "plasma", "inferno", "cividis", or "ggplot2"
+#'   (default "auto" preserves upstream palette)
 #' @param ... Forwarded to \code{\link[blockr.core]{new_transform_block}}
 #'
 #' @export
@@ -168,6 +174,8 @@ new_theme_block <- function(
   show_panel_border = "auto",
   legend_position = "auto",
   base_theme = "auto",
+  palette_fill = "auto",
+  palette_colour = "auto",
   ...
 ) {
   new_ggplot_transform_block(
@@ -186,6 +194,8 @@ new_theme_block <- function(
           r_show_panel_border <- reactiveVal(show_panel_border)
           r_legend_position <- reactiveVal(legend_position)
           r_base_theme <- reactiveVal(base_theme)
+          r_palette_fill <- reactiveVal(palette_fill)
+          r_palette_colour <- reactiveVal(palette_colour)
 
           # Observe input changes
           # (convert "transparent" or "#00000000" to empty string for colors)
@@ -290,6 +300,20 @@ new_theme_block <- function(
             input$base_theme,
             {
               r_base_theme(input$base_theme %||% "minimal")
+            },
+            ignoreNULL = FALSE
+          )
+          observeEvent(
+            input$palette_fill,
+            {
+              r_palette_fill(input$palette_fill %||% "auto")
+            },
+            ignoreNULL = FALSE
+          )
+          observeEvent(
+            input$palette_colour,
+            {
+              r_palette_colour(input$palette_colour %||% "auto")
             },
             ignoreNULL = FALSE
           )
@@ -482,6 +506,56 @@ new_theme_block <- function(
                 text <- glue::glue("({text}) + ggplot2::theme({theme_call})")
               }
 
+              # Add color palette overrides
+              # Values are like "viridis_d", "viridis_c", "magma_d", etc.
+              if (r_palette_fill() != "auto") {
+                if (r_palette_fill() == "ggplot2") {
+                  # Reset to ggplot2 default
+                  text <- glue::glue("({text}) + ggplot2::scale_fill_discrete()")
+                } else {
+                  # Parse option name and type (viridis_d -> viridis, d)
+                  parts <- strsplit(r_palette_fill(), "_")[[1]]
+                  option_name <- parts[1]
+                  scale_type <- parts[2]
+                  if (scale_type == "c") {
+                    text <- glue::glue(
+                      "({text}) + ggplot2::scale_fill_viridis_c(",
+                      "option = \"{option_name}\")"
+                    )
+                  } else {
+                    text <- glue::glue(
+                      "({text}) + ggplot2::scale_fill_viridis_d(",
+                      "option = \"{option_name}\")"
+                    )
+                  }
+                }
+              }
+
+              if (r_palette_colour() != "auto") {
+                if (r_palette_colour() == "ggplot2") {
+                  # Reset to ggplot2 default
+                  text <- glue::glue(
+                    "({text}) + ggplot2::scale_colour_discrete()"
+                  )
+                } else {
+                  # Parse option name and type (viridis_d -> viridis, d)
+                  parts <- strsplit(r_palette_colour(), "_")[[1]]
+                  option_name <- parts[1]
+                  scale_type <- parts[2]
+                  if (scale_type == "c") {
+                    text <- glue::glue(
+                      "({text}) + ggplot2::scale_colour_viridis_c(",
+                      "option = \"{option_name}\")"
+                    )
+                  } else {
+                    text <- glue::glue(
+                      "({text}) + ggplot2::scale_colour_viridis_d(",
+                      "option = \"{option_name}\")"
+                    )
+                  }
+                }
+              }
+
               parse(text = text)[[1]]
             }),
             state = list(
@@ -494,7 +568,9 @@ new_theme_block <- function(
               grid_color = r_grid_color,
               show_panel_border = r_show_panel_border,
               legend_position = r_legend_position,
-              base_theme = r_base_theme
+              base_theme = r_base_theme,
+              palette_fill = r_palette_fill,
+              palette_colour = r_palette_colour
             )
           )
         }
@@ -610,6 +686,44 @@ new_theme_block <- function(
                       "None" = "none"
                     ),
                     selected = legend_position,
+                    width = "100%"
+                  )
+                ),
+                div(
+                  class = "block-input-wrapper",
+                  selectInput(
+                    inputId = NS(id, "palette_fill"),
+                    label = "Fill Palette",
+                    choices = c(
+                      "Auto (keep upstream)" = "auto",
+                      "Viridis (categorical)" = "viridis_d",
+                      "Viridis (continuous)" = "viridis_c",
+                      "Magma (categorical)" = "magma_d",
+                      "Magma (continuous)" = "magma_c",
+                      "Plasma (categorical)" = "plasma_d",
+                      "Plasma (continuous)" = "plasma_c",
+                      "ggplot2 Default" = "ggplot2"
+                    ),
+                    selected = palette_fill,
+                    width = "100%"
+                  )
+                ),
+                div(
+                  class = "block-input-wrapper",
+                  selectInput(
+                    inputId = NS(id, "palette_colour"),
+                    label = "Colour Palette",
+                    choices = c(
+                      "Auto (keep upstream)" = "auto",
+                      "Viridis (categorical)" = "viridis_d",
+                      "Viridis (continuous)" = "viridis_c",
+                      "Magma (categorical)" = "magma_d",
+                      "Magma (continuous)" = "magma_c",
+                      "Plasma (categorical)" = "plasma_d",
+                      "Plasma (continuous)" = "plasma_c",
+                      "ggplot2 Default" = "ggplot2"
+                    ),
+                    selected = palette_colour,
                     width = "100%"
                   )
                 )
@@ -787,7 +901,9 @@ new_theme_block <- function(
       "base_size",
       "base_family",
       "grid_color",
-      "legend_position"
+      "legend_position",
+      "palette_fill",
+      "palette_colour"
     ),
     ...
   )

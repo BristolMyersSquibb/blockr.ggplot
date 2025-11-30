@@ -98,3 +98,129 @@ test_that("get_theme_function handles ggpubr themes appropriately", {
     expect_equal(result, "ggplot2::theme_minimal()")
   }
 })
+
+# =============================================================================
+# Palette tests - testServer
+# =============================================================================
+
+test_that("theme block with categorical fill palette - testServer", {
+  skip_if_not_installed("shiny")
+  skip_if_not_installed("ggplot2")
+
+  # Create a ggplot with categorical fill (Species is a factor)
+  input_plot <- ggplot2::ggplot(
+    iris,
+    ggplot2::aes(x = Species, y = Sepal.Length, fill = Species)
+  ) +
+    ggplot2::geom_boxplot()
+
+  block <- new_theme_block(
+    palette_fill = "viridis_d"
+  )
+
+  testServer(
+    blockr.core:::get_s3_method("block_server", block),
+    {
+      session$flushReact()
+      result <- session$returned$result()
+
+      expect_true(inherits(result, "ggplot"))
+      # Verify it renders without error
+      expect_no_error(ggplot2::ggplot_build(result))
+    },
+    args = list(x = block, data = list(data = function() input_plot))
+  )
+})
+
+test_that("theme block with continuous colour palette - testServer", {
+  skip_if_not_installed("shiny")
+  skip_if_not_installed("ggplot2")
+
+  # Create a ggplot with continuous colour (cyl is numeric)
+  input_plot <- ggplot2::ggplot(
+    mtcars,
+    ggplot2::aes(x = wt, y = mpg, colour = cyl)
+  ) +
+    ggplot2::geom_point()
+
+  block <- new_theme_block(
+    palette_colour = "viridis_c"
+  )
+
+  testServer(
+    blockr.core:::get_s3_method("block_server", block),
+    {
+      session$flushReact()
+      result <- session$returned$result()
+
+      expect_true(inherits(result, "ggplot"))
+      # Verify it renders without error
+      expect_no_error(ggplot2::ggplot_build(result))
+    },
+    args = list(x = block, data = list(data = function() input_plot))
+  )
+})
+
+test_that("theme block with both fill and colour palettes - testServer", {
+  skip_if_not_installed("shiny")
+  skip_if_not_installed("ggplot2")
+
+  # Create a ggplot with categorical fill and continuous colour
+  input_plot <- ggplot2::ggplot(
+    iris,
+    ggplot2::aes(
+      x = Sepal.Length,
+      y = Sepal.Width,
+      fill = Species,
+      colour = Petal.Length
+    )
+  ) +
+    ggplot2::geom_point(shape = 21, size = 3)
+
+  block <- new_theme_block(
+    palette_fill = "magma_d",
+    palette_colour = "plasma_c"
+  )
+
+  testServer(
+    blockr.core:::get_s3_method("block_server", block),
+    {
+      session$flushReact()
+      result <- session$returned$result()
+
+      expect_true(inherits(result, "ggplot"))
+      # Verify it renders without error (both palettes applied)
+      expect_no_error(ggplot2::ggplot_build(result))
+    },
+    args = list(x = block, data = list(data = function() input_plot))
+  )
+})
+
+test_that("theme block with auto palette keeps upstream - testServer", {
+  skip_if_not_installed("shiny")
+  skip_if_not_installed("ggplot2")
+
+  # Create a ggplot with default colours
+  input_plot <- ggplot2::ggplot(
+    mtcars,
+    ggplot2::aes(x = wt, y = mpg, colour = factor(cyl))
+  ) +
+    ggplot2::geom_point()
+
+  block <- new_theme_block(
+    palette_colour = "auto"
+  )
+
+  testServer(
+    blockr.core:::get_s3_method("block_server", block),
+    {
+      session$flushReact()
+      result <- session$returned$result()
+
+      expect_true(inherits(result, "ggplot"))
+      # Verify it renders without error (uses ggplot2 defaults)
+      expect_no_error(ggplot2::ggplot_build(result))
+    },
+    args = list(x = block, data = list(data = function() input_plot))
+  )
+})

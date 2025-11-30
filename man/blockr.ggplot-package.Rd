@@ -8,6 +8,14 @@
 \description{
 Provides comprehensive blocks for plotting with blockr using 'ggplot2'. Includes PowerBI-style chart types (bar charts, line charts, pie charts, scatter plots) as well as statistical plots (boxplots, histograms, density plots, violin plots, heatmaps) with rich customization options and intuitive user interfaces.
 }
+\seealso{
+Useful links:
+\itemize{
+  \item \url{https://bristolmyerssquibb.github.io/blockr.ggplot/}
+  \item Report bugs at \url{https://github.com/BristolMyersSquibb/blockr.ggplot/issues}
+}
+
+}
 \author{
 \strong{Maintainer}: Nicolas Bennett \email{nicolas@cynkra.com}
 
