@@ -24,7 +24,7 @@ test_that("pie chart with x only - initialization - testServer", {
   testServer(
     blockr.core:::get_s3_method("block_server", block),
     {
-      # Pie charts with stat_count may warn about dropped aesthetics
+      # Pie charts with stat_count warn about dropped aesthetics
       expect_warning(
         session$flushReact(),
         "aesthetics were dropped"
@@ -61,6 +61,7 @@ test_that("pie chart with x and y - initialization - testServer", {
   testServer(
     blockr.core:::get_s3_method("block_server", block),
     {
+      # With y specified, uses geom_col which doesn't have the warning
       session$flushReact()
       result <- session$returned$result()
 
@@ -91,15 +92,23 @@ test_that("pie chart - changing x input updates mapping - testServer", {
     blockr.core:::get_s3_method("block_server", block),
     {
       expr <- session$makeScope("expr")
-      session$flushReact()
+      expect_warning(
+        session$flushReact(),
+        "aesthetics were dropped"
+      )
 
       # For pie charts, x is used for fill, so check fill mapping
       result <- session$returned$result()
       fill_expr <- deparse(result$mapping$fill)
       expect_true(grepl("cyl", fill_expr))
 
-      expr$setInputs(x = "gear")
-      session$flushReact()
+      expect_warning(
+        {
+          expr$setInputs(x = "gear")
+          session$flushReact()
+        },
+        "aesthetics were dropped"
+      )
 
       result <- session$returned$result()
       fill_expr <- deparse(result$mapping$fill)
@@ -126,7 +135,10 @@ test_that("pie chart with fill - initialization - testServer", {
   testServer(
     blockr.core:::get_s3_method("block_server", block),
     {
-      session$flushReact()
+      expect_warning(
+        session$flushReact(),
+        "aesthetics were dropped"
+      )
       result <- session$returned$result()
 
       expect_true(inherits(result, "ggplot"))
@@ -151,7 +163,10 @@ test_that("pie chart - changing fill input updates mapping - testServer", {
     blockr.core:::get_s3_method("block_server", block),
     {
       expr <- session$makeScope("expr")
-      session$flushReact()
+      expect_warning(
+        session$flushReact(),
+        "aesthetics were dropped"
+      )
 
       # Initially fill is from x
       result <- session$returned$result()
@@ -159,8 +174,13 @@ test_that("pie chart - changing fill input updates mapping - testServer", {
       expect_true(grepl("cyl", fill_expr))
 
       # Set explicit fill
-      expr$setInputs(fill = "am")
-      session$flushReact()
+      expect_warning(
+        {
+          expr$setInputs(fill = "am")
+          session$flushReact()
+        },
+        "aesthetics were dropped"
+      )
 
       result <- session$returned$result()
       fill_expr <- deparse(result$mapping$fill)
@@ -183,7 +203,10 @@ test_that("pie chart with alpha - initialization - testServer", {
   testServer(
     blockr.core:::get_s3_method("block_server", block),
     {
-      session$flushReact()
+      expect_warning(
+        session$flushReact(),
+        "aesthetics were dropped"
+      )
       result <- session$returned$result()
 
       expect_true(inherits(result, "ggplot"))
@@ -206,13 +229,21 @@ test_that("pie chart - changing alpha input updates mapping - testServer", {
     blockr.core:::get_s3_method("block_server", block),
     {
       expr <- session$makeScope("expr")
-      session$flushReact()
+      expect_warning(
+        session$flushReact(),
+        "aesthetics were dropped"
+      )
 
       result <- session$returned$result()
       expect_null(result$mapping$alpha)
 
-      expr$setInputs(alpha = "mpg")
-      session$flushReact()
+      expect_warning(
+        {
+          expr$setInputs(alpha = "mpg")
+          session$flushReact()
+        },
+        "aesthetics were dropped"
+      )
 
       result <- session$returned$result()
       expect_equal(rlang::as_name(result$mapping$alpha), "mpg")
@@ -238,7 +269,10 @@ test_that("pie chart with donut style - initialization - testServer", {
   testServer(
     blockr.core:::get_s3_method("block_server", block),
     {
-      session$flushReact()
+      expect_warning(
+        session$flushReact(),
+        "aesthetics were dropped"
+      )
       result <- session$returned$result()
 
       expect_true(inherits(result, "ggplot"))
@@ -266,15 +300,23 @@ test_that("pie chart - changing donut input - testServer", {
     blockr.core:::get_s3_method("block_server", block),
     {
       expr <- session$makeScope("expr")
-      session$flushReact()
+      expect_warning(
+        session$flushReact(),
+        "aesthetics were dropped"
+      )
 
       # Initially not a donut
       result <- session$returned$result()
       expect_true(inherits(result, "ggplot"))
 
       # Change to donut
-      expr$setInputs(donut = TRUE)
-      session$flushReact()
+      expect_warning(
+        {
+          expr$setInputs(donut = TRUE)
+          session$flushReact()
+        },
+        "aesthetics were dropped"
+      )
 
       result <- session$returned$result()
       expect_true(inherits(result$coordinates, "CoordPolar"))
