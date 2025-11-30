@@ -408,11 +408,10 @@ new_ggplot_block <- function(
               if (r_fill() != "(none)" && "fill" %in% chart_config$optional) {
                 # For histograms, bars, pie, etc., convert to factor
                 # for discrete colors (stat_count needs grouping)
-                if (
-                  current_type %in%
-                    c("histogram", "bar", "boxplot", "violin", "density", "pie") &&
-                    isTruthy(r_fill())
-                ) {
+                stat_types <- c(
+                  "histogram", "bar", "boxplot", "violin", "density", "pie"
+                )
+                if (current_type %in% stat_types && isTruthy(r_fill())) {
                   aes_parts <- c(
                     aes_parts,
                     glue::glue(
@@ -545,7 +544,7 @@ new_ggplot_block <- function(
                 }
                 if (!fill_added) {
                   # Use x column for fill if no fill aesthetic specified
-                  # Wrap in as.factor() so stat_count knows it's a grouping variable
+                  # Wrap in as.factor() so stat_count knows it's grouping
                   aes_parts <- c(
                     aes_parts,
                     glue::glue("fill = as.factor({backtick_if_needed(r_x())})")

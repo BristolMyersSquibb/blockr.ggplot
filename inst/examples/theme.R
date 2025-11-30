@@ -26,7 +26,6 @@ board1 <- new_board(
 # Test 2: Theme with minimal defaults (can switch to 20+ themes in UI)
 # NEW THEMES: ggthemes (Economist, FiveThirtyEight, Tufte, WSJ)
 #             cowplot (Publication-ready themes)
-#             hrbrthemes (Typography-focused)
 #             ggpubr (Scientific publication)
 board2 <- new_board(
   blocks = c(

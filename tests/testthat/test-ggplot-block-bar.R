@@ -220,7 +220,7 @@ test_that("bar plot (geom_col) with color - initialization - testServer", {
   )
 })
 
-test_that("bar plot (geom_col) - changing color input updates mapping - testServer", {
+test_that("bar plot (geom_col) - color input updates mapping", {
   skip_if_not_installed("shiny")
   skip_if_not_installed("ggplot2")
 
@@ -273,7 +273,7 @@ test_that("bar plot (geom_col) with alpha - initialization - testServer", {
   )
 })
 
-test_that("bar plot (geom_col) - changing alpha input updates mapping - testServer", {
+test_that("bar plot (geom_col) - alpha input updates mapping", {
   skip_if_not_installed("shiny")
   skip_if_not_installed("ggplot2")
 

@@ -147,7 +147,7 @@ test_that("histogram with color - initialization - testServer", {
   testServer(
     blockr.core:::get_s3_method("block_server", block),
     {
-      # Expect warning about colour being dropped during statistical transformation
+      # Expect warning about colour dropped during stat transform
       expect_warning(
         session$flushReact(),
         "aesthetics were dropped"
@@ -195,7 +195,7 @@ test_that("histogram - changing color input updates mapping - testServer", {
   )
 })
 
-# Note: alpha mapped to a variable is dropped during stat_bin for same reason as color
+# Note: alpha mapped to variable is dropped during stat_bin like color
 
 test_that("histogram with alpha - initialization - testServer", {
   skip_if_not_installed("shiny")
@@ -210,7 +210,7 @@ test_that("histogram with alpha - initialization - testServer", {
   testServer(
     blockr.core:::get_s3_method("block_server", block),
     {
-      # Expect warning about alpha being dropped during statistical transformation
+      # Expect warning about alpha dropped during stat transform
       expect_warning(
         session$flushReact(),
         "aesthetics were dropped"

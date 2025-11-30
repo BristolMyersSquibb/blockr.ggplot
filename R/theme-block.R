@@ -37,17 +37,6 @@ build_theme_choices <- function() {
     )
   }
 
-  # Add hrbrthemes if available
-  if (requireNamespace("hrbrthemes", quietly = TRUE)) {
-    choices[["hrbrthemes (Typography)"]] <- list(
-      "Ipsum" = "ipsum",
-      "Ipsum RC" = "ipsum_rc",
-      "Ipsum PS" = "ipsum_ps",
-      "Financial Times" = "ft_rc",
-      "Modern RC" = "modern_rc"
-    )
-  }
-
   # Add ggpubr themes if available
   if (requireNamespace("ggpubr", quietly = TRUE)) {
     choices[["ggpubr (Scientific)"]] <- list(
@@ -118,24 +107,6 @@ get_theme_function <- function(theme_name) {
       return(ggthemes_themes[[theme_name]])
     } else {
       # Fallback to minimal if ggthemes not available
-      return("ggplot2::theme_minimal()")
-    }
-  }
-
-  # hrbrthemes (check availability)
-  hrbrthemes_themes <- c(
-    ipsum = "hrbrthemes::theme_ipsum()",
-    ipsum_rc = "hrbrthemes::theme_ipsum_rc()",
-    ipsum_ps = "hrbrthemes::theme_ipsum_ps()",
-    ft_rc = "hrbrthemes::theme_ft_rc()",
-    modern_rc = "hrbrthemes::theme_modern_rc()"
-  )
-
-  if (theme_name %in% names(hrbrthemes_themes)) {
-    if (requireNamespace("hrbrthemes", quietly = TRUE)) {
-      return(hrbrthemes_themes[[theme_name]])
-    } else {
-      # Fallback to minimal if hrbrthemes not available
       return("ggplot2::theme_minimal()")
     }
   }

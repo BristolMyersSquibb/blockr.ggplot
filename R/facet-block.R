@@ -589,7 +589,10 @@ new_facet_block <- function(
                 } else if (length(row_vars) == 1) {
                   rows_part <- backtick_if_needed(row_vars[1])
                 } else {
-                  rows_part <- paste(backtick_if_needed(row_vars), collapse = " + ")
+                  rows_part <- paste(
+                    backtick_if_needed(row_vars),
+                    collapse = " + "
+                  )
                 }
 
                 # Build cols formula (use backticks for non-syntactic names)
@@ -598,7 +601,10 @@ new_facet_block <- function(
                 } else if (length(col_vars) == 1) {
                   cols_part <- backtick_if_needed(col_vars[1])
                 } else {
-                  cols_part <- paste(backtick_if_needed(col_vars), collapse = " + ")
+                  cols_part <- paste(
+                    backtick_if_needed(col_vars),
+                    collapse = " + "
+                  )
                 }
 
                 grid_formula <- glue::glue("{rows_part} ~ {cols_part}")
