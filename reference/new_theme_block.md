@@ -18,6 +18,8 @@ new_theme_block(
   show_panel_border = "auto",
   legend_position = "auto",
   base_theme = "auto",
+  palette_fill = "auto",
+  palette_colour = "auto",
   ...
 )
 ```
@@ -69,6 +71,18 @@ new_theme_block(
 
   Base ggplot2 theme: "auto", "minimal", "classic", "gray", "bw", etc.
   (default "auto" preserves upstream theme)
+
+- palette_fill:
+
+  Color palette for fill aesthetic: "auto" (keep upstream), "viridis",
+  "magma", "plasma", "inferno", "cividis", or "ggplot2" (default "auto"
+  preserves upstream palette)
+
+- palette_colour:
+
+  Color palette for colour aesthetic: "auto" (keep upstream), "viridis",
+  "magma", "plasma", "inferno", "cividis", or "ggplot2" (default "auto"
+  preserves upstream palette)
 
 - ...:
 

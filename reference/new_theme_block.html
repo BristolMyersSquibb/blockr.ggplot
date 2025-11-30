@@ -59,6 +59,8 @@ Empty/NULL values will use the base theme's defaults.</p>
 <span>  show_panel_border <span class="op">=</span> <span class="st">"auto"</span>,</span>
 <span>  legend_position <span class="op">=</span> <span class="st">"auto"</span>,</span>
 <span>  base_theme <span class="op">=</span> <span class="st">"auto"</span>,</span>
+<span>  palette_fill <span class="op">=</span> <span class="st">"auto"</span>,</span>
+<span>  palette_colour <span class="op">=</span> <span class="st">"auto"</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -113,6 +115,18 @@ Empty/NULL values will use the base theme's defaults.</p>
 <dt id="arg-base-theme">base_theme<a class="anchor" aria-label="anchor" href="#arg-base-theme"></a></dt>
 <dd><p>Base ggplot2 theme: "auto", "minimal", "classic",
 "gray", "bw", etc. (default "auto" preserves upstream theme)</p></dd>
+
+
+<dt id="arg-palette-fill">palette_fill<a class="anchor" aria-label="anchor" href="#arg-palette-fill"></a></dt>
+<dd><p>Color palette for fill aesthetic: "auto" (keep upstream),
+"viridis", "magma", "plasma", "inferno", "cividis", or "ggplot2"
+(default "auto" preserves upstream palette)</p></dd>
+
+
+<dt id="arg-palette-colour">palette_colour<a class="anchor" aria-label="anchor" href="#arg-palette-colour"></a></dt>
+<dd><p>Color palette for colour aesthetic: "auto" (keep
+upstream), "viridis", "magma", "plasma", "inferno", "cividis", or "ggplot2"
+(default "auto" preserves upstream palette)</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
