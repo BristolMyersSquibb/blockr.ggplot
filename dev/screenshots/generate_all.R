@@ -20,6 +20,12 @@ source("dev/screenshots/validate-screenshot.R")
 cat("Generating screenshots for all blockr.ggplot blocks...\n")
 cat("Output directory: man/figures/\n\n")
 
+# Common screenshot settings
+# Note: ggplot blocks need more height to show both controls AND the plot
+SCREENSHOT_WIDTH <- 1400
+SCREENSHOT_HEIGHT <- 1200
+SCREENSHOT_DELAY <- 4
+
 # =============================================================================
 # GGPLOT BLOCK - SCATTER (point)
 # =============================================================================
@@ -35,9 +41,9 @@ validate_block_screenshot(
   data = mtcars,
   filename = "block-ggplot-scatter.png",
   output_dir = "man/figures",
-  width = 800,
-  height = 600,
-  delay = 2,
+  width = SCREENSHOT_WIDTH,
+  height = SCREENSHOT_HEIGHT,
+  delay = SCREENSHOT_DELAY,
   verbose = FALSE
 )
 
@@ -45,23 +51,18 @@ validate_block_screenshot(
 # GGPLOT BLOCK - BAR
 # =============================================================================
 cat("2/14 - ggplot block: bar\n")
-# Convert cyl and gear to factors for proper bar chart display
-mtcars_for_bar <- mtcars
-mtcars_for_bar$cyl <- factor(mtcars_for_bar$cyl)
-mtcars_for_bar$gear <- factor(mtcars_for_bar$gear)
-
 validate_block_screenshot(
   block = new_ggplot_block(
     type = "bar",
     x = "cyl",
     fill = "gear"
   ),
-  data = mtcars_for_bar,
+  data = mtcars,
   filename = "block-ggplot-bar.png",
   output_dir = "man/figures",
-  width = 800,
-  height = 600,
-  delay = 3,
+  width = SCREENSHOT_WIDTH,
+  height = SCREENSHOT_HEIGHT,
+  delay = SCREENSHOT_DELAY,
   verbose = FALSE
 )
 
@@ -80,9 +81,11 @@ validate_block_screenshot(
   data = datasets::Orange,
   filename = "block-ggplot-line.png",
   output_dir = "man/figures",
-  width = 800,
-  height = 600,
-  delay = 2,
+  width = SCREENSHOT_WIDTH,
+  height = SCREENSHOT_HEIGHT,
+  delay = SCREENSHOT_DELAY,
+  dataset = "Orange",
+  dataset_package = "datasets",
   verbose = FALSE
 )
 
@@ -100,9 +103,9 @@ validate_block_screenshot(
   data = mtcars,
   filename = "block-ggplot-boxplot.png",
   output_dir = "man/figures",
-  width = 800,
-  height = 600,
-  delay = 2,
+  width = SCREENSHOT_WIDTH,
+  height = SCREENSHOT_HEIGHT,
+  delay = SCREENSHOT_DELAY,
   verbose = FALSE
 )
 
@@ -121,9 +124,11 @@ validate_block_screenshot(
   data = datasets::iris,
   filename = "block-ggplot-violin.png",
   output_dir = "man/figures",
-  width = 800,
-  height = 600,
-  delay = 3,
+  width = SCREENSHOT_WIDTH,
+  height = SCREENSHOT_HEIGHT,
+  delay = SCREENSHOT_DELAY,
+  dataset = "iris",
+  dataset_package = "datasets",
   verbose = FALSE
 )
 
@@ -131,22 +136,18 @@ validate_block_screenshot(
 # GGPLOT BLOCK - DENSITY
 # =============================================================================
 cat("6/14 - ggplot block: density\n")
-# Convert cyl to factor for proper grouping
-mtcars_density <- mtcars
-mtcars_density$cyl <- factor(mtcars_density$cyl)
-
 validate_block_screenshot(
   block = new_ggplot_block(
     type = "density",
     x = "mpg",
     fill = "cyl"
   ),
-  data = mtcars_density,
+  data = mtcars,
   filename = "block-ggplot-density.png",
   output_dir = "man/figures",
-  width = 800,
-  height = 600,
-  delay = 3,
+  width = SCREENSHOT_WIDTH,
+  height = SCREENSHOT_HEIGHT,
+  delay = SCREENSHOT_DELAY,
   verbose = FALSE
 )
 
@@ -164,9 +165,11 @@ validate_block_screenshot(
   data = datasets::Orange,
   filename = "block-ggplot-area.png",
   output_dir = "man/figures",
-  width = 800,
-  height = 600,
-  delay = 3,
+  width = SCREENSHOT_WIDTH,
+  height = SCREENSHOT_HEIGHT,
+  delay = SCREENSHOT_DELAY,
+  dataset = "Orange",
+  dataset_package = "datasets",
   verbose = FALSE
 )
 
@@ -174,22 +177,18 @@ validate_block_screenshot(
 # GGPLOT BLOCK - HISTOGRAM
 # =============================================================================
 cat("8/14 - ggplot block: histogram\n")
-# Convert cyl to factor for fill aesthetic
-mtcars_hist <- mtcars
-mtcars_hist$cyl <- factor(mtcars_hist$cyl)
-
 validate_block_screenshot(
   block = new_ggplot_block(
     type = "histogram",
     x = "mpg",
     fill = "cyl"
   ),
-  data = mtcars_hist,
+  data = mtcars,
   filename = "block-ggplot-histogram.png",
   output_dir = "man/figures",
-  width = 800,
-  height = 600,
-  delay = 3,
+  width = SCREENSHOT_WIDTH,
+  height = SCREENSHOT_HEIGHT,
+  delay = SCREENSHOT_DELAY,
   verbose = FALSE
 )
 
@@ -197,24 +196,22 @@ validate_block_screenshot(
 # GGPLOT BLOCK - PIE
 # =============================================================================
 cat("9/14 - ggplot block: pie\n")
-# Count cylinders for pie chart - use aggregated data
-cyl_counts <- aggregate(mpg ~ cyl, data = mtcars, FUN = length)
-names(cyl_counts) <- c("Cylinders", "Count")
-cyl_counts$Cylinders <- factor(cyl_counts$Cylinders, labels = c("4 cyl", "6 cyl", "8 cyl"))
-
+# Use iris dataset - Species as category, Sepal.Length as values
 validate_block_screenshot(
   block = new_ggplot_block(
     type = "pie",
-    x = "Cylinders",
-    y = "Count",
-    fill = "Cylinders"
+    x = "Species",
+    y = "Sepal.Length",
+    fill = "Species"
   ),
-  data = cyl_counts,
+  data = datasets::iris,
   filename = "block-ggplot-pie.png",
   output_dir = "man/figures",
-  width = 800,
-  height = 600,
-  delay = 3,
+  width = SCREENSHOT_WIDTH,
+  height = SCREENSHOT_HEIGHT,
+  delay = SCREENSHOT_DELAY,
+  dataset = "iris",
+  dataset_package = "datasets",
   verbose = FALSE
 )
 
@@ -222,118 +219,111 @@ validate_block_screenshot(
 # GGPLOT BLOCK - DONUT
 # =============================================================================
 cat("10/14 - ggplot block: donut\n")
+# Same as pie but with donut = TRUE for hole in center
 validate_block_screenshot(
   block = new_ggplot_block(
     type = "pie",
-    x = "Cylinders",
-    y = "Count",
-    fill = "Cylinders",
-    donut_hole = 0.5
+    x = "Species",
+    y = "Sepal.Length",
+    fill = "Species",
+    donut = TRUE
   ),
-  data = cyl_counts,
+  data = datasets::iris,
   filename = "block-ggplot-donut.png",
   output_dir = "man/figures",
-  width = 800,
-  height = 600,
-  delay = 3,
+  width = SCREENSHOT_WIDTH,
+  height = SCREENSHOT_HEIGHT,
+  delay = SCREENSHOT_DELAY,
+  dataset = "iris",
+  dataset_package = "datasets",
   verbose = FALSE
 )
 
 # =============================================================================
 # FACET BLOCK - WRAP
+# Uses dock with upstream ggplot: dataset → ggplot → facet
 # =============================================================================
 cat("11/14 - facet block: wrap\n")
-# Create a ggplot object as input for facet block
-plot_for_facet <- ggplot2::ggplot(mtcars, ggplot2::aes(x = wt, y = mpg, color = factor(cyl))) +
-  ggplot2::geom_point(size = 3) +
-  ggplot2::theme_minimal()
-
 validate_block_screenshot(
   block = new_facet_block(
     facet_type = "wrap",
     facets = "cyl",
     ncol = 3
   ),
-  data = list(data = plot_for_facet),
+  data = mtcars,
   filename = "block-facet.png",
   output_dir = "man/figures",
-  width = 800,
-  height = 600,
-  delay = 3,
+  width = SCREENSHOT_WIDTH,
+  height = SCREENSHOT_HEIGHT,
+  delay = SCREENSHOT_DELAY,
+  upstream_ggplot = list(type = "point", x = "wt", y = "mpg", color = "cyl"),
   verbose = FALSE
 )
 
 # =============================================================================
 # FACET BLOCK - GRID
+# Uses dock with upstream ggplot: dataset → ggplot → facet
 # =============================================================================
 cat("12/14 - facet block: grid\n")
-# Create a ggplot object as input for facet grid
-plot_for_grid <- ggplot2::ggplot(mtcars, ggplot2::aes(x = wt, y = mpg)) +
-  ggplot2::geom_point(size = 2) +
-  ggplot2::theme_minimal()
-
 validate_block_screenshot(
   block = new_facet_block(
     facet_type = "grid",
     rows = "cyl",
     cols = "gear"
   ),
-  data = list(data = plot_for_grid),
+  data = mtcars,
   filename = "block-facet-grid.png",
   output_dir = "man/figures",
-  width = 800,
-  height = 600,
-  delay = 3,
+  width = SCREENSHOT_WIDTH,
+  height = SCREENSHOT_HEIGHT,
+  delay = SCREENSHOT_DELAY,
+  upstream_ggplot = list(type = "point", x = "wt", y = "mpg"),
   verbose = FALSE
 )
 
 # =============================================================================
 # THEME BLOCK
+# Uses dock with upstream ggplot: dataset → ggplot → theme
 # =============================================================================
 cat("13/14 - theme block\n")
-# Create a ggplot object as input for theme block
-plot_for_theme <- ggplot2::ggplot(mtcars, ggplot2::aes(x = wt, y = mpg, color = factor(cyl))) +
-  ggplot2::geom_point(size = 3) +
-  ggplot2::labs(title = "MPG vs Weight", color = "Cylinders")
-
 validate_block_screenshot(
   block = new_theme_block(
-    base_theme = "economist"
+    base_theme = "economist",
+    panel_bg = "#f0f8ff",      # Light blue panel background
+    plot_bg = "#ffffff",       # White plot background
+    legend_position = "bottom"
   ),
-  data = list(data = plot_for_theme),
+  data = mtcars,
   filename = "block-theme.png",
   output_dir = "man/figures",
-  width = 800,
-  height = 600,
-  delay = 3,
+  width = SCREENSHOT_WIDTH,
+  height = SCREENSHOT_HEIGHT,
+  delay = SCREENSHOT_DELAY,
   expand_advanced = TRUE,  # Show advanced options
+  upstream_ggplot = list(type = "point", x = "wt", y = "mpg", color = "cyl"),
   verbose = FALSE
 )
 
 # =============================================================================
 # GRID BLOCK - Multi-plot composition
+# Uses dock with multiple upstream ggplots: dataset → ggplot1, ggplot2 → grid
 # =============================================================================
 cat("14/14 - grid block\n")
-# Create multiple ggplot objects as input for grid block
-plot1 <- ggplot2::ggplot(mtcars, ggplot2::aes(x = wt, y = mpg)) +
-  ggplot2::geom_point(color = "steelblue", size = 2) +
-  ggplot2::theme_minimal()
-
-plot2 <- ggplot2::ggplot(mtcars, ggplot2::aes(x = factor(cyl), y = mpg)) +
-  ggplot2::geom_boxplot(fill = "coral") +
-  ggplot2::theme_minimal()
-
 validate_block_screenshot(
   block = new_grid_block(
     layout = "horizontal",
     n_plots = 2
   ),
-  data = list(`1` = plot1, `2` = plot2),
+  data = mtcars,
   filename = "block-grid.png",
   output_dir = "man/figures",
-  width = 800,
-  height = 600,
-  delay = 3,
+  width = SCREENSHOT_WIDTH,
+  height = SCREENSHOT_HEIGHT,
+  delay = SCREENSHOT_DELAY,
+  upstream_ggplots = list(
+    list(type = "point", x = "wt", y = "mpg", color = "cyl"),
+    list(type = "boxplot", x = "cyl", y = "mpg", fill = "cyl")
+  ),
   verbose = FALSE
 )
 
