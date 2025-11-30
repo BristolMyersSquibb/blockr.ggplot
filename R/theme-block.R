@@ -511,7 +511,9 @@ new_theme_block <- function(
               if (r_palette_fill() != "auto") {
                 if (r_palette_fill() == "ggplot2") {
                   # Reset to ggplot2 default
-                  text <- glue::glue("({text}) + ggplot2::scale_fill_discrete()")
+                  text <- glue::glue(
+                    "({text}) + ggplot2::scale_fill_discrete()"
+                  )
                 } else {
                   # Parse option name and type (viridis_d -> viridis, d)
                   parts <- strsplit(r_palette_fill(), "_")[[1]]
