@@ -41,6 +41,7 @@
 <li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json">
 </form></li>
+<li class="nav-item"><a class="external-link nav-link" href="https://github.com/BristolMyersSquibb/blockr.ggplot/" aria-label="GitHub"><span class="fa fab fa-github fa-lg"></span></a></li>
       </ul>
 </div>
 
@@ -57,7 +58,7 @@
       <h1>blockr.ggplot Showcase: Visualization Blocks</h1>
             
       
-
+      <small class="dont-index">Source: <a href="https://github.com/BristolMyersSquibb/blockr.ggplot/blob/main/vignettes/blockr-ggplot-showcase.Rmd" class="external-link"><code>vignettes/blockr-ggplot-showcase.Rmd</code></a></small>
       <div class="d-none name"><code>blockr-ggplot-showcase.Rmd</code></div>
     </div>
 
@@ -90,7 +91,7 @@ between 0 and 1 to reduce overplotting in dense regions. The block
 automatically handles scale creation and legend generation for all
 mapped aesthetics.</p>
 <div class="figure">
-<img src="../reference/figures/block-ggplot-scatter.png" alt="ggplot block: scatter plot" width="100%"><p class="caption">
+<img src="../reference/figures/block-ggplot-scatter.png" class="r-plt" alt="ggplot block: scatter plot" width="100%"><p class="caption">
 ggplot block: scatter plot
 </p>
 </div>
@@ -113,7 +114,7 @@ distributions of categorical variables, or displaying summary
 statistics. The block handles count aggregation automatically when no y
 variable is specified.</p>
 <div class="figure">
-<img src="../reference/figures/block-ggplot-bar.png" alt="ggplot block: bar chart" width="100%"><p class="caption">
+<img src="../reference/figures/block-ggplot-bar.png" class="r-plt" alt="ggplot block: bar chart" width="100%"><p class="caption">
 ggplot block: bar chart
 </p>
 </div>
@@ -136,7 +137,7 @@ and size for varying line thickness. This visualization is ideal for
 temporal data, growth curves, and tracking changes over ordered
 sequences.</p>
 <div class="figure">
-<img src="../reference/figures/block-ggplot-line.png" alt="ggplot block: line chart" width="100%"><p class="caption">
+<img src="../reference/figures/block-ggplot-line.png" class="r-plt" alt="ggplot block: line chart" width="100%"><p class="caption">
 ggplot block: line chart
 </p>
 </div>
@@ -158,7 +159,7 @@ tendency, and variability. They’re particularly effective when comparing
 multiple groups side-by-side, as the aligned boxes make differences in
 median, spread, and skewness immediately visible.</p>
 <div class="figure">
-<img src="../reference/figures/block-ggplot-boxplot.png" alt="ggplot block: box plot" width="100%"><p class="caption">
+<img src="../reference/figures/block-ggplot-boxplot.png" class="r-plt" alt="ggplot block: box plot" width="100%"><p class="caption">
 ggplot block: box plot
 </p>
 </div>
@@ -182,7 +183,7 @@ distribution shape, or understand the full data density rather than just
 quartiles. They’re especially valuable with larger datasets where
 distribution details matter.</p>
 <div class="figure">
-<img src="../reference/figures/block-ggplot-violin.png" alt="ggplot block: violin plot" width="100%"><p class="caption">
+<img src="../reference/figures/block-ggplot-violin.png" class="r-plt" alt="ggplot block: violin plot" width="100%"><p class="caption">
 ggplot block: violin plot
 </p>
 </div>
@@ -206,7 +207,7 @@ which makes overlapping distributions easy to distinguish. Use them to
 compare distribution shapes, identify modes, or assess whether groups
 follow similar patterns.</p>
 <div class="figure">
-<img src="../reference/figures/block-ggplot-density.png" alt="ggplot block: density plot" width="100%"><p class="caption">
+<img src="../reference/figures/block-ggplot-density.png" class="r-plt" alt="ggplot block: density plot" width="100%"><p class="caption">
 ggplot block: density plot
 </p>
 </div>
@@ -229,7 +230,7 @@ The alpha aesthetic (0.6-0.8) is particularly important when comparing
 overlapping areas, as it allows all curves to remain visible while still
 emphasizing volume.</p>
 <div class="figure">
-<img src="../reference/figures/block-ggplot-area.png" alt="ggplot block: area chart" width="100%"><p class="caption">
+<img src="../reference/figures/block-ggplot-area.png" class="r-plt" alt="ggplot block: area chart" width="100%"><p class="caption">
 ggplot block: area chart
 </p>
 </div>
@@ -252,7 +253,7 @@ multimodality, detecting outliers, and understanding data range.
 Experiment with bin counts to find the right level of detail for your
 data’s density and range.</p>
 <div class="figure">
-<img src="../reference/figures/block-ggplot-histogram.png" alt="ggplot block: histogram" width="100%"><p class="caption">
+<img src="../reference/figures/block-ggplot-histogram.png" class="r-plt" alt="ggplot block: histogram" width="100%"><p class="caption">
 ggplot block: histogram
 </p>
 </div>
@@ -275,7 +276,7 @@ simple proportions, especially when one category dominates or when
 emphasizing that parts constitute a whole. Keep categories limited and
 consider using a donut chart variant for a modern aesthetic.</p>
 <div class="figure">
-<img src="../reference/figures/block-ggplot-pie.png" alt="ggplot block: pie chart" width="100%"><p class="caption">
+<img src="../reference/figures/block-ggplot-pie.png" class="r-plt" alt="ggplot block: pie chart" width="100%"><p class="caption">
 ggplot block: pie chart
 </p>
 </div>
@@ -299,7 +300,7 @@ it slightly easier to compare arc lengths than full pie slices, as the
 curves are more linear. Use donut charts when aesthetics matter or when
 you want to emphasize the ring pattern over the center point.</p>
 <div class="figure">
-<img src="../reference/figures/block-ggplot-donut.png" alt="ggplot block: donut chart" width="100%"><p class="caption">
+<img src="../reference/figures/block-ggplot-donut.png" class="r-plt" alt="ggplot block: donut chart" width="100%"><p class="caption">
 ggplot block: donut chart
 </p>
 </div>
@@ -323,7 +324,7 @@ y scales for easy comparison, though you can set scales to “free” for
 independent axes. Use this for comparing patterns across time periods,
 regions, or categories.</p>
 <div class="figure">
-<img src="../reference/figures/block-facet.png" alt="Facet block: wrap layout" width="100%"><p class="caption">
+<img src="../reference/figures/block-facet.png" class="r-plt" alt="Facet block: wrap layout" width="100%"><p class="caption">
 Facet block: wrap layout
 </p>
 </div>
@@ -346,7 +347,7 @@ structure reveals interaction effects and makes systematic comparisons
 straightforward. Keep factor levels reasonable (typically 2-5 levels per
 dimension) to maintain readability.</p>
 <div class="figure">
-<img src="../reference/figures/block-facet-grid.png" alt="Facet block: grid layout" width="100%"><p class="caption">
+<img src="../reference/figures/block-facet-grid.png" class="r-plt" alt="Facet block: grid layout" width="100%"><p class="caption">
 Facet block: grid layout
 </p>
 </div>
@@ -369,7 +370,7 @@ choices include theme_minimal for clean presentations, theme_classic for
 publication-ready plots, and theme_dark for emphasis or presentations on
 dark backgrounds.</p>
 <div class="figure">
-<img src="../reference/figures/block-theme.png" alt="Theme block" width="100%"><p class="caption">
+<img src="../reference/figures/block-theme.png" class="r-plt" alt="Theme block" width="100%"><p class="caption">
 Theme block
 </p>
 </div>
@@ -394,7 +395,7 @@ types, subsets, or transformations. This is particularly powerful for
 academic papers, reports, or dashboards where you need to present
 multiple coordinated views.</p>
 <div class="figure">
-<img src="../reference/figures/block-grid.png" alt="Grid block" width="100%"><p class="caption">
+<img src="../reference/figures/block-grid.png" class="r-plt" alt="Grid block" width="100%"><p class="caption">
 Grid block
 </p>
 </div>
@@ -420,7 +421,7 @@ understand how data flows through your pipeline.</p>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.3.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
 </div>
 
     </footer>
