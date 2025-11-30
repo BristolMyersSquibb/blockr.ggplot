@@ -21,6 +21,10 @@ Imports:
     shinyjs,
     shinyWidgets
 Suggests:
+    cowplot,
+    ggpubr,
+    ggthemes,
+    hrbrthemes,
     knitr,
     pkgdown,
     rmarkdown,
