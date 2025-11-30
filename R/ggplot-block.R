@@ -432,9 +432,10 @@ new_ggplot_block <- function(
                 r_linetype() != "(none)" &&
                   "linetype" %in% chart_config$optional
               ) {
+                # Linetype requires discrete/factor variables
                 aes_parts <- c(
                   aes_parts,
-                  glue::glue("linetype = {r_linetype()}")
+                  glue::glue("linetype = as.factor({r_linetype()})")
                 )
               }
               # For density plots, always set group to match fill
