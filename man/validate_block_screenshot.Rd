@@ -12,11 +12,15 @@ validate_block_screenshot(
   width = 800,
   height = 600,
   delay = 5,
+  expand_advanced = FALSE,
+  use_dock = TRUE,
+  dataset = "mtcars",
+  dataset_package = "datasets",
   verbose = TRUE
 )
 }
 \arguments{
-\item{block}{A blockr block object (e.g., from new_chart_block())}
+\item{block}{A blockr block object (e.g., from new_ggplot_block())}
 
 \item{data}{Data to use for the block (default: mtcars)}
 
@@ -29,6 +33,18 @@ validate_block_screenshot(
 \item{height}{Screenshot height in pixels (default: 600)}
 
 \item{delay}{Seconds to wait for app to load (default: 5)}
+
+\item{expand_advanced}{Logical. If TRUE, attempts to click "advanced options"
+toggle before taking screenshot (default: FALSE)}
+
+\item{use_dock}{Logical. If TRUE, uses blockr.dock for improved styling
+and automatically crops to the block panel (default: TRUE)}
+
+\item{dataset}{Character. Name of the dataset to use in dock mode
+(default: "mtcars"). Must be a dataset available via data().}
+
+\item{dataset_package}{Character. Package containing the dataset
+(default: "datasets").}
 
 \item{verbose}{Print progress messages (default: TRUE)}
 }
@@ -50,14 +66,22 @@ simple, direct way to test whether a block implementation works correctly.
 \dontrun{
 # Simple usage with default data (mtcars)
 result <- validate_block_screenshot(
-  new_chart_block(type = "point", x = "wt", y = "mpg")
+  new_ggplot_block(chart_type = "point", x = "mpg", y = "hp")
 )
 
 # With custom data
 result <- validate_block_screenshot(
-  new_chart_block(type = "bar", x = "Species"),
+  new_ggplot_block(chart_type = "bar", x = "Species"),
   data = iris,
-  filename = "iris-bar-chart.png"
+  filename = "iris-bar.png",
+  dataset = "iris",
+  dataset_package = "datasets"
+)
+
+# With advanced options expanded
+result <- validate_block_screenshot(
+  new_theme_block(),
+  expand_advanced = TRUE
 )
 
 # Check if successful
@@ -66,18 +90,6 @@ if (result$success) {
 } else {
   cat("Failed:", result$error)
 }
-
-# Test a new block implementation
-my_block <- new_chart_block(
-  type = "histogram",
-  x = "mpg",
-  bins = 20,
-  fill = "cyl"
-)
-result <- validate_block_screenshot(
-  my_block,
-  filename = "test-histogram.png"
-)
 }
 
 }

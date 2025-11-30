@@ -12,7 +12,8 @@ validate_blocks_batch(
 )
 }
 \arguments{
-\item{blocks}{Named list of blocks to validate}
+\item{blocks}{Named list of blocks to validate (can also be a list of lists
+with 'block' and 'expand_advanced' elements)}
 
 \item{data}{Data to use for all blocks (can also be a named list
 matching block names)}
@@ -32,30 +33,23 @@ a summary report of which blocks work and which don't.
 \dontrun{
 # Test multiple blocks
 blocks <- list(
-  scatter = new_chart_block(type = "point", x = "wt", y = "mpg"),
-  bar = new_chart_block(type = "bar", x = "cyl"),
-  histogram = new_chart_block(type = "histogram", x = "mpg")
+  scatter = new_ggplot_block(chart_type = "point", x = "mpg", y = "hp"),
+  bar = new_ggplot_block(chart_type = "bar", x = "cyl"),
+  facet = new_facet_block(facet_type = "wrap", facet_vars = "cyl")
 )
 
 results <- validate_blocks_batch(blocks)
 print(results)
 
-# With different data for each block
+# With advanced options for specific blocks
 blocks <- list(
-  iris_scatter = new_chart_block(
-    type = "point",
-    x = "Sepal.Length",
-    y = "Sepal.Width"
+  `theme-block` = list(
+    block = new_theme_block(),
+    expand_advanced = TRUE
   ),
-  mtcars_bar = new_chart_block(type = "bar", x = "cyl")
+  `scatter-block` = new_ggplot_block(chart_type = "point", x = "mpg", y = "hp")
 )
-
-data_list <- list(
-  iris_scatter = iris,
-  mtcars_bar = datasets::mtcars
-)
-
-results <- validate_blocks_batch(blocks, data = data_list)
+results <- validate_blocks_batch(blocks)
 }
 
 }

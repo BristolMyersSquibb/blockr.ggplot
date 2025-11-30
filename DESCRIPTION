@@ -24,9 +24,12 @@ Suggests:
     cowplot,
     ggpubr,
     ggthemes,
+    hrbrthemes,
     knitr,
+    magick,
     pkgdown,
     rmarkdown,
+    rlang,
     shinytest2,
     testthat (>= 3.0.0),
     webshot2

@@ -517,12 +517,14 @@ new_facet_block <- function(
                   return(parse(text = "(data)")[[1]])
                 }
 
-                # Build facets formula
+                # Build facets formula (use backticks for non-syntactic names)
                 if (length(facet_vars) == 1) {
-                  facets_formula <- glue::glue("~{facet_vars[1]}")
+                  facets_formula <- glue::glue(
+                    "~{backtick_if_needed(facet_vars[1])}"
+                  )
                 } else {
                   facets_formula <- glue::glue(
-                    "~{paste(facet_vars, collapse = ' + ')}"
+                    "~{paste(backtick_if_needed(facet_vars), collapse = ' + ')}"
                   )
                 }
 
@@ -581,22 +583,22 @@ new_facet_block <- function(
                   return(parse(text = "(data)")[[1]])
                 }
 
-                # Build rows formula
+                # Build rows formula (use backticks for non-syntactic names)
                 if (length(row_vars) == 0) {
                   rows_part <- "."
                 } else if (length(row_vars) == 1) {
-                  rows_part <- row_vars[1]
+                  rows_part <- backtick_if_needed(row_vars[1])
                 } else {
-                  rows_part <- paste(row_vars, collapse = " + ")
+                  rows_part <- paste(backtick_if_needed(row_vars), collapse = " + ")
                 }
 
-                # Build cols formula
+                # Build cols formula (use backticks for non-syntactic names)
                 if (length(col_vars) == 0) {
                   cols_part <- "."
                 } else if (length(col_vars) == 1) {
-                  cols_part <- col_vars[1]
+                  cols_part <- backtick_if_needed(col_vars[1])
                 } else {
-                  cols_part <- paste(col_vars, collapse = " + ")
+                  cols_part <- paste(backtick_if_needed(col_vars), collapse = " + ")
                 }
 
                 grid_formula <- glue::glue("{rows_part} ~ {cols_part}")
