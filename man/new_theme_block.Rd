@@ -59,8 +59,29 @@ upstream), "viridis", "magma", "plasma", "inferno", "cividis", or "ggplot2"
 
 \item{...}{Forwarded to \code{\link[blockr.core]{new_transform_block}}}
 }
+\value{
+A ggplot transform block object of class \code{theme_block}.
+}
 \description{
 A block that applies advanced theme customizations to ggplot2 objects.
 Allows fine-grained control over backgrounds, fonts, grid lines, and more.
 Empty/NULL values will use the base theme's defaults.
+}
+\examples{
+# Create a theme block with classic theme
+new_theme_block(base_theme = "classic")
+
+# Create a theme block with custom settings
+new_theme_block(
+  base_theme = "minimal",
+  legend_position = "bottom",
+  base_size = 14
+)
+
+if (interactive()) {
+  library(blockr.core)
+  # Theme block requires a ggplot input
+  serve(new_theme_block())
+}
+
 }

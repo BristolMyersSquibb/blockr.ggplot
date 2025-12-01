@@ -12,6 +12,11 @@
 #' @param ... Additional arguments forwarded to [blockr.core::new_block()]
 #'
 #' @return A `ggplot_transform_block` object
+#'
+#' @examples
+#' # This is a low-level constructor typically used by other block creators
+#' # See new_ggplot_block() for user-facing examples
+#'
 #' @export
 new_ggplot_transform_block <- function(
   server,

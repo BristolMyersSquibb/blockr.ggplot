@@ -20,6 +20,20 @@
 #' @param donut Whether to create donut chart when type is "pie" (default FALSE)
 #' @param ... Forwarded to \code{\link[blockr.core]{new_plot_block}}
 #'
+#' @return A plot block object of class `ggplot_block`.
+#'
+#' @examples
+#' # Create a scatter plot block
+#' new_ggplot_block(type = "point", x = "mpg", y = "hp")
+#'
+#' # Create a bar chart block
+#' new_ggplot_block(type = "bar", x = "cyl")
+#'
+#' if (interactive()) {
+#'   library(blockr.core)
+#'   serve(new_ggplot_block(), list(data = mtcars))
+#' }
+#'
 #' @export
 new_ggplot_block <- function(
   type = "point",

@@ -45,7 +45,24 @@ new_facet_block(
 
 \item{...}{Forwarded to \code{\link[=new_ggplot_transform_block]{new_ggplot_transform_block()}}}
 }
+\value{
+A ggplot transform block object of class \code{facet_block}.
+}
 \description{
 Applies faceting to a ggplot object using facet_wrap() or facet_grid().
 Accepts a single ggplot input and adds faceting based on data columns.
+}
+\examples{
+# Create a facet wrap block
+new_facet_block(facet_type = "wrap", facets = "cyl")
+
+# Create a facet grid block
+new_facet_block(facet_type = "grid", rows = "cyl", cols = "gear")
+
+if (interactive()) {
+  library(blockr.core)
+  # Facet block requires a ggplot input
+  serve(new_facet_block())
+}
+
 }

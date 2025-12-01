@@ -34,9 +34,26 @@ new_grid_block(
 
 \item{...}{Forwarded to \code{\link[=new_ggplot_transform_block]{new_ggplot_transform_block()}}}
 }
+\value{
+A ggplot transform block object of class \code{grid_block}.
+}
 \description{
 Combines multiple ggplot objects using patchwork::wrap_plots().
 Variadic block that accepts 1 or more ggplot inputs with automatic
 alignment. Supports layout control (ncol, nrow) and annotations
 (title, subtitle, auto-tags).
+}
+\examples{
+# Create a grid block with 2 columns
+new_grid_block(ncol = "2")
+
+# Create a grid block with title
+new_grid_block(title = "My Combined Plots", ncol = "2")
+
+if (interactive()) {
+  library(blockr.core)
+  # Grid block requires multiple ggplot inputs
+  serve(new_grid_block())
+}
+
 }

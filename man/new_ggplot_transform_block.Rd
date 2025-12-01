@@ -26,3 +26,8 @@ This block returns ggplot objects as data, allowing ggplot blocks to be
 chained together (e.g., for combining plots with patchwork). Custom output
 methods ensure plots are displayed properly rather than as data tables.
 }
+\examples{
+# This is a low-level constructor typically used by other block creators
+# See new_ggplot_block() for user-facing examples
+
+}
