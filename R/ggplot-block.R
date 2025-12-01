@@ -52,6 +52,13 @@ new_ggplot_block <- function(
   donut = FALSE,
   ...
 ) {
+
+  # Helper to normalize aesthetic values - ensures empty/NULL becomes "(none)"
+
+  normalize_aes <- function(x) {
+    if (is.null(x) || length(x) == 0 || !nzchar(x)) "(none)" else x
+  }
+
   # Define which aesthetics are valid for each chart type
   chart_aesthetics <- list(
     point = list(
@@ -111,19 +118,17 @@ new_ggplot_block <- function(
         function(input, output, session) {
           cols <- reactive(colnames(data()))
 
-          # Initialize reactive values
+          # Initialize reactive values (normalize aesthetics to handle restoration)
           r_type <- reactiveVal(type)
           r_x <- reactiveVal(x)
-          r_y <- reactiveVal(if (length(y) == 0) "(none)" else y)
-          r_color <- reactiveVal(if (length(color) == 0) "(none)" else color)
-          r_fill <- reactiveVal(if (length(fill) == 0) "(none)" else fill)
-          r_size <- reactiveVal(if (length(size) == 0) "(none)" else size)
-          r_shape <- reactiveVal(if (length(shape) == 0) "(none)" else shape)
-          r_linetype <- reactiveVal(
-            if (length(linetype) == 0) "(none)" else linetype
-          )
-          r_group <- reactiveVal(if (length(group) == 0) "(none)" else group)
-          r_alpha <- reactiveVal(if (length(alpha) == 0) "(none)" else alpha)
+          r_y <- reactiveVal(normalize_aes(y))
+          r_color <- reactiveVal(normalize_aes(color))
+          r_fill <- reactiveVal(normalize_aes(fill))
+          r_size <- reactiveVal(normalize_aes(size))
+          r_shape <- reactiveVal(normalize_aes(shape))
+          r_linetype <- reactiveVal(normalize_aes(linetype))
+          r_group <- reactiveVal(normalize_aes(group))
+          r_alpha <- reactiveVal(normalize_aes(alpha))
           r_density_alpha <- reactiveVal(density_alpha)
           r_position <- reactiveVal(position)
           r_bins <- reactiveVal(bins)
@@ -837,7 +842,7 @@ new_ggplot_block <- function(
                     inputId = NS(id, "y"),
                     label = make_aesthetic_label("Y-axis", "y", type),
                     choices = c("(none)", y),
-                    selected = if (length(y) == 0) "(none)" else y,
+                    selected = normalize_aes(y),
                     width = "100%"
                   )
                 ),
@@ -849,7 +854,7 @@ new_ggplot_block <- function(
                     inputId = NS(id, "color"),
                     label = make_aesthetic_label("Color By", "color", type),
                     choices = c("(none)", color),
-                    selected = if (length(color) == 0) "(none)" else color,
+                    selected = normalize_aes(color),
                     width = "100%"
                   )
                 ),
@@ -860,7 +865,7 @@ new_ggplot_block <- function(
                     inputId = NS(id, "fill"),
                     label = make_aesthetic_label("Fill By", "fill", type),
                     choices = c("(none)", fill),
-                    selected = if (length(fill) == 0) "(none)" else fill,
+                    selected = normalize_aes(fill),
                     width = "100%"
                   )
                 ),
@@ -871,7 +876,7 @@ new_ggplot_block <- function(
                     inputId = NS(id, "size"),
                     label = make_aesthetic_label("Size By", "size", type),
                     choices = c("(none)", size),
-                    selected = if (length(size) == 0) "(none)" else size,
+                    selected = normalize_aes(size),
                     width = "100%"
                   )
                 )
@@ -915,7 +920,7 @@ new_ggplot_block <- function(
                       inputId = NS(id, "shape"),
                       label = make_aesthetic_label("Shape By", "shape", type),
                       choices = c("(none)", shape),
-                      selected = if (length(shape) == 0) "(none)" else shape,
+                      selected = normalize_aes(shape),
                       width = "100%"
                     )
                   ),
@@ -930,11 +935,7 @@ new_ggplot_block <- function(
                         type
                       ),
                       choices = c("(none)", linetype),
-                      selected = if (length(linetype) == 0) {
-                        "(none)"
-                      } else {
-                        linetype
-                      },
+                      selected = normalize_aes(linetype),
                       width = "100%"
                     )
                   ),
@@ -945,7 +946,7 @@ new_ggplot_block <- function(
                       inputId = NS(id, "group"),
                       label = make_aesthetic_label("Group By", "group", type),
                       choices = c("(none)", group),
-                      selected = if (length(group) == 0) "(none)" else group,
+                      selected = normalize_aes(group),
                       width = "100%"
                     )
                   ),
@@ -956,7 +957,7 @@ new_ggplot_block <- function(
                       inputId = NS(id, "alpha"),
                       label = make_aesthetic_label("Alpha By", "alpha", type),
                       choices = c("(none)", alpha),
-                      selected = if (length(alpha) == 0) "(none)" else alpha,
+                      selected = normalize_aes(alpha),
                       width = "100%"
                     )
                   ),
