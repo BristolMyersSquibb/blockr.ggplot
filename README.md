@@ -37,92 +37,25 @@ This opens a visual interface in your web browser. Add blocks using the "+" butt
 
 ## Available Blocks
 
-blockr.ggplot provides 4 visualization blocks:
+blockr.ggplot provides visualization blocks using the ggplot block with 9 chart types, plus 3 composition blocks:
 
-### Chart Block
-- [ggplot](https://bristolmyerssquibb.github.io/blockr.ggplot/articles/blockr-ggplot-showcase.html#scatter-plot): universal chart block supporting 9 chart types
-  - [scatter](https://bristolmyerssquibb.github.io/blockr.ggplot/articles/blockr-ggplot-showcase.html#scatter-plot): relationships between continuous variables
-  - [bar](https://bristolmyerssquibb.github.io/blockr.ggplot/articles/blockr-ggplot-showcase.html#bar-chart): compare values across categories
-  - [line](https://bristolmyerssquibb.github.io/blockr.ggplot/articles/blockr-ggplot-showcase.html#line-chart): trends over time or sequences
-  - [boxplot](https://bristolmyerssquibb.github.io/blockr.ggplot/articles/blockr-ggplot-showcase.html#box-plot): distribution statistics across groups
-  - [violin](https://bristolmyerssquibb.github.io/blockr.ggplot/articles/blockr-ggplot-showcase.html#violin-plot): distribution shapes with density
-  - [density](https://bristolmyerssquibb.github.io/blockr.ggplot/articles/blockr-ggplot-showcase.html#density-plot): smooth probability distributions
-  - [area](https://bristolmyerssquibb.github.io/blockr.ggplot/articles/blockr-ggplot-showcase.html#area-chart): cumulative magnitude over time
-  - [histogram](https://bristolmyerssquibb.github.io/blockr.ggplot/articles/blockr-ggplot-showcase.html#histogram): frequency distributions
-  - [pie/donut](https://bristolmyerssquibb.github.io/blockr.ggplot/articles/blockr-ggplot-showcase.html#pie-chart): proportions of a whole
+### Chart Types
+- [scatter](https://bristolmyerssquibb.github.io/blockr.ggplot/articles/blockr-ggplot-showcase.html#scatter-plot): relationships between continuous variables
+- [bar](https://bristolmyerssquibb.github.io/blockr.ggplot/articles/blockr-ggplot-showcase.html#bar-chart): compare values across categories
+- [line](https://bristolmyerssquibb.github.io/blockr.ggplot/articles/blockr-ggplot-showcase.html#line-chart): trends over time or sequences
+- [boxplot](https://bristolmyerssquibb.github.io/blockr.ggplot/articles/blockr-ggplot-showcase.html#box-plot): distribution statistics across groups
+- [violin](https://bristolmyerssquibb.github.io/blockr.ggplot/articles/blockr-ggplot-showcase.html#violin-plot): distribution shapes with density
+- [density](https://bristolmyerssquibb.github.io/blockr.ggplot/articles/blockr-ggplot-showcase.html#density-plot): smooth probability distributions
+- [area](https://bristolmyerssquibb.github.io/blockr.ggplot/articles/blockr-ggplot-showcase.html#area-chart): cumulative magnitude over time
+- [histogram](https://bristolmyerssquibb.github.io/blockr.ggplot/articles/blockr-ggplot-showcase.html#histogram): frequency distributions
+- [pie/donut](https://bristolmyerssquibb.github.io/blockr.ggplot/articles/blockr-ggplot-showcase.html#pie-chart): proportions of a whole
 
-### Composition Blocks
-- [facet](https://bristolmyerssquibb.github.io/blockr.ggplot/articles/blockr-ggplot-showcase.html#facet-wrap-layout): split plots into panels by category (wrap or grid layout)
+### Composition
+- [facet](https://bristolmyerssquibb.github.io/blockr.ggplot/articles/blockr-ggplot-showcase.html#facet-wrap-layout): split plots into panels by category
 - [grid](https://bristolmyerssquibb.github.io/blockr.ggplot/articles/blockr-ggplot-showcase.html#grid-block): combine multiple plots into dashboards
-- [theme](https://bristolmyerssquibb.github.io/blockr.ggplot/articles/blockr-ggplot-showcase.html#theme-block): apply professional styling with 20+ themes
+- [theme](https://bristolmyerssquibb.github.io/blockr.ggplot/articles/blockr-ggplot-showcase.html#theme-block): apply professional styling
 
 See `vignette("blockr-ggplot-showcase")` for a complete showcase with screenshots and detailed explanations of each block.
-
-## Chart Types Gallery
-
-All visualizations are created with the same ggplot block - just by changing the chart type:
-
-### Distribution Visualizations
-
-<img src="man/figures/block-ggplot-scatter.png" alt="Scatter Plot" width="60%">
-
-*Scatter plot: explore relationships between continuous variables*
-
-<img src="man/figures/block-ggplot-histogram.png" alt="Histogram" width="60%">
-
-*Histogram: visualize distributions of continuous variables*
-
-<img src="man/figures/block-ggplot-density.png" alt="Density Plot" width="60%">
-
-*Density plot: smooth probability density curves*
-
-### Categorical Comparisons
-
-<img src="man/figures/block-ggplot-bar.png" alt="Bar Chart" width="60%">
-
-*Bar chart: compare values across categories*
-
-<img src="man/figures/block-ggplot-boxplot.png" alt="Box Plot" width="60%">
-
-*Box plot: distribution statistics across groups*
-
-<img src="man/figures/block-ggplot-violin.png" alt="Violin Plot" width="60%">
-
-*Violin plot: distribution shapes with density*
-
-### Time Series & Trends
-
-<img src="man/figures/block-ggplot-line.png" alt="Line Chart" width="60%">
-
-*Line chart: track changes over time*
-
-<img src="man/figures/block-ggplot-area.png" alt="Area Chart" width="60%">
-
-*Area chart: cumulative totals and magnitude*
-
-### Proportions
-
-<img src="man/figures/block-ggplot-pie.png" alt="Pie Chart" width="60%">
-
-*Pie chart: parts of a whole*
-
-<img src="man/figures/block-ggplot-donut.png" alt="Donut Chart" width="60%">
-
-*Donut chart: modern pie chart variant*
-
-### Composition Blocks
-
-<img src="man/figures/block-facet.png" alt="Facet Block" width="60%">
-
-*Facet block: split into panels by category*
-
-<img src="man/figures/block-grid.png" alt="Grid Block" width="60%">
-
-*Grid block: combine multiple plots*
-
-<img src="man/figures/block-theme.png" alt="Theme Block" width="60%">
-
-*Theme block: apply professional styling*
 
 ## Learn More
 
