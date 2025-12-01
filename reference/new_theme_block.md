@@ -88,3 +88,61 @@ new_theme_block(
 
   Forwarded to
   [`new_transform_block`](https://bristolmyerssquibb.github.io/blockr.core/reference/new_transform_block.html)
+
+## Value
+
+A ggplot transform block object of class `theme_block`.
+
+## Examples
+
+``` r
+# Create a theme block with classic theme
+new_theme_block(base_theme = "classic")
+#> <theme_block<ggplot_transform_block<block>>>
+#> Name: "Theme"
+#> Data inputs: "data"
+#> Initial block state:
+#>  $ panel_bg         : chr ""
+#>  $ plot_bg          : chr ""
+#>  $ base_size        : num NA
+#>  $ base_family      : chr "auto"
+#>  $ show_major_grid  : chr "auto"
+#>  $ show_minor_grid  : chr "auto"
+#>  $ grid_color       : chr ""
+#>  $ show_panel_border: chr "auto"
+#>  $ legend_position  : chr "auto"
+#>  $ base_theme       : chr "classic"
+#>  $ palette_fill     : chr "auto"
+#>  $ palette_colour   : chr "auto"
+#> Constructor: blockr.ggplot::new_theme_block()
+
+# Create a theme block with custom settings
+new_theme_block(
+  base_theme = "minimal",
+  legend_position = "bottom",
+  base_size = 14
+)
+#> <theme_block<ggplot_transform_block<block>>>
+#> Name: "Theme"
+#> Data inputs: "data"
+#> Initial block state:
+#>  $ panel_bg         : chr ""
+#>  $ plot_bg          : chr ""
+#>  $ base_size        : num 14
+#>  $ base_family      : chr "auto"
+#>  $ show_major_grid  : chr "auto"
+#>  $ show_minor_grid  : chr "auto"
+#>  $ grid_color       : chr ""
+#>  $ show_panel_border: chr "auto"
+#>  $ legend_position  : chr "bottom"
+#>  $ base_theme       : chr "minimal"
+#>  $ palette_fill     : chr "auto"
+#>  $ palette_colour   : chr "auto"
+#> Constructor: blockr.ggplot::new_theme_block()
+
+if (interactive()) {
+  library(blockr.core)
+  # Theme block requires a ggplot input
+  serve(new_theme_block())
+}
+```

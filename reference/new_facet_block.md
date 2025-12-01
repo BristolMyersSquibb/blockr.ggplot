@@ -70,3 +70,53 @@ new_facet_block(
 
   Forwarded to
   [`new_ggplot_transform_block()`](https://bristolmyerssquibb.github.io/blockr.ggplot/reference/new_ggplot_transform_block.md)
+
+## Value
+
+A ggplot transform block object of class `facet_block`.
+
+## Examples
+
+``` r
+# Create a facet wrap block
+new_facet_block(facet_type = "wrap", facets = "cyl")
+#> <facet_block<ggplot_transform_block<block>>>
+#> Name: "Facet"
+#> Data inputs: "data"
+#> Initial block state:
+#>  $ facet_type: chr "wrap"
+#>  $ facets    : chr "cyl"
+#>  $ rows      : chr(0)
+#>  $ cols      : chr(0)
+#>  $ ncol      : chr(0)
+#>  $ nrow      : chr(0)
+#>  $ scales    : chr "fixed"
+#>  $ labeller  : chr "label_value"
+#>  $ dir       : chr "h"
+#>  $ space     : chr "fixed"
+#> Constructor: blockr.ggplot::new_facet_block()
+
+# Create a facet grid block
+new_facet_block(facet_type = "grid", rows = "cyl", cols = "gear")
+#> <facet_block<ggplot_transform_block<block>>>
+#> Name: "Facet"
+#> Data inputs: "data"
+#> Initial block state:
+#>  $ facet_type: chr "grid"
+#>  $ facets    : chr(0)
+#>  $ rows      : chr "cyl"
+#>  $ cols      : chr "gear"
+#>  $ ncol      : chr(0)
+#>  $ nrow      : chr(0)
+#>  $ scales    : chr "fixed"
+#>  $ labeller  : chr "label_value"
+#>  $ dir       : chr "h"
+#>  $ space     : chr "fixed"
+#> Constructor: blockr.ggplot::new_facet_block()
+
+if (interactive()) {
+  library(blockr.core)
+  # Facet block requires a ggplot input
+  serve(new_facet_block())
+}
+```

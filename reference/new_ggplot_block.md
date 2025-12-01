@@ -89,3 +89,60 @@ new_ggplot_block(
 
   Forwarded to
   [`new_plot_block`](https://bristolmyerssquibb.github.io/blockr.core/reference/new_plot_block.html)
+
+## Value
+
+A plot block object of class `ggplot_block`.
+
+## Examples
+
+``` r
+# Create a scatter plot block
+new_ggplot_block(type = "point", x = "mpg", y = "hp")
+#> <ggplot_block<ggplot_transform_block<block>>>
+#> Name: "Ggplot"
+#> Data inputs: "data"
+#> Initial block state:
+#>  $ type         : chr "point"
+#>  $ x            : chr "mpg"
+#>  $ y            : chr "hp"
+#>  $ color        : chr(0)
+#>  $ fill         : chr(0)
+#>  $ size         : chr(0)
+#>  $ shape        : chr(0)
+#>  $ linetype     : chr(0)
+#>  $ group        : chr(0)
+#>  $ alpha        : chr(0)
+#>  $ density_alpha: num 0.8
+#>  $ position     : chr "stack"
+#>  $ bins         : num 30
+#>  $ donut        : logi FALSE
+#> Constructor: blockr.ggplot::new_ggplot_block()
+
+# Create a bar chart block
+new_ggplot_block(type = "bar", x = "cyl")
+#> <ggplot_block<ggplot_transform_block<block>>>
+#> Name: "Ggplot"
+#> Data inputs: "data"
+#> Initial block state:
+#>  $ type         : chr "bar"
+#>  $ x            : chr "cyl"
+#>  $ y            : chr(0)
+#>  $ color        : chr(0)
+#>  $ fill         : chr(0)
+#>  $ size         : chr(0)
+#>  $ shape        : chr(0)
+#>  $ linetype     : chr(0)
+#>  $ group        : chr(0)
+#>  $ alpha        : chr(0)
+#>  $ density_alpha: num 0.8
+#>  $ position     : chr "stack"
+#>  $ bins         : num 30
+#>  $ donut        : logi FALSE
+#> Constructor: blockr.ggplot::new_ggplot_block()
+
+if (interactive()) {
+  library(blockr.core)
+  serve(new_ggplot_block(), list(data = mtcars))
+}
+```

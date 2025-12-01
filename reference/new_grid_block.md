@@ -54,3 +54,47 @@ new_grid_block(
 
   Forwarded to
   [`new_ggplot_transform_block()`](https://bristolmyerssquibb.github.io/blockr.ggplot/reference/new_ggplot_transform_block.md)
+
+## Value
+
+A ggplot transform block object of class `grid_block`.
+
+## Examples
+
+``` r
+# Create a grid block with 2 columns
+new_grid_block(ncol = "2")
+#> <grid_block<rbind_block<ggplot_transform_block<block>>>>
+#> Name: "Grid"
+#> Indefinite arity
+#> Initial block state:
+#>  $ ncol      : chr "2"
+#>  $ nrow      : chr(0)
+#>  $ title     : chr(0)
+#>  $ subtitle  : chr(0)
+#>  $ caption   : chr(0)
+#>  $ tag_levels: chr(0)
+#>  $ guides    : chr "auto"
+#> Constructor: blockr.ggplot::new_grid_block()
+
+# Create a grid block with title
+new_grid_block(title = "My Combined Plots", ncol = "2")
+#> <grid_block<rbind_block<ggplot_transform_block<block>>>>
+#> Name: "Grid"
+#> Indefinite arity
+#> Initial block state:
+#>  $ ncol      : chr "2"
+#>  $ nrow      : chr(0)
+#>  $ title     : chr "My Combined Plots"
+#>  $ subtitle  : chr(0)
+#>  $ caption   : chr(0)
+#>  $ tag_levels: chr(0)
+#>  $ guides    : chr "auto"
+#> Constructor: blockr.ggplot::new_grid_block()
+
+if (interactive()) {
+  library(blockr.core)
+  # Grid block requires multiple ggplot inputs
+  serve(new_grid_block())
+}
+```

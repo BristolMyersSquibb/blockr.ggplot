@@ -38,3 +38,10 @@ new_ggplot_transform_block(server, ui, class, ctor = sys.parent(), ...)
 ## Value
 
 A `ggplot_transform_block` object
+
+## Examples
+
+``` r
+# This is a low-level constructor typically used by other block creators
+# See new_ggplot_block() for user-facing examples
+```
