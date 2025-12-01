@@ -892,7 +892,6 @@ new_ggplot_block <- function(
               # Advanced Aesthetic Mappings
               div(
                 class = "block-section",
-                tags$h4("Advanced Mappings"),
                 div(
                   class = "block-section-grid",
                   div(
@@ -963,10 +962,9 @@ new_ggplot_block <- function(
                 )
               ),
 
-              # Advanced Options
+              # Chart-Specific Options
               div(
                 class = "block-section",
-                tags$h4("Chart-Specific Options"),
                 div(
                   class = "block-section-grid",
                   div(
