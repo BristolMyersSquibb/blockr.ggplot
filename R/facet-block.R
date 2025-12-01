@@ -255,6 +255,22 @@ create_facet_preview_svg <- function(
 #' @param space Space behavior for facet_grid: "fixed", "free_x", "free_y"
 #'   (default: "fixed")
 #' @param ... Forwarded to [new_ggplot_transform_block()]
+#'
+#' @return A ggplot transform block object of class `facet_block`.
+#'
+#' @examples
+#' # Create a facet wrap block
+#' new_facet_block(facet_type = "wrap", facets = "cyl")
+#'
+#' # Create a facet grid block
+#' new_facet_block(facet_type = "grid", rows = "cyl", cols = "gear")
+#'
+#' if (interactive()) {
+#'   library(blockr.core)
+#'   # Facet block requires a ggplot input
+#'   serve(new_facet_block())
+#' }
+#'
 #' @export
 new_facet_block <- function(
   facet_type = "wrap",

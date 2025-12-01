@@ -162,6 +162,25 @@ get_theme_function <- function(theme_name) {
 #'   (default "auto" preserves upstream palette)
 #' @param ... Forwarded to \code{\link[blockr.core]{new_transform_block}}
 #'
+#' @return A ggplot transform block object of class `theme_block`.
+#'
+#' @examples
+#' # Create a theme block with classic theme
+#' new_theme_block(base_theme = "classic")
+#'
+#' # Create a theme block with custom settings
+#' new_theme_block(
+#'   base_theme = "minimal",
+#'   legend_position = "bottom",
+#'   base_size = 14
+#' )
+#'
+#' if (interactive()) {
+#'   library(blockr.core)
+#'   # Theme block requires a ggplot input
+#'   serve(new_theme_block())
+#' }
+#'
 #' @export
 new_theme_block <- function(
   panel_bg = "",

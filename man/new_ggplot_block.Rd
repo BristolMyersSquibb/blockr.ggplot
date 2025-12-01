@@ -54,7 +54,23 @@ new_ggplot_block(
 
 \item{...}{Forwarded to \code{\link[blockr.core]{new_plot_block}}}
 }
+\value{
+A plot block object of class \code{ggplot_block}.
+}
 \description{
 A flexible block that allows users to select from various ggplot2 geoms
 and dynamically shows relevant aesthetics for the selected visualization.
+}
+\examples{
+# Create a scatter plot block
+new_ggplot_block(type = "point", x = "mpg", y = "hp")
+
+# Create a bar chart block
+new_ggplot_block(type = "bar", x = "cyl")
+
+if (interactive()) {
+  library(blockr.core)
+  serve(new_ggplot_block(), list(data = mtcars))
+}
+
 }

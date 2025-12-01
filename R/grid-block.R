@@ -198,6 +198,22 @@ dot_args_names <- function(x) {
 #' @param guides Legend handling: 'auto', 'collect', or 'keep'
 #'   (default: 'auto')
 #' @param ... Forwarded to [new_ggplot_transform_block()]
+#'
+#' @return A ggplot transform block object of class `grid_block`.
+#'
+#' @examples
+#' # Create a grid block with 2 columns
+#' new_grid_block(ncol = "2")
+#'
+#' # Create a grid block with title
+#' new_grid_block(title = "My Combined Plots", ncol = "2")
+#'
+#' if (interactive()) {
+#'   library(blockr.core)
+#'   # Grid block requires multiple ggplot inputs
+#'   serve(new_grid_block())
+#' }
+#'
 #' @export
 new_grid_block <- function(
   ncol = character(),
