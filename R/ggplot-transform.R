@@ -45,8 +45,8 @@ block_output.ggplot_transform_block <- function(x, result, session) {
 }
 
 #' @export
-block_eval.ggplot_transform_block <- function(x, expr, data, ...) {
-  result <- eval(expr, data)
+block_eval.ggplot_transform_block <- function(x, expr, env, ...) {
+  result <- eval(expr, env)
 
   if (inherits(result, "ggplot")) {
     ggplot2::ggplot_build(result)
