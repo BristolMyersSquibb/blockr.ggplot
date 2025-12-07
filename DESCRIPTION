@@ -1,18 +1,41 @@
 Package: blockr.ggplot
-Title: Interactive ggplot2 Charts for Blockr
-Version: 0.0.1
-Authors@R: c(
-    person("Nicolas", "Bennett", , "nicolas@cynkra.com", role = c("aut", "cre")),
-    person("Christoph", "Sax", , "christoph@cynkra.com", role = "aut")
-  )
-Description: Provides comprehensive blocks for plotting with blockr using
-    'ggplot2'.  Includes PowerBI-style chart types (bar charts, line
-    charts, pie charts, scatter plots) as well as statistical plots
-    (boxplots, histograms, density plots, violin plots, heatmaps) with
+Title: Interactive 'ggplot2' Visualization Blocks
+Version: 0.1.0
+Authors@R:
+    c(person(given = "Christoph",
+             family = "Sax",
+             role = c("aut", "cre"),
+             email = "christoph@cynkra.com",
+             comment = c(ORCID = "0000-0002-7192-7044")),
+      person(given = "Nicolas",
+             family = "Bennett",
+             role = "aut",
+             email = "nicolas@cynkra.com"),
+      person(given = "David",
+             family = "Granjon",
+             role = "aut",
+             email = "david@cynkra.com"),
+      person(given = "Mike",
+             family = "Page",
+             role = "aut",
+             email = "mike@cynkra.com"),
+      person(family = "Bristol Myers Squibb",
+             role = "fnd")
+    )
+Description: Extends 'blockr.core' with interactive blocks for data
+    visualization using 'ggplot2'. Users can build charts through a graphical
+    interface without writing code directly. Includes PowerBI-style chart types
+    (bar charts, line charts, pie charts, scatter plots) as well as statistical
+    plots (boxplots, histograms, density plots, violin plots, heatmaps) with
     rich customization options and intuitive user interfaces.
-License: GPL (>= 3)
 URL: https://bristolmyerssquibb.github.io/blockr.ggplot/
 BugReports: https://github.com/BristolMyersSquibb/blockr.ggplot/issues
+License: GPL (>= 3)
+Depends:
+    R (>= 4.1.0)
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.3
 Imports:
     blockr.core (>= 0.1.1),
     colourpicker,
@@ -34,7 +57,4 @@ Suggests:
     testthat (>= 3.0.0)
 VignetteBuilder: knitr
 Config/testthat/edition: 3
-Encoding: UTF-8
-Remotes: cynkra/blockr.core
-Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.3.3
+Config/testthat/parallel: true
