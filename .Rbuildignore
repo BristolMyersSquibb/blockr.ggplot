@@ -17,3 +17,4 @@
 ^pkgdown$
 ^[.]?air[.]toml$
 ^\.vscode$
+^cran-comments\.md$

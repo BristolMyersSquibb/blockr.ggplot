@@ -118,7 +118,8 @@ new_ggplot_block <- function(
         function(input, output, session) {
           cols <- reactive(colnames(data()))
 
-          # Initialize reactive values (normalize aesthetics to handle restoration)
+          # Initialize reactive values
+          # (normalize aesthetics to handle restoration)
           r_type <- reactiveVal(type)
           r_x <- reactiveVal(x)
           r_y <- reactiveVal(normalize_aes(y))
