@@ -4,7 +4,7 @@
 \name{blockr.ggplot-package}
 \alias{blockr.ggplot}
 \alias{blockr.ggplot-package}
-\title{blockr.ggplot: Interactive 'ggplot2' Charts for 'blockr'}
+\title{blockr.ggplot: Interactive 'ggplot2' Visualization Blocks}
 \description{
 Extends 'blockr.core' with interactive blocks for data visualization using 'ggplot2'. Users can build charts through a graphical interface without writing code directly. Includes PowerBI-style chart types (bar charts, line charts, pie charts, scatter plots) as well as statistical plots (boxplots, histograms, density plots, violin plots, heatmaps) with rich customization options and intuitive user interfaces.
 }
@@ -17,11 +17,11 @@ Useful links:
 
 }
 \author{
-\strong{Maintainer}: Nicolas Bennett \email{nicolas@cynkra.com}
+\strong{Maintainer}: Christoph Sax \email{christoph@cynkra.com} (\href{https://orcid.org/0000-0002-7192-7044}{ORCID})
 
 Authors:
 \itemize{
-  \item Christoph Sax \email{christoph@cynkra.com} (\href{https://orcid.org/0000-0002-7192-7044}{ORCID})
+  \item Nicolas Bennett \email{nicolas@cynkra.com}
   \item David Granjon \email{david@cynkra.com}
   \item Mike Page \email{mike@cynkra.com}
 }
