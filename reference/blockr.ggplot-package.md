@@ -1,4 +1,4 @@
-# blockr.ggplot: Interactive 'ggplot2' Charts for 'blockr'
+# blockr.ggplot: Interactive 'ggplot2' Visualization Blocks
 
 Extends 'blockr.core' with interactive blocks for data visualization
 using 'ggplot2'. Users can build charts through a graphical interface
@@ -18,12 +18,12 @@ Useful links:
 
 ## Author
 
-**Maintainer**: Nicolas Bennett <nicolas@cynkra.com>
+**Maintainer**: Christoph Sax <christoph@cynkra.com>
+([ORCID](https://orcid.org/0000-0002-7192-7044))
 
 Authors:
 
-- Christoph Sax <christoph@cynkra.com>
-  ([ORCID](https://orcid.org/0000-0002-7192-7044))
+- Nicolas Bennett <nicolas@cynkra.com>
 
 - David Granjon <david@cynkra.com>
 

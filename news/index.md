@@ -1,6 +1,6 @@
 # Changelog
 
-## blockr.ggplot 0.0.1
+## blockr.ggplot 0.1.0
 
 Initial CRAN release.
 

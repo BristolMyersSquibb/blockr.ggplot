@@ -25,7 +25,7 @@ Internal UI components and helper functions
   : ggplot transform block constructor
 - [`blockr.ggplot`](https://bristolmyerssquibb.github.io/blockr.ggplot/reference/blockr.ggplot-package.md)
   [`blockr.ggplot-package`](https://bristolmyerssquibb.github.io/blockr.ggplot/reference/blockr.ggplot-package.md)
-  : blockr.ggplot: Interactive 'ggplot2' Charts for 'blockr'
+  : blockr.ggplot: Interactive 'ggplot2' Visualization Blocks
 - [`build_theme_choices()`](https://bristolmyerssquibb.github.io/blockr.ggplot/reference/build_theme_choices.md)
   : Build theme choices list based on available packages
 - [`get_theme_function()`](https://bristolmyerssquibb.github.io/blockr.ggplot/reference/get_theme_function.md)
