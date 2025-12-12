@@ -6,7 +6,7 @@
 \alias{blockr.ggplot-package}
 \title{blockr.ggplot: Interactive 'ggplot2' Visualization Blocks}
 \description{
-Extends 'blockr.core' with interactive blocks for data visualization using 'ggplot2'. Users can build charts through a graphical interface without writing code directly. Includes PowerBI-style chart types (bar charts, line charts, pie charts, scatter plots) as well as statistical plots (boxplots, histograms, density plots, violin plots, heatmaps) with rich customization options and intuitive user interfaces.
+Extends 'blockr.core' with interactive blocks for data visualization using 'ggplot2'. Users can build charts through a graphical interface without writing code directly. Includes common chart types (bar charts, line charts, pie charts, scatter plots) as well as statistical plots (boxplots, histograms, density plots, violin plots) with rich customization options and intuitive user interfaces.
 }
 \seealso{
 Useful links:
