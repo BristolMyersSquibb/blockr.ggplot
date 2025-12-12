@@ -53,10 +53,11 @@ new_ggplot_block <- function(
   ...
 ) {
 
-  # Helper to normalize aesthetic values - ensures empty/NULL becomes "(none)"
 
+  # Helper to normalize aesthetic values - ensures empty/NULL/NA becomes "(none)"
+  # Covers all cases that isTruthy() would catch as FALSE
   normalize_aes <- function(x) {
-    if (is.null(x) || length(x) == 0 || !nzchar(x)) "(none)" else x
+    if (!isTruthy(x)) "(none)" else x
   }
 
   # Define which aesthetics are valid for each chart type
@@ -155,14 +156,14 @@ new_ggplot_block <- function(
             )
           })
           observeEvent(input$x, r_x(input$x))
-          observeEvent(input$y, r_y(input$y))
-          observeEvent(input$color, r_color(input$color))
-          observeEvent(input$fill, r_fill(input$fill))
-          observeEvent(input$size, r_size(input$size))
-          observeEvent(input$shape, r_shape(input$shape))
-          observeEvent(input$linetype, r_linetype(input$linetype))
-          observeEvent(input$group, r_group(input$group))
-          observeEvent(input$alpha, r_alpha(input$alpha))
+          observeEvent(input$y, r_y(normalize_aes(input$y)))
+          observeEvent(input$color, r_color(normalize_aes(input$color)))
+          observeEvent(input$fill, r_fill(normalize_aes(input$fill)))
+          observeEvent(input$size, r_size(normalize_aes(input$size)))
+          observeEvent(input$shape, r_shape(normalize_aes(input$shape)))
+          observeEvent(input$linetype, r_linetype(normalize_aes(input$linetype)))
+          observeEvent(input$group, r_group(normalize_aes(input$group)))
+          observeEvent(input$alpha, r_alpha(normalize_aes(input$alpha)))
           observeEvent(
             input$density_alpha,
             r_density_alpha(input$density_alpha)
@@ -431,7 +432,7 @@ new_ggplot_block <- function(
                 stat_types <- c(
                   "histogram", "bar", "boxplot", "violin", "density", "pie"
                 )
-                if (current_type %in% stat_types && isTruthy(r_fill())) {
+                if (current_type %in% stat_types) {
                   aes_parts <- c(
                     aes_parts,
                     glue::glue(
@@ -451,10 +452,7 @@ new_ggplot_block <- function(
                   glue::glue("size = {backtick_if_needed(r_size())}")
                 )
               }
-              if (
-                r_shape() != "(none)" && "shape" %in% chart_config$optional
-                  && isTruthy(r_shape())
-              ) {
+              if (r_shape() != "(none)" && "shape" %in% chart_config$optional) {
                 # Shape requires discrete/factor variables
                 aes_parts <- c(
                   aes_parts,
@@ -478,7 +476,7 @@ new_ggplot_block <- function(
               # For density plots, always set group to match fill
               # This ensures proper grouping for statistical transformation
               if (current_type == "density") {
-                if (r_fill() != "(none)" && isTruthy(r_fill())) {
+                if (r_fill() != "(none)") {
                   aes_parts <- c(
                     aes_parts,
                     glue::glue(
