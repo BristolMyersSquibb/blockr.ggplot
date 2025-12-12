@@ -54,8 +54,7 @@ new_ggplot_block <- function(
 ) {
 
 
-  # Helper to normalize aesthetic values - ensures empty/NULL/NA becomes "(none)"
-  # Covers all cases that isTruthy() would catch as FALSE
+  # Normalize aesthetic values - empty/NULL/NA becomes "(none)"
   normalize_aes <- function(x) {
     if (!isTruthy(x)) "(none)" else x
   }
@@ -161,7 +160,10 @@ new_ggplot_block <- function(
           observeEvent(input$fill, r_fill(normalize_aes(input$fill)))
           observeEvent(input$size, r_size(normalize_aes(input$size)))
           observeEvent(input$shape, r_shape(normalize_aes(input$shape)))
-          observeEvent(input$linetype, r_linetype(normalize_aes(input$linetype)))
+          observeEvent(
+            input$linetype,
+            r_linetype(normalize_aes(input$linetype))
+          )
           observeEvent(input$group, r_group(normalize_aes(input$group)))
           observeEvent(input$alpha, r_alpha(normalize_aes(input$alpha)))
           observeEvent(
