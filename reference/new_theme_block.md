@@ -10,7 +10,7 @@ more. Empty/NULL values will use the base theme's defaults.
 new_theme_block(
   panel_bg = "",
   plot_bg = "",
-  base_size = NA_real_,
+  base_size = "auto",
   base_family = "auto",
   show_major_grid = "auto",
   show_minor_grid = "auto",
@@ -36,7 +36,7 @@ new_theme_block(
 
 - base_size:
 
-  Base font size in points (default NA uses base theme default)
+  Base font size in points (default "auto" uses base theme default)
 
 - base_family:
 
@@ -104,7 +104,7 @@ new_theme_block(base_theme = "classic")
 #> Initial block state:
 #>  $ panel_bg         : chr ""
 #>  $ plot_bg          : chr ""
-#>  $ base_size        : num NA
+#>  $ base_size        : chr "auto"
 #>  $ base_family      : chr "auto"
 #>  $ show_major_grid  : chr "auto"
 #>  $ show_minor_grid  : chr "auto"
