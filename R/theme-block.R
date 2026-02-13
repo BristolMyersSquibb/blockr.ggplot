@@ -221,114 +221,126 @@ new_theme_block <- function(
           observeEvent(
             input$panel_bg,
             {
-              val <- input$panel_bg
-              if (is.null(val)) {
-                val <- ""
+              if (!is.null(input$panel_bg)) {
+                val <- input$panel_bg
+                # Treat transparent, #00000000 (transparent black),
+                # or empty as "auto"
+                r_panel_bg(
+                  if (val %in% c("transparent", "#00000000", "")) "" else val
+                )
               }
-              # Treat transparent, #00000000 (transparent black),
-              # or empty as "auto"
-              r_panel_bg(
-                if (val %in% c("transparent", "#00000000", "")) "" else val
-              )
             },
             ignoreNULL = FALSE
           )
           observeEvent(
             input$plot_bg,
             {
-              val <- input$plot_bg
-              if (is.null(val)) {
-                val <- ""
+              if (!is.null(input$plot_bg)) {
+                val <- input$plot_bg
+                # Treat transparent, #00000000 (transparent black),
+                # or empty as "auto"
+                r_plot_bg(
+                  if (val %in% c("transparent", "#00000000", "")) "" else val
+                )
               }
-              # Treat transparent, #00000000 (transparent black),
-              # or empty as "auto"
-              r_plot_bg(
-                if (val %in% c("transparent", "#00000000", "")) "" else val
-              )
             },
             ignoreNULL = FALSE
           )
           observeEvent(
             input$base_size,
             {
-              val <- input$base_size
-              if (is.null(val)) {
-                val <- "auto"
+              if (!is.null(input$base_size)) {
+                val <- input$base_size
+                r_base_size(
+                  if (val == "auto") "auto" else as.numeric(val)
+                )
               }
-              r_base_size(
-                if (val == "auto") "auto" else as.numeric(val)
-              )
             },
             ignoreNULL = FALSE
           )
           observeEvent(
             input$base_family,
             {
-              r_base_family(input$base_family %||% "auto")
+              if (!is.null(input$base_family)) {
+                r_base_family(input$base_family)
+              }
             },
             ignoreNULL = FALSE
           )
           observeEvent(
             input$show_major_grid,
             {
-              r_show_major_grid(input$show_major_grid %||% "auto")
+              if (!is.null(input$show_major_grid)) {
+                r_show_major_grid(input$show_major_grid)
+              }
             },
             ignoreNULL = FALSE
           )
           observeEvent(
             input$show_minor_grid,
             {
-              r_show_minor_grid(input$show_minor_grid %||% "auto")
+              if (!is.null(input$show_minor_grid)) {
+                r_show_minor_grid(input$show_minor_grid)
+              }
             },
             ignoreNULL = FALSE
           )
           observeEvent(
             input$grid_color,
             {
-              val <- input$grid_color
-              if (is.null(val)) {
-                val <- ""
+              if (!is.null(input$grid_color)) {
+                val <- input$grid_color
+                # Treat transparent, #00000000 (transparent black),
+                # or empty as "auto"
+                r_grid_color(
+                  if (val %in% c("transparent", "#00000000", "")) "" else val
+                )
               }
-              # Treat transparent, #00000000 (transparent black),
-              # or empty as "auto"
-              r_grid_color(
-                if (val %in% c("transparent", "#00000000", "")) "" else val
-              )
             },
             ignoreNULL = FALSE
           )
           observeEvent(
             input$show_panel_border,
             {
-              r_show_panel_border(input$show_panel_border %||% "auto")
+              if (!is.null(input$show_panel_border)) {
+                r_show_panel_border(input$show_panel_border)
+              }
             },
             ignoreNULL = FALSE
           )
           observeEvent(
             input$legend_position,
             {
-              r_legend_position(input$legend_position %||% "auto")
+              if (!is.null(input$legend_position)) {
+                r_legend_position(input$legend_position)
+              }
             },
             ignoreNULL = FALSE
           )
           observeEvent(
             input$base_theme,
             {
-              r_base_theme(input$base_theme %||% "minimal")
+              if (!is.null(input$base_theme)) {
+                r_base_theme(input$base_theme)
+              }
             },
             ignoreNULL = FALSE
           )
           observeEvent(
             input$palette_fill,
             {
-              r_palette_fill(input$palette_fill %||% "auto")
+              if (!is.null(input$palette_fill)) {
+                r_palette_fill(input$palette_fill)
+              }
             },
             ignoreNULL = FALSE
           )
           observeEvent(
             input$palette_colour,
             {
-              r_palette_colour(input$palette_colour %||% "auto")
+              if (!is.null(input$palette_colour)) {
+                r_palette_colour(input$palette_colour)
+              }
             },
             ignoreNULL = FALSE
           )
