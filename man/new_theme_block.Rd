@@ -7,7 +7,7 @@
 new_theme_block(
   panel_bg = "",
   plot_bg = "",
-  base_size = NA_real_,
+  base_size = "auto",
   base_family = "auto",
   show_major_grid = "auto",
   show_minor_grid = "auto",
@@ -26,7 +26,7 @@ new_theme_block(
 \item{plot_bg}{Plot background color (default "" uses base theme default)}
 
 \item{base_size}{Base font size in points
-(default NA uses base theme default)}
+(default "auto" uses base theme default)}
 
 \item{base_family}{Font family: "auto", "sans", "serif", or "mono"
 (default "auto" preserves upstream font)}

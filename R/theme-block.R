@@ -139,7 +139,7 @@ get_theme_function <- function(theme_name) {
 #' @param panel_bg Panel background color (default "" uses base theme default)
 #' @param plot_bg Plot background color (default "" uses base theme default)
 #' @param base_size Base font size in points
-#'   (default NA uses base theme default)
+#'   (default "auto" uses base theme default)
 #' @param base_family Font family: "auto", "sans", "serif", or "mono"
 #'   (default "auto" preserves upstream font)
 #' @param show_major_grid Show major grid lines: "auto", "show", "hide"
@@ -185,7 +185,7 @@ get_theme_function <- function(theme_name) {
 new_theme_block <- function(
   panel_bg = "",
   plot_bg = "",
-  base_size = NA_real_,
+  base_size = "auto",
   base_family = "auto",
   show_major_grid = "auto",
   show_minor_grid = "auto",
@@ -256,11 +256,7 @@ new_theme_block <- function(
                 val <- "auto"
               }
               r_base_size(
-                if (val == "auto") {
-                  NA_real_
-                } else {
-                  as.numeric(val)
-                }
+                if (val == "auto") "auto" else as.numeric(val)
               )
             },
             ignoreNULL = FALSE
@@ -376,7 +372,7 @@ new_theme_block <- function(
               text_parts <- c()
 
               # Base text size (only if explicitly set)
-              if (!is.na(r_base_size())) {
+              if (r_base_size() != "auto") {
                 text_parts <- c(
                   text_parts,
                   glue::glue("size = {r_base_size()}")
@@ -834,11 +830,7 @@ new_theme_block <- function(
                         "18" = "18",
                         "20" = "20"
                       ),
-                      selected = if (is.na(base_size)) {
-                        "auto"
-                      } else {
-                        as.character(base_size)
-                      },
+                      selected = as.character(base_size),
                       width = "100%"
                     )
                   ),
