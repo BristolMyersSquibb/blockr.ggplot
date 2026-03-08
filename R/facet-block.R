@@ -398,6 +398,80 @@ new_facet_block <- function(
           observeEvent(input$dir, r_dir(input$dir))
           observeEvent(input$space, r_space(input$space))
 
+          # Reverse sync: external_ctrl -> UI
+          observeEvent(r_facet_type(), {
+            if (!identical(input$facet_type, r_facet_type())) {
+              shinyWidgets::updateRadioGroupButtons(
+                session, "facet_type", selected = r_facet_type()
+              )
+            }
+            # Toggle visibility (replicate input$facet_type handler)
+            if (r_facet_type() == "wrap") {
+              shinyjs::show("wrap_vars")
+              shinyjs::hide("grid_vars_row")
+              shinyjs::hide("grid_vars_col")
+              shinyjs::show("layout_section")
+              shinyjs::show("layout_options_section")
+              shinyjs::hide("space_option")
+            } else {
+              shinyjs::hide("wrap_vars")
+              shinyjs::show("grid_vars_row")
+              shinyjs::show("grid_vars_col")
+              shinyjs::hide("layout_section")
+              shinyjs::hide("layout_options_section")
+              shinyjs::show("space_option")
+            }
+          }, ignoreInit = TRUE)
+          observeEvent(r_facets(), {
+            if (!identical(input$facets, r_facets())) {
+              updateSelectizeInput(
+                session, "facets", selected = r_facets()
+              )
+            }
+          }, ignoreInit = TRUE)
+          observeEvent(r_rows(), {
+            if (!identical(input$rows, r_rows())) {
+              updateSelectizeInput(session, "rows", selected = r_rows())
+            }
+          }, ignoreInit = TRUE)
+          observeEvent(r_cols(), {
+            if (!identical(input$cols, r_cols())) {
+              updateSelectizeInput(session, "cols", selected = r_cols())
+            }
+          }, ignoreInit = TRUE)
+          observeEvent(r_ncol(), {
+            if (!identical(input$ncol, r_ncol())) {
+              updateSelectInput(session, "ncol", selected = r_ncol())
+            }
+          }, ignoreInit = TRUE)
+          observeEvent(r_nrow(), {
+            if (!identical(input$nrow, r_nrow())) {
+              updateSelectInput(session, "nrow", selected = r_nrow())
+            }
+          }, ignoreInit = TRUE)
+          observeEvent(r_scales(), {
+            if (!identical(input$scales, r_scales())) {
+              updateSelectInput(session, "scales", selected = r_scales())
+            }
+          }, ignoreInit = TRUE)
+          observeEvent(r_labeller(), {
+            if (!identical(input$labeller, r_labeller())) {
+              updateSelectInput(
+                session, "labeller", selected = r_labeller()
+              )
+            }
+          }, ignoreInit = TRUE)
+          observeEvent(r_dir(), {
+            if (!identical(input$dir, r_dir())) {
+              updateSelectInput(session, "dir", selected = r_dir())
+            }
+          }, ignoreInit = TRUE)
+          observeEvent(r_space(), {
+            if (!identical(input$space, r_space())) {
+              updateSelectInput(session, "space", selected = r_space())
+            }
+          }, ignoreInit = TRUE)
+
           # Initialize visibility based on default facet_type
           observe({
             # This runs once on initialization
@@ -1097,6 +1171,7 @@ new_facet_block <- function(
     },
     allow_empty_state = c("facets", "rows", "cols", "ncol", "nrow"),
     class = "facet_block",
+    external_ctrl = TRUE,
     ...
   )
 }

@@ -174,6 +174,82 @@ new_ggplot_block <- function(
           observeEvent(input$bins, r_bins(input$bins))
           observeEvent(input$donut, r_donut(input$donut))
 
+          # Reverse sync: external_ctrl -> UI
+          observeEvent(r_type(), {
+            if (!identical(input$type, r_type())) {
+              shinyWidgets::updateRadioGroupButtons(
+                session, "type", selected = r_type()
+              )
+            }
+          }, ignoreInit = TRUE)
+          observeEvent(r_x(), {
+            if (!identical(input$x, r_x())) {
+              updateSelectInput(session, "x", selected = r_x())
+            }
+          }, ignoreInit = TRUE)
+          observeEvent(r_y(), {
+            if (!identical(input$y, r_y())) {
+              updateSelectInput(session, "y", selected = r_y())
+            }
+          }, ignoreInit = TRUE)
+          observeEvent(r_color(), {
+            if (!identical(input$color, r_color())) {
+              updateSelectInput(session, "color", selected = r_color())
+            }
+          }, ignoreInit = TRUE)
+          observeEvent(r_fill(), {
+            if (!identical(input$fill, r_fill())) {
+              updateSelectInput(session, "fill", selected = r_fill())
+            }
+          }, ignoreInit = TRUE)
+          observeEvent(r_size(), {
+            if (!identical(input$size, r_size())) {
+              updateSelectInput(session, "size", selected = r_size())
+            }
+          }, ignoreInit = TRUE)
+          observeEvent(r_shape(), {
+            if (!identical(input$shape, r_shape())) {
+              updateSelectInput(session, "shape", selected = r_shape())
+            }
+          }, ignoreInit = TRUE)
+          observeEvent(r_linetype(), {
+            if (!identical(input$linetype, r_linetype())) {
+              updateSelectInput(session, "linetype", selected = r_linetype())
+            }
+          }, ignoreInit = TRUE)
+          observeEvent(r_group(), {
+            if (!identical(input$group, r_group())) {
+              updateSelectInput(session, "group", selected = r_group())
+            }
+          }, ignoreInit = TRUE)
+          observeEvent(r_alpha(), {
+            if (!identical(input$alpha, r_alpha())) {
+              updateSelectInput(session, "alpha", selected = r_alpha())
+            }
+          }, ignoreInit = TRUE)
+          observeEvent(r_density_alpha(), {
+            if (!identical(input$density_alpha, r_density_alpha())) {
+              updateNumericInput(
+                session, "density_alpha", value = r_density_alpha()
+              )
+            }
+          }, ignoreInit = TRUE)
+          observeEvent(r_position(), {
+            if (!identical(input$position, r_position())) {
+              updateSelectInput(session, "position", selected = r_position())
+            }
+          }, ignoreInit = TRUE)
+          observeEvent(r_bins(), {
+            if (!identical(input$bins, r_bins())) {
+              updateNumericInput(session, "bins", value = r_bins())
+            }
+          }, ignoreInit = TRUE)
+          observeEvent(r_donut(), {
+            if (!identical(input$donut, r_donut())) {
+              updateCheckboxInput(session, "donut", value = r_donut())
+            }
+          }, ignoreInit = TRUE)
+
           # Update column-dependent inputs
           observeEvent(
             cols(),
@@ -1023,6 +1099,7 @@ new_ggplot_block <- function(
       ) # Close tagList
     },
     class = "ggplot_block",
+    external_ctrl = TRUE,
     allow_empty_state = c(
       "y",
       "color",

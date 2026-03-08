@@ -345,6 +345,100 @@ new_theme_block <- function(
             ignoreNULL = FALSE
           )
 
+          # Reverse sync: external_ctrl -> UI
+          observeEvent(r_panel_bg(), {
+            ui_val <- if (r_panel_bg() == "") "transparent" else r_panel_bg()
+            if (!identical(input$panel_bg, ui_val)) {
+              colourpicker::updateColourInput(
+                session, "panel_bg", value = ui_val
+              )
+            }
+          }, ignoreInit = TRUE)
+          observeEvent(r_plot_bg(), {
+            ui_val <- if (r_plot_bg() == "") "transparent" else r_plot_bg()
+            if (!identical(input$plot_bg, ui_val)) {
+              colourpicker::updateColourInput(
+                session, "plot_bg", value = ui_val
+              )
+            }
+          }, ignoreInit = TRUE)
+          observeEvent(r_grid_color(), {
+            ui_val <- if (r_grid_color() == "") {
+              "transparent"
+            } else {
+              r_grid_color()
+            }
+            if (!identical(input$grid_color, ui_val)) {
+              colourpicker::updateColourInput(
+                session, "grid_color", value = ui_val
+              )
+            }
+          }, ignoreInit = TRUE)
+          observeEvent(r_base_size(), {
+            if (!identical(input$base_size, as.character(r_base_size()))) {
+              updateSelectInput(
+                session, "base_size", selected = as.character(r_base_size())
+              )
+            }
+          }, ignoreInit = TRUE)
+          observeEvent(r_base_family(), {
+            if (!identical(input$base_family, r_base_family())) {
+              updateSelectInput(
+                session, "base_family", selected = r_base_family()
+              )
+            }
+          }, ignoreInit = TRUE)
+          observeEvent(r_show_major_grid(), {
+            if (!identical(input$show_major_grid, r_show_major_grid())) {
+              updateSelectInput(
+                session, "show_major_grid", selected = r_show_major_grid()
+              )
+            }
+          }, ignoreInit = TRUE)
+          observeEvent(r_show_minor_grid(), {
+            if (!identical(input$show_minor_grid, r_show_minor_grid())) {
+              updateSelectInput(
+                session, "show_minor_grid", selected = r_show_minor_grid()
+              )
+            }
+          }, ignoreInit = TRUE)
+          observeEvent(r_show_panel_border(), {
+            if (!identical(input$show_panel_border, r_show_panel_border())) {
+              updateSelectInput(
+                session, "show_panel_border",
+                selected = r_show_panel_border()
+              )
+            }
+          }, ignoreInit = TRUE)
+          observeEvent(r_legend_position(), {
+            if (!identical(input$legend_position, r_legend_position())) {
+              updateSelectInput(
+                session, "legend_position", selected = r_legend_position()
+              )
+            }
+          }, ignoreInit = TRUE)
+          observeEvent(r_base_theme(), {
+            if (!identical(input$base_theme, r_base_theme())) {
+              updateSelectInput(
+                session, "base_theme", selected = r_base_theme()
+              )
+            }
+          }, ignoreInit = TRUE)
+          observeEvent(r_palette_fill(), {
+            if (!identical(input$palette_fill, r_palette_fill())) {
+              updateSelectInput(
+                session, "palette_fill", selected = r_palette_fill()
+              )
+            }
+          }, ignoreInit = TRUE)
+          observeEvent(r_palette_colour(), {
+            if (!identical(input$palette_colour, r_palette_colour())) {
+              updateSelectInput(
+                session, "palette_colour", selected = r_palette_colour()
+              )
+            }
+          }, ignoreInit = TRUE)
+
           list(
             expr = reactive({
               # Build theme customization code
@@ -920,6 +1014,7 @@ new_theme_block <- function(
       )
     },
     class = "theme_block",
+    external_ctrl = TRUE,
     allow_empty_state = c(
       "panel_bg",
       "plot_bg",

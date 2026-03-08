@@ -252,6 +252,45 @@ new_grid_block <- function(
           observeEvent(input$tag_levels, r_tag_levels(input$tag_levels))
           observeEvent(input$guides, r_guides(input$guides))
 
+          # Reverse sync: external_ctrl -> UI
+          observeEvent(r_ncol(), {
+            if (!identical(input$ncol, r_ncol())) {
+              updateTextInput(session, "ncol", value = r_ncol())
+            }
+          }, ignoreInit = TRUE)
+          observeEvent(r_nrow(), {
+            if (!identical(input$nrow, r_nrow())) {
+              updateTextInput(session, "nrow", value = r_nrow())
+            }
+          }, ignoreInit = TRUE)
+          observeEvent(r_title(), {
+            if (!identical(input$title, r_title())) {
+              updateTextInput(session, "title", value = r_title())
+            }
+          }, ignoreInit = TRUE)
+          observeEvent(r_subtitle(), {
+            if (!identical(input$subtitle, r_subtitle())) {
+              updateTextInput(session, "subtitle", value = r_subtitle())
+            }
+          }, ignoreInit = TRUE)
+          observeEvent(r_caption(), {
+            if (!identical(input$caption, r_caption())) {
+              updateTextInput(session, "caption", value = r_caption())
+            }
+          }, ignoreInit = TRUE)
+          observeEvent(r_tag_levels(), {
+            if (!identical(input$tag_levels, r_tag_levels())) {
+              updateSelectInput(
+                session, "tag_levels", selected = r_tag_levels()
+              )
+            }
+          }, ignoreInit = TRUE)
+          observeEvent(r_guides(), {
+            if (!identical(input$guides, r_guides())) {
+              updateSelectInput(session, "guides", selected = r_guides())
+            }
+          }, ignoreInit = TRUE)
+
           # Layout preview output
           output$layout_preview <- renderUI({
             args_list <- shiny::reactiveValuesToList(...args)
@@ -569,6 +608,7 @@ new_grid_block <- function(
     },
     allow_empty_state = TRUE,
     class = c("grid_block", "rbind_block"),
+    external_ctrl = TRUE,
     ...
   )
 }

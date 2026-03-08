@@ -7,7 +7,7 @@ library(blockr.core)
 library(blockr.dock)
 library(blockr.dplyr)
 
-devtools::load_all(".")
+devtools::load_all("blockr.ggplot")
 
 # Serve scatter plot with theme customization
 serve(
