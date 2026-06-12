@@ -1,6 +1,6 @@
 Package: blockr.ggplot
 Title: Interactive 'ggplot2' Visualization Blocks
-Version: 0.1.0
+Version: 0.1.1
 Authors@R:
     c(person(given = "Christoph",
              family = "Sax",
@@ -49,6 +49,7 @@ Imports:
     shinyjs,
     shinyWidgets
 Suggests:
+    blockr.theme,
     cowplot,
     ggpubr,
     ggthemes,

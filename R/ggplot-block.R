@@ -691,6 +691,26 @@ new_ggplot_block <- function(
                 text <- glue::glue("({text}) + ggplot2::theme_minimal()")
               }
 
+              # Board scale map (blockr.theme via Suggests): inject manual
+              # scales for bound discrete variables so the same level shows
+              # the same color as in every other consumer. Pie maps fill
+              # from x when no fill aesthetic is set (mirrors aes assembly
+              # above). NULL (no theme / no map / no complete binding) keeps
+              # ggplot defaults.
+              fill_var <- if (r_fill() != "(none)") {
+                r_fill()
+              } else if (current_type == "pie") {
+                r_x()
+              }
+              for (sm in c(
+                gg_scale_map_text(session, data(), fill_var, "fill"),
+                if (r_color() != "(none)") {
+                  gg_scale_map_text(session, data(), r_color(), "colour")
+                }
+              )) {
+                text <- glue::glue("({text}) + {sm}")
+              }
+
               parse(text = text)[[1]]
             }),
             state = list(
