@@ -12,12 +12,14 @@ blocks using ggplot2.
 ## Installation
 
 ``` r
+
 install.packages("blockr.ggplot")
 ```
 
 Or install the development version from GitHub:
 
 ``` r
+
 # install.packages("pak")
 pak::pak("BristolMyersSquibb/blockr.ggplot")
 ```
@@ -27,6 +29,7 @@ pak::pak("BristolMyersSquibb/blockr.ggplot")
 Create and launch an empty dashboard:
 
 ``` r
+
 library(blockr.ggplot)
 serve(new_board())
 ```
