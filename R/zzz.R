@@ -10,9 +10,9 @@ register_ggplot_blocks <- function() {
     category = "plot",
     icon = "bar-chart-line",
     guidance = paste(
-      "CRITICAL — valid type values: point, bar, col, line, histogram,",
+      "CRITICAL -- valid type values: point, bar, col, line, histogram,",
       "density, boxplot, violin, pie.",
-      '"scatter" is NOT valid — always use "point" for scatter plots.',
+      '"scatter" is NOT valid -- always use "point" for scatter plots.',
       '\n\nOnly literal column names or "(none)" are accepted for',
       "x, y, color, fill, size, shape, linetype, group, alpha.",
       "No expressions, no functions (e.g. mean(x) is invalid),",
@@ -20,7 +20,7 @@ register_ggplot_blocks <- function() {
       '\n\n"(none)" is the sentinel value for omitting an aesthetic.',
       "Do not use empty string, null, or NA.",
       '\n\nFor bar charts counting rows: set y = "(none)".',
-      '\n\nFor histogram: set y = "(none)" — counts are automatic.',
+      '\n\nFor histogram: set y = "(none)" -- counts are automatic.',
       "\n\nIf the user wants computed statistics (mean, median, sum, etc.),",
       "suggest adding an upstream Summarize/Aggregate block first,",
       "then plot the pre-computed column."
@@ -31,7 +31,7 @@ register_ggplot_blocks <- function() {
           paste0(
             'Plot type. Valid values: "point", "bar", "col", "line", ',
             '"histogram", "density", "boxplot", "violin", "pie". ',
-            'NOTE: "scatter" is NOT valid — use "point" for scatter plots.'
+            'NOTE: "scatter" is NOT valid -- use "point" for scatter plots.'
           ),
           example = "point",
           type = arg_enum(
@@ -95,7 +95,7 @@ register_ggplot_blocks <- function() {
           type = arg_number()
         ),
         position = new_block_arg(
-          '"stack", "dodge", or "fill" — position adjustment for bar/col/histogram',
+          '"stack", "dodge", or "fill" -- position adjustment for bar/col/histogram',
           example = "stack",
           type = arg_enum(c("stack", "dodge", "fill"))
         ),
@@ -126,7 +126,7 @@ register_ggplot_blocks <- function() {
     icon = "grid-3x3",
     guidance = paste(
       "This block arranges existing plot outputs into a grid layout.",
-      "It does NOT create plots — plots must come from upstream ggplot blocks.",
+      "It does NOT create plots -- plots must come from upstream ggplot blocks.",
       'Use guides = "collect" to de-duplicate shared legends across panels.'
     ),
     arguments = list(
@@ -340,12 +340,12 @@ register_ggplot_blocks <- function() {
           type = arg_enum(c("label_value", "label_both", "label_parsed"))
         ),
         dir = new_block_arg(
-          '"h" (horizontal) or "v" (vertical) — fill direction for wrap',
+          '"h" (horizontal) or "v" (vertical) -- fill direction for wrap',
           example = "h",
           type = arg_enum(c("h", "v"))
         ),
         space = new_block_arg(
-          '"fixed", "free_x", or "free_y" — panel sizing for grid',
+          '"fixed", "free_x", or "free_y" -- panel sizing for grid',
           example = "fixed",
           type = arg_enum(c("fixed", "free_x", "free_y"))
         )
