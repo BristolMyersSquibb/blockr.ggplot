@@ -59,7 +59,9 @@ new_ggplot_block <- function(
     if (!isTruthy(x)) "(none)" else x
   }
 
-  # Define which aesthetics are valid for each chart type
+  # Define which aesthetics are valid for each chart type.
+  # NB: this list is mirrored by GG_TYPE_ROLES in inst/js/gg-blocks.js (the
+  # settings-band UI) — keep both in sync.
   chart_aesthetics <- list(
     point = list(
       required = c("x", "y"),
@@ -116,7 +118,6 @@ new_ggplot_block <- function(
       moduleServer(
         id,
         function(input, output, session) {
-          cols <- reactive(colnames(data()))
 
           # Initialize reactive values
           # (normalize aesthetics to handle restoration)
@@ -135,333 +136,95 @@ new_ggplot_block <- function(
           r_bins <- reactiveVal(bins)
           r_donut <- reactiveVal(donut)
 
-          # Observe input changes
-          observeEvent(input$type, {
-            r_type(input$type)
-            # Clear statistical chart selection when main chart is selected
-            shinyWidgets::updateRadioGroupButtons(
-              session,
-              inputId = "type_stat",
-              selected = character(0)
-            )
+          # Column metadata for the JS settings band (same
+          # name/type/n_unique/label/levels shape as blockr.viz's chart
+          # block; factor level order travels as data).
+          r_col_meta <- reactive({
+            d <- data()
+            req(is.data.frame(d))
+            lapply(names(d), function(col) {
+              vals <- d[[col]]
+              lbl <- attr(vals, "label")
+              res <- list(
+                name = col,
+                type = if (is.numeric(vals)) "numeric" else "categorical",
+                n_unique = length(unique(vals))
+              )
+              if (!is.null(lbl) && nzchar(lbl)) res$label <- lbl
+              if (is.factor(vals)) res$levels <- as.list(levels(vals))
+              res
+            })
           })
-          observeEvent(input$type_stat, {
-            r_type(input$type_stat)
-            # Clear main chart selection when statistical chart is selected
-            shinyWidgets::updateRadioGroupButtons(
-              session,
-              inputId = "type",
-              selected = character(0)
-            )
-          })
-          observeEvent(input$x, r_x(input$x))
-          observeEvent(input$y, r_y(normalize_aes(input$y)))
-          observeEvent(input$color, r_color(normalize_aes(input$color)))
-          observeEvent(input$fill, r_fill(normalize_aes(input$fill)))
-          observeEvent(input$size, r_size(normalize_aes(input$size)))
-          observeEvent(input$shape, r_shape(normalize_aes(input$shape)))
-          observeEvent(
-            input$linetype,
-            r_linetype(normalize_aes(input$linetype))
-          )
-          observeEvent(input$group, r_group(normalize_aes(input$group)))
-          observeEvent(input$alpha, r_alpha(normalize_aes(input$alpha)))
-          observeEvent(
-            input$density_alpha,
-            r_density_alpha(input$density_alpha)
-          )
-          observeEvent(input$position, r_position(input$position))
-          observeEvent(input$bins, r_bins(input$bins))
-          observeEvent(input$donut, r_donut(input$donut))
 
-          # Reverse sync: external_ctrl -> UI
-          observeEvent(r_type(), {
-            if (!identical(input$type, r_type())) {
-              shinyWidgets::updateRadioGroupButtons(
-                session, "type", selected = r_type()
-              )
-            }
-          }, ignoreInit = TRUE)
-          observeEvent(r_x(), {
-            if (!identical(input$x, r_x())) {
-              updateSelectInput(session, "x", selected = r_x())
-            }
-          }, ignoreInit = TRUE)
-          observeEvent(r_y(), {
-            if (!identical(input$y, r_y())) {
-              updateSelectInput(session, "y", selected = r_y())
-            }
-          }, ignoreInit = TRUE)
-          observeEvent(r_color(), {
-            if (!identical(input$color, r_color())) {
-              updateSelectInput(session, "color", selected = r_color())
-            }
-          }, ignoreInit = TRUE)
-          observeEvent(r_fill(), {
-            if (!identical(input$fill, r_fill())) {
-              updateSelectInput(session, "fill", selected = r_fill())
-            }
-          }, ignoreInit = TRUE)
-          observeEvent(r_size(), {
-            if (!identical(input$size, r_size())) {
-              updateSelectInput(session, "size", selected = r_size())
-            }
-          }, ignoreInit = TRUE)
-          observeEvent(r_shape(), {
-            if (!identical(input$shape, r_shape())) {
-              updateSelectInput(session, "shape", selected = r_shape())
-            }
-          }, ignoreInit = TRUE)
-          observeEvent(r_linetype(), {
-            if (!identical(input$linetype, r_linetype())) {
-              updateSelectInput(session, "linetype", selected = r_linetype())
-            }
-          }, ignoreInit = TRUE)
-          observeEvent(r_group(), {
-            if (!identical(input$group, r_group())) {
-              updateSelectInput(session, "group", selected = r_group())
-            }
-          }, ignoreInit = TRUE)
-          observeEvent(r_alpha(), {
-            if (!identical(input$alpha, r_alpha())) {
-              updateSelectInput(session, "alpha", selected = r_alpha())
-            }
-          }, ignoreInit = TRUE)
-          observeEvent(r_density_alpha(), {
-            if (!identical(input$density_alpha, r_density_alpha())) {
-              updateNumericInput(
-                session, "density_alpha", value = r_density_alpha()
-              )
-            }
-          }, ignoreInit = TRUE)
-          observeEvent(r_position(), {
-            if (!identical(input$position, r_position())) {
-              updateSelectInput(session, "position", selected = r_position())
-            }
-          }, ignoreInit = TRUE)
-          observeEvent(r_bins(), {
-            if (!identical(input$bins, r_bins())) {
-              updateNumericInput(session, "bins", value = r_bins())
-            }
-          }, ignoreInit = TRUE)
-          observeEvent(r_donut(), {
-            if (!identical(input$donut, r_donut())) {
-              updateCheckboxInput(session, "donut", value = r_donut())
-            }
-          }, ignoreInit = TRUE)
+          # State sentinel "(none)" (and the empty constructor default) maps
+          # to "" for the JS side; state itself keeps "(none)" so
+          # serialization is unchanged.
+          snd <- function(v) {
+            if (length(v) != 1 || identical(v, "(none)")) "" else v
+          }
 
-          # Update column-dependent inputs
-          observeEvent(
-            cols(),
-            {
-              updateSelectInput(
-                session,
-                inputId = "x",
-                choices = cols(),
-                selected = r_x()
-              )
-              updateSelectInput(
-                session,
-                inputId = "y",
-                choices = c("(none)", cols()),
-                selected = r_y()
-              )
-              updateSelectInput(
-                session,
-                inputId = "color",
-                choices = c("(none)", cols()),
-                selected = r_color()
-              )
-              updateSelectInput(
-                session,
-                inputId = "fill",
-                choices = c("(none)", cols()),
-                selected = r_fill()
-              )
-              updateSelectInput(
-                session,
-                inputId = "size",
-                choices = c("(none)", cols()),
-                selected = r_size()
-              )
-              updateSelectInput(
-                session,
-                inputId = "shape",
-                choices = c("(none)", cols()),
-                selected = r_shape()
-              )
-              updateSelectInput(
-                session,
-                inputId = "linetype",
-                choices = c("(none)", cols()),
-                selected = r_linetype()
-              )
-              updateSelectInput(
-                session,
-                inputId = "group",
-                choices = c("(none)", cols()),
-                selected = r_group()
-              )
-              updateSelectInput(
-                session,
-                inputId = "alpha",
-                choices = c("(none)", cols()),
-                selected = r_alpha()
-              )
-            }
-          )
-
-          # Dynamic UI visibility based on chart type
+          # Push columns + config to JS. A single observe (the shape the
+          # blockr.dock lazy-eval gating pairs with — see blockr.viz
+          # chart-block.R). No data frame is shipped: the plot renders
+          # server-side, JS only needs column metadata for its pickers.
           observe({
-            current_type <- r_type()
-            chart_config <- chart_aesthetics[[current_type]]
-
-            if (!is.null(chart_config)) {
-              all_aesthetics <- c(
-                "y",
-                "color",
-                "fill",
-                "size",
-                "shape",
-                "linetype",
-                "group",
-                "alpha"
+            session$sendCustomMessage("gg-block-data", list(
+              id = session$ns("gg_block"),
+              block = "ggplot",
+              columns = r_col_meta(),
+              config = list(
+                type = r_type(),
+                x = snd(r_x()),
+                y = snd(r_y()),
+                color = snd(r_color()),
+                fill = snd(r_fill()),
+                size = snd(r_size()),
+                shape = snd(r_shape()),
+                linetype = snd(r_linetype()),
+                group = snd(r_group()),
+                alpha = snd(r_alpha()),
+                density_alpha = r_density_alpha(),
+                position = r_position(),
+                bins = r_bins(),
+                donut = if (isTRUE(r_donut())) "on" else "off"
               )
-              valid_aesthetics <- c(
-                chart_config$required,
-                chart_config$optional
-              )
-              # x is always shown
-              valid_aesthetics <- valid_aesthetics[valid_aesthetics != "x"]
+            ))
+          })
 
-              # Hide/show aesthetic inputs based on validity
-              for (aes in all_aesthetics) {
-                # Special handling for alpha: density uses fixed alpha,
-                # others use variable alpha
-                if (aes == "alpha") {
-                  if (current_type == "density") {
-                    shinyjs::hide("alpha") # Hide variable alpha selector
-                    shinyjs::show("density_alpha") # Show fixed alpha slider
-                  } else if (aes %in% valid_aesthetics) {
-                    shinyjs::show("alpha") # Show variable alpha selector
-                    shinyjs::hide("density_alpha") # Hide fixed alpha slider
-                  } else {
-                    shinyjs::hide("alpha")
-                    shinyjs::hide("density_alpha")
-                  }
-                } else if (aes == "group" && current_type == "density") {
-                  # For density plots, hide group input
-                  # (it's set automatically to match fill)
-                  shinyjs::hide("group")
-                } else {
-                  if (aes %in% valid_aesthetics) {
-                    shinyjs::show(aes)
-                  } else {
-                    shinyjs::hide(aes)
-                  }
-                }
-              }
+          # JS -> R: the band echoes the FULL config on every change. Only
+          # write when a value actually changed — a blind reactiveVal set
+          # invalidates the push observe above, which re-sends to JS, which
+          # echoes back: an R->JS->R loop. Same identical() guard as
+          # blockr.viz's chart block. This also gives external control for
+          # free: an externally set state reactiveVal re-runs the push
+          # observe and the band re-renders.
+          upd <- function(rv, v) {
+            if (!identical(isolate(rv()), v)) rv(v)
+          }
 
-              # Update labels to show required indicators dynamically
-              # X is always required for all chart types
-              updateSelectInput(
-                session,
-                inputId = "x",
-                label = if ("x" %in% chart_config$required) {
-                  tags$span(
-                    tags$strong("X-axis"),
-                    tags$span("*", style = "color: #dc3545; margin-left: 2px;")
-                  )
-                } else {
-                  "X-axis"
-                }
-              )
-
-              # Y label - check if required for this chart type
-              if ("y" %in% valid_aesthetics) {
-                updateSelectInput(
-                  session,
-                  inputId = "y",
-                  label = if ("y" %in% chart_config$required) {
-                    tags$span(
-                      tags$strong("Y-axis"),
-                      tags$span(
-                        "*",
-                        style = "color: #dc3545; margin-left: 2px;"
-                      )
-                    )
-                  } else {
-                    "Y-axis"
-                  }
-                )
-              }
-
-              # Update other aesthetic labels (all optional for current geoms)
-              for (aes_field in c(
-                "color",
-                "fill",
-                "size",
-                "shape",
-                "linetype",
-                "group",
-                "alpha"
-              )) {
-                if (aes_field %in% valid_aesthetics) {
-                  label_text <- switch(
-                    aes_field,
-                    color = "Color By",
-                    fill = "Fill By",
-                    size = "Size By",
-                    shape = "Shape By",
-                    linetype = "Line Type By",
-                    group = "Group By",
-                    alpha = "Alpha By"
-                  )
-
-                  updateSelectInput(
-                    session,
-                    inputId = aes_field,
-                    label = if (aes_field %in% chart_config$required) {
-                      tags$span(
-                        tags$strong(label_text),
-                        tags$span(
-                          "*",
-                          style = "color: #dc3545; margin-left: 2px;"
-                        )
-                      )
-                    } else {
-                      label_text
-                    }
-                  )
-                }
-              }
-
-              # Handle chart-specific options
-              if ("position" %in% names(chart_config$specific)) {
-                shinyjs::show("position")
-                updateSelectInput(
-                  session,
-                  inputId = "position",
-                  choices = chart_config$specific$position,
-                  selected = r_position()
-                )
-              } else {
-                shinyjs::hide("position")
-              }
-
-              if (isTRUE(chart_config$specific$bins)) {
-                shinyjs::show("bins")
-              } else {
-                shinyjs::hide("bins")
-              }
-
-              # Show donut checkbox only for pie charts
-              if (current_type == "pie") {
-                shinyjs::show("donut")
-              } else {
-                shinyjs::hide("donut")
-              }
+          observeEvent(input$gg_block_action, {
+            msg <- input$gg_block_action
+            if (!identical(msg$action, "config")) {
+              return()
             }
+            if (!is.null(msg$type)) upd(r_type, msg$type)
+            if (!is.null(msg$x)) upd(r_x, msg$x)
+            if (!is.null(msg$y)) upd(r_y, normalize_aes(msg$y))
+            if (!is.null(msg$color)) upd(r_color, normalize_aes(msg$color))
+            if (!is.null(msg$fill)) upd(r_fill, normalize_aes(msg$fill))
+            if (!is.null(msg$size)) upd(r_size, normalize_aes(msg$size))
+            if (!is.null(msg$shape)) upd(r_shape, normalize_aes(msg$shape))
+            if (!is.null(msg$linetype)) {
+              upd(r_linetype, normalize_aes(msg$linetype))
+            }
+            if (!is.null(msg$group)) upd(r_group, normalize_aes(msg$group))
+            if (!is.null(msg$alpha)) upd(r_alpha, normalize_aes(msg$alpha))
+            if (!is.null(msg$density_alpha)) {
+              upd(r_density_alpha, as.numeric(msg$density_alpha))
+            }
+            if (!is.null(msg$position)) upd(r_position, msg$position)
+            if (!is.null(msg$bins)) upd(r_bins, as.numeric(msg$bins))
+            if (!is.null(msg$donut)) upd(r_donut, identical(msg$donut, "on"))
           })
 
           list(
@@ -734,389 +497,19 @@ new_ggplot_block <- function(
       )
     },
     function(id) {
-      # Helper function to create aesthetic labels with required indicators
-      make_aesthetic_label <- function(name, field_id, chart_type) {
-        chart_config <- chart_aesthetics[[chart_type]]
-        if (!is.null(chart_config)) {
-          # Check if field is required for this chart type
-          is_required <- field_id %in% chart_config$required
-          if (is_required) {
-            return(tags$span(
-              tags$strong(name),
-              tags$span("*", style = "color: #dc3545; margin-left: 2px;")
-            ))
-          }
-        }
-        name
-      }
-
-      # Need shinyjs for dynamic UI
+      # JS-first UI (settings-band pattern from blockr.viz): the expr slot
+      # renders only the html dependencies plus an empty container; the gear
+      # header and in-flow settings band are built by inst/js/gg-blocks.js.
+      # The plot itself stays block_ui's plotOutput below this container, so
+      # opening the band pushes it down and the result remains visible.
       tagList(
-        shinyjs::useShinyjs(),
-
-        # CSS for collapsible section
-        tags$style(HTML(sprintf(
-          "
-          #%s-advanced-options {
-            max-height: 0;
-            overflow: hidden;
-            transition: max-height 0.3s ease-out;
-            grid-column: 1 / -1;
-            display: grid;
-            grid-template-columns: subgrid;
-            gap: 15px;
-          }
-          #%s-advanced-options.expanded {
-            max-height: 2000px;
-            overflow: visible;
-            transition: max-height 0.5s ease-in;
-          }
-          .block-advanced-toggle {
-            cursor: pointer;
-            user-select: none;
-            padding: 8px 0;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            grid-column: 1 / -1;
-            color: #6c757d;
-            font-size: 0.875rem;
-          }
-          .block-advanced-toggle .block-chevron {
-            transition: transform 0.2s;
-            display: inline-block;
-            font-size: 14px;
-            font-weight: bold;
-          }
-          .block-advanced-toggle .block-chevron.rotated {
-            transform: rotate(90deg);
-          }
-        ",
-          id,
-          id
-        ))),
-
+        ggplot_block_deps(),
         div(
-          class = "block-container",
-
-          # Add responsive CSS
-          block_responsive_css(),
-
-          # Add custom CSS for chart type selector
-          tags$style(HTML(
-            "
-  .chart-type-selector {
-    margin-top: 0 !important;
-    padding-top: 0 !important;
-    width: 100%;
-  }
-  .chart-type-selector .btn-group-toggle,
-  .chart-type-selector .btn-group {
-    display: grid !important;
-    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
-    gap: 5px;
-    margin: 0;
-    width: 100% !important;
-    max-width: 100%;
-  }
-  .chart-type-selector .btn {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 8px 12px;
-    white-space: nowrap;
-    width: 100%;
-  }
-  .chart-type-selector .btn i {
-    font-size: 1.2em;
-    margin-bottom: 4px;
-  }
-  .chart-type-selector .btn span {
-    font-size: 0.85em;
-    white-space: nowrap;
-  }
-"
-          )),
-
-          # Set container query context
-          block_container_script(),
-
-          # Form inputs
-          div(
-            class = "block-form-grid",
-
-            # Chart Type Selection Section (always visible)
-            div(
-              class = "block-section",
-              tags$h4("Chart Type"),
-              div(
-                class = "block-section-grid",
-                div(
-                  class = "block-input-wrapper chart-type-selector",
-                  style = "grid-column: 1 / -1;", # Span full width
-                  shinyWidgets::radioGroupButtons(
-                    inputId = NS(id, "type"),
-                    label = NULL,
-                    choiceNames = list(
-                      tags$div(icon("braille"), tags$span("Scatter")),
-                      tags$div(icon("chart-bar"), tags$span("Bar")),
-                      tags$div(icon("chart-line"), tags$span("Line")),
-                      tags$div(icon("th-large"), tags$span("Box")),
-                      tags$div(icon("chart-pie"), tags$span("Pie")),
-                      tags$div(icon("chart-column"), tags$span("Histogram")),
-                      tags$div(icon("signal"), tags$span("Density")),
-                      tags$div(icon("water"), tags$span("Violin")),
-                      tags$div(icon("chart-area"), tags$span("Area"))
-                    ),
-                    choiceValues = c(
-                      "point",
-                      "bar",
-                      "line",
-                      "boxplot",
-                      "pie",
-                      "histogram",
-                      "density",
-                      "violin",
-                      "area"
-                    ),
-                    selected = type,
-                    status = "light",
-                    size = "sm",
-                    justified = FALSE,
-                    individual = FALSE,
-                    checkIcon = list(
-                      yes = tags$i(
-                        class = "fa fa-check",
-                        style = "display: none;"
-                      ),
-                      no = tags$i(style = "display: none;")
-                    )
-                  )
-                ),
-                div(
-                  class = "block-help-text",
-                  style = "margin-top: -8px;",
-                  p("Click an icon to change the visualization type")
-                )
-              )
-            ),
-
-            # Unified Aesthetic Mapping Section
-            div(
-              class = "block-section",
-              tags$h4(
-                style = paste(
-                  "display: flex; align-items: center;",
-                  "justify-content: space-between;"
-                ),
-                "Mappings",
-                tags$small(
-                  tags$span("*", style = "color: #dc3545; font-weight: bold;"),
-                  " Required field",
-                  style = paste(
-                    "font-size: 0.7em; color: #6c757d;",
-                    "font-weight: normal;"
-                  )
-                )
-              ),
-              div(
-                class = "block-section-grid",
-                # Primary axes - X and Y
-                div(
-                  class = "block-input-wrapper",
-                  selectInput(
-                    inputId = NS(id, "x"),
-                    label = make_aesthetic_label("X-axis", "x", type),
-                    choices = x,
-                    selected = x,
-                    width = "100%"
-                  )
-                ),
-                div(
-                  id = NS(id, "y"),
-                  class = "block-input-wrapper",
-                  selectInput(
-                    inputId = NS(id, "y"),
-                    label = make_aesthetic_label("Y-axis", "y", type),
-                    choices = c("(none)", y),
-                    selected = normalize_aes(y),
-                    width = "100%"
-                  )
-                ),
-                # Core aesthetic mappings
-                div(
-                  id = NS(id, "color"),
-                  class = "block-input-wrapper",
-                  selectInput(
-                    inputId = NS(id, "color"),
-                    label = make_aesthetic_label("Color By", "color", type),
-                    choices = c("(none)", color),
-                    selected = normalize_aes(color),
-                    width = "100%"
-                  )
-                ),
-                div(
-                  id = NS(id, "fill"),
-                  class = "block-input-wrapper",
-                  selectInput(
-                    inputId = NS(id, "fill"),
-                    label = make_aesthetic_label("Fill By", "fill", type),
-                    choices = c("(none)", fill),
-                    selected = normalize_aes(fill),
-                    width = "100%"
-                  )
-                ),
-                div(
-                  id = NS(id, "size"),
-                  class = "block-input-wrapper",
-                  selectInput(
-                    inputId = NS(id, "size"),
-                    label = make_aesthetic_label("Size By", "size", type),
-                    choices = c("(none)", size),
-                    selected = normalize_aes(size),
-                    width = "100%"
-                  )
-                )
-              )
-            ),
-
-            # Advanced Options Toggle
-            div(
-              class = "block-section",
-              div(
-                class = "block-advanced-toggle text-muted",
-                id = NS(id, "advanced-toggle"),
-                onclick = sprintf(
-                  "
-                  const section = document.getElementById('%s');
-                  const chevron = document.querySelector('#%s .block-chevron');
-                  section.classList.toggle('expanded');
-                  chevron.classList.toggle('rotated');
-                ",
-                  NS(id, "advanced-options"),
-                  NS(id, "advanced-toggle")
-                ),
-                tags$span(class = "block-chevron", "\u203A"),
-                "Show advanced options"
-              )
-            ),
-
-            # Advanced Options Section (Collapsible)
-            div(
-              id = NS(id, "advanced-options"),
-
-              # Advanced Aesthetic Mappings
-              div(
-                class = "block-section",
-                div(
-                  class = "block-section-grid",
-                  div(
-                    id = NS(id, "shape"),
-                    class = "block-input-wrapper",
-                    selectInput(
-                      inputId = NS(id, "shape"),
-                      label = make_aesthetic_label("Shape By", "shape", type),
-                      choices = c("(none)", shape),
-                      selected = normalize_aes(shape),
-                      width = "100%"
-                    )
-                  ),
-                  div(
-                    id = NS(id, "linetype"),
-                    class = "block-input-wrapper",
-                    selectInput(
-                      inputId = NS(id, "linetype"),
-                      label = make_aesthetic_label(
-                        "Line Type By",
-                        "linetype",
-                        type
-                      ),
-                      choices = c("(none)", linetype),
-                      selected = normalize_aes(linetype),
-                      width = "100%"
-                    )
-                  ),
-                  div(
-                    id = NS(id, "group"),
-                    class = "block-input-wrapper",
-                    selectInput(
-                      inputId = NS(id, "group"),
-                      label = make_aesthetic_label("Group By", "group", type),
-                      choices = c("(none)", group),
-                      selected = normalize_aes(group),
-                      width = "100%"
-                    )
-                  ),
-                  div(
-                    id = NS(id, "alpha"),
-                    class = "block-input-wrapper",
-                    selectInput(
-                      inputId = NS(id, "alpha"),
-                      label = make_aesthetic_label("Alpha By", "alpha", type),
-                      choices = c("(none)", alpha),
-                      selected = normalize_aes(alpha),
-                      width = "100%"
-                    )
-                  ),
-                  div(
-                    id = NS(id, "density_alpha"),
-                    class = "block-input-wrapper",
-                    sliderInput(
-                      inputId = NS(id, "density_alpha"),
-                      label = "Transparency (Alpha)",
-                      min = 0,
-                      max = 1,
-                      value = density_alpha,
-                      step = 0.05,
-                      width = "100%"
-                    )
-                  )
-                )
-              ),
-
-              # Chart-Specific Options
-              div(
-                class = "block-section",
-                div(
-                  class = "block-section-grid",
-                  div(
-                    id = NS(id, "position"),
-                    class = "block-input-wrapper",
-                    selectInput(
-                      inputId = NS(id, "position"),
-                      label = "Position",
-                      choices = c("stack", "dodge", "fill"),
-                      selected = position,
-                      width = "100%"
-                    )
-                  ),
-                  div(
-                    id = NS(id, "bins"),
-                    class = "block-input-wrapper",
-                    numericInput(
-                      inputId = NS(id, "bins"),
-                      label = "Number of Bins",
-                      value = bins,
-                      min = 1,
-                      max = 100,
-                      width = "100%"
-                    )
-                  ),
-                  div(
-                    id = NS(id, "donut"),
-                    class = "block-input-wrapper",
-                    checkboxInput(
-                      inputId = NS(id, "donut"),
-                      label = "Donut Chart Style",
-                      value = donut
-                    )
-                  )
-                )
-              )
-            )
-          ) # Close block-form-grid div
-        ) # Close block-container div
-      ) # Close tagList
+          id = NS(id, "gg_block"),
+          class = "gg-block-container",
+          `data-gg-block` = "ggplot"
+        )
+      )
     },
     class = "ggplot_block",
     external_ctrl = TRUE,

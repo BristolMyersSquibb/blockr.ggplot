@@ -64,7 +64,9 @@ test_that("area plot - changing x input updates mapping - testServer", {
       result <- session$returned$result()
       expect_equal(rlang::as_name(result$mapping$x), "wt")
 
-      expr$setInputs(x = "hp")
+      expr$setInputs(
+        gg_block_action = list(action = "config", x = "hp")
+      )
       session$flushReact()
 
       result <- session$returned$result()
@@ -93,7 +95,9 @@ test_that("area plot - changing y input updates mapping - testServer", {
       result <- session$returned$result()
       expect_equal(rlang::as_name(result$mapping$y), "mpg")
 
-      expr$setInputs(y = "hp")
+      expr$setInputs(
+        gg_block_action = list(action = "config", y = "hp")
+      )
       session$flushReact()
 
       result <- session$returned$result()
@@ -150,7 +154,9 @@ test_that("area plot - changing fill input updates mapping - testServer", {
       result <- session$returned$result()
       expect_null(result$mapping$fill)
 
-      expr$setInputs(fill = "cyl")
+      expr$setInputs(
+        gg_block_action = list(action = "config", fill = "cyl")
+      )
       session$flushReact()
 
       result <- session$returned$result()
@@ -203,7 +209,9 @@ test_that("area plot - changing alpha input updates mapping - testServer", {
       result <- session$returned$result()
       expect_null(result$mapping$alpha)
 
-      expr$setInputs(alpha = "qsec")
+      expr$setInputs(
+        gg_block_action = list(action = "config", alpha = "qsec")
+      )
       session$flushReact()
 
       result <- session$returned$result()

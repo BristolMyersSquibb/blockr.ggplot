@@ -94,7 +94,9 @@ test_that("boxplot - changing y input updates mapping - testServer", {
       expect_equal(rlang::as_name(result$mapping$y), "Sepal.Length")
 
       # Change y input
-      expr$setInputs(y = "Petal.Width")
+      expr$setInputs(
+        gg_block_action = list(action = "config", y = "Petal.Width")
+      )
       session$flushReact()
 
       result <- session$returned$result()
@@ -153,7 +155,9 @@ test_that("boxplot - changing fill input updates mapping - testServer", {
       result <- session$returned$result()
       expect_null(result$mapping$fill)
 
-      expr$setInputs(fill = "Species")
+      expr$setInputs(
+        gg_block_action = list(action = "config", fill = "Species")
+      )
       session$flushReact()
 
       result <- session$returned$result()
@@ -207,7 +211,9 @@ test_that("boxplot - changing color input updates mapping - testServer", {
       result <- session$returned$result()
       expect_null(result$mapping$colour)
 
-      expr$setInputs(color = "Species")
+      expr$setInputs(
+        gg_block_action = list(action = "config", color = "Species")
+      )
       session$flushReact()
 
       result <- session$returned$result()
@@ -267,7 +273,9 @@ test_that("boxplot - changing alpha input updates mapping - testServer", {
 
       expect_warning(
         {
-          expr$setInputs(alpha = "Sepal.Width")
+          expr$setInputs(
+            gg_block_action = list(action = "config", alpha = "Sepal.Width")
+          )
           session$flushReact()
         },
         "aesthetics were dropped"

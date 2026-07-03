@@ -64,7 +64,9 @@ test_that("line plot - changing x input updates mapping - testServer", {
       result <- session$returned$result()
       expect_equal(rlang::as_name(result$mapping$x), "wt")
 
-      expr$setInputs(x = "hp")
+      expr$setInputs(
+        gg_block_action = list(action = "config", x = "hp")
+      )
       session$flushReact()
 
       result <- session$returned$result()
@@ -93,7 +95,9 @@ test_that("line plot - changing y input updates mapping - testServer", {
       result <- session$returned$result()
       expect_equal(rlang::as_name(result$mapping$y), "mpg")
 
-      expr$setInputs(y = "hp")
+      expr$setInputs(
+        gg_block_action = list(action = "config", y = "hp")
+      )
       session$flushReact()
 
       result <- session$returned$result()
@@ -150,7 +154,9 @@ test_that("line plot - changing color input updates mapping - testServer", {
       result <- session$returned$result()
       expect_null(result$mapping$colour)
 
-      expr$setInputs(color = "cyl")
+      expr$setInputs(
+        gg_block_action = list(action = "config", color = "cyl")
+      )
       session$flushReact()
 
       result <- session$returned$result()
@@ -205,7 +211,9 @@ test_that("line plot - changing linetype input updates mapping - testServer", {
       result <- session$returned$result()
       expect_null(result$mapping$linetype)
 
-      expr$setInputs(linetype = "gear")
+      expr$setInputs(
+        gg_block_action = list(action = "config", linetype = "gear")
+      )
       session$flushReact()
 
       result <- session$returned$result()
@@ -260,7 +268,9 @@ test_that("line plot - changing alpha input updates mapping - testServer", {
       result <- session$returned$result()
       expect_null(result$mapping$alpha)
 
-      expr$setInputs(alpha = "qsec")
+      expr$setInputs(
+        gg_block_action = list(action = "config", alpha = "qsec")
+      )
       session$flushReact()
 
       result <- session$returned$result()
@@ -313,7 +323,9 @@ test_that("line plot - changing group input updates mapping - testServer", {
       result <- session$returned$result()
       expect_null(result$mapping$group)
 
-      expr$setInputs(group = "cyl")
+      expr$setInputs(
+        gg_block_action = list(action = "config", group = "cyl")
+      )
       session$flushReact()
 
       result <- session$returned$result()

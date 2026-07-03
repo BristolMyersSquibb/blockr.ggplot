@@ -70,7 +70,9 @@ test_that("point plot - changing x input updates mapping - testServer", {
       expect_equal(rlang::as_name(result$mapping$x), "wt")
 
       # Change x input to "hp"
-      expr$setInputs(x = "hp")
+      expr$setInputs(
+        gg_block_action = list(action = "config", x = "hp")
+      )
       session$flushReact()
 
       # Verify mapping updated
@@ -103,7 +105,9 @@ test_that("point plot - changing y input updates mapping - testServer", {
       expect_equal(rlang::as_name(result$mapping$y), "mpg")
 
       # Change y input to "hp"
-      expr$setInputs(y = "hp")
+      expr$setInputs(
+        gg_block_action = list(action = "config", y = "hp")
+      )
       session$flushReact()
 
       # Verify mapping updated
@@ -164,7 +168,9 @@ test_that("point plot - changing color input updates mapping - testServer", {
       expect_null(result$mapping$colour)
 
       # Set color to "cyl"
-      expr$setInputs(color = "cyl")
+      expr$setInputs(
+        gg_block_action = list(action = "config", color = "cyl")
+      )
       session$flushReact()
 
       # Verify color mapping added
@@ -220,7 +226,9 @@ test_that("point plot - changing size input updates mapping - testServer", {
       expect_null(result$mapping$size)
 
       # Set size to "hp"
-      expr$setInputs(size = "hp")
+      expr$setInputs(
+        gg_block_action = list(action = "config", size = "hp")
+      )
       session$flushReact()
 
       # Verify size mapping added
@@ -278,7 +286,9 @@ test_that("point plot - changing shape input updates mapping - testServer", {
       expect_null(result$mapping$shape)
 
       # Set shape to "gear"
-      expr$setInputs(shape = "gear")
+      expr$setInputs(
+        gg_block_action = list(action = "config", shape = "gear")
+      )
       session$flushReact()
 
       # Verify shape mapping added
@@ -335,7 +345,9 @@ test_that("point plot - changing alpha input updates mapping - testServer", {
       expect_null(result$mapping$alpha)
 
       # Set alpha to "qsec"
-      expr$setInputs(alpha = "qsec")
+      expr$setInputs(
+        gg_block_action = list(action = "config", alpha = "qsec")
+      )
       session$flushReact()
 
       # Verify alpha mapping added
@@ -391,7 +403,9 @@ test_that("point plot - changing fill input updates mapping - testServer", {
       expect_null(result$mapping$fill)
 
       # Set fill to "am"
-      expr$setInputs(fill = "am")
+      expr$setInputs(
+        gg_block_action = list(action = "config", fill = "am")
+      )
       session$flushReact()
 
       # Verify fill mapping added

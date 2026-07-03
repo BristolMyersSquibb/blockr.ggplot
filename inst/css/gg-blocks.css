@@ -1,0 +1,262 @@
+/* =========================================================================
+   gg-blocks.css — blockr.ggplot settings-band UI.
+
+   The dd-* rules below are COPIED from blockr.viz/inst/css/chart.css
+   (CANONICAL SOURCE — keep in sync): the shared DrilldownConfig engine
+   emits dd-* classes, so the layout language must match blockr.viz
+   verbatim. Only the engine-emitted form/section/type/slider/add-menu
+   rules are copied; chart-rendering rules (dd-chart-grid, dd-facet,
+   dd-status-footer) are not used here. gg-* rules are blockr.ggplot's own.
+   ========================================================================= */
+
+.gg-block-container {
+  font: inherit;
+  position: relative;
+}
+
+/* ===== dd-* layout (from blockr.viz chart.css) =========================== */
+
+/* Title and the chart-type selector always own a full row. */
+.dd-popover > .dd-popover-title,
+.dd-popover > .dd-popover-types {
+  flex: 1 1 100%;
+}
+
+.dd-popover-title {
+  font-weight: var(--blockr-font-weight-semibold, 600);
+  margin-bottom: 10px;
+}
+
+.dd-form-row {
+  flex: 1 1 190px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 4px;
+  margin-bottom: 12px;
+}
+
+.dd-form-row > .blockr-popover-label {
+  margin-bottom: 0;
+}
+
+.dd-form-help {
+  font-size: var(--blockr-font-size-xs, 0.75rem);
+  color: var(--blockr-grey-400, #9ca3af);
+  line-height: 1.3;
+}
+
+/* Picker wrap — layout-only hook for the canonical select; visual chrome
+   comes from blockr.dplyr's .blockr-popover-select-wrap. */
+.dd-picker-wrap {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Fallback native select (only when Blockr.Select is unavailable). */
+.dd-cfg-select {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 8px 12px;
+  border: 1px solid var(--blockr-color-border, #e5e7eb);
+  border-radius: 8px;
+  font-size: var(--blockr-font-size-base, 0.875rem);
+  color: var(--blockr-color-text-primary, #374151);
+  background: var(--blockr-color-bg-input, #f9fafb);
+  cursor: pointer;
+  min-height: 38px;
+}
+.dd-cfg-select:focus {
+  border-color: var(--blockr-color-primary, #2563eb);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Sections (Mapping / Presentation): uniform auto-fill grid. */
+.dd-section {
+  flex: 1 1 100%;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  align-items: start;
+  gap: 0 14px;
+}
+.dd-section > .dd-role-paired { grid-column: span 2; }
+.dd-section-title {
+  grid-column: 1 / -1;
+  font-size: var(--blockr-font-size-xs, 0.75rem);
+  font-weight: var(--blockr-font-weight-semibold, 600);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--blockr-grey-400, #9ca3af);
+  margin: 10px 0 6px;
+  border-top: 1px solid var(--blockr-color-border, #e5e7eb);
+  padding-top: 10px;
+}
+
+/* Row head: label + remove button on one line above the control. */
+.dd-row-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+.dd-role-remove {
+  border: none;
+  background: none;
+  color: var(--blockr-grey-400, #9ca3af);
+  cursor: pointer;
+  font-size: 0.75rem;
+  line-height: 1;
+  padding: 2px 4px;
+  border-radius: 4px;
+}
+.dd-role-remove:hover {
+  color: var(--blockr-color-danger, #dc3545);
+  background: var(--blockr-grey-50, #f9fafb);
+}
+
+/* Control area. */
+.dd-row-controls {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+}
+.dd-row-controls > .dd-picker-wrap,
+.dd-row-controls > .dd-pill-wrap,
+.dd-row-controls > .dd-slider-wrap { flex: 1 1 0; min-width: 0; }
+
+/* Required mapping with no value: soft attention, not a hard error. */
+.dd-role-required-empty .blockr-popover-select-wrap .blockr-select__control {
+  border-color: var(--blockr-color-warning, #f59e0b);
+  background: var(--blockr-color-warning-bg, #fffbeb);
+}
+
+/* Add-mapping menu. */
+.dd-add-wrap { grid-column: 1 / -1; position: relative; margin-bottom: 12px; }
+.dd-add-trigger {
+  border: none;
+  background: none;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+}
+.dd-add-menu {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 6px;
+}
+.dd-add-item {
+  border: 1px solid var(--blockr-color-border, #e5e7eb);
+  background: #fff;
+  cursor: pointer;
+  font-size: var(--blockr-font-size-sm, 0.8125rem);
+  padding: 4px 10px;
+  border-radius: 6px;
+}
+.dd-add-item:hover {
+  border-color: var(--blockr-color-primary, #2563eb);
+  color: var(--blockr-color-primary, #2563eb);
+}
+
+/* Click-through pill wrapper. */
+.dd-pill-wrap {
+  display: flex;
+  align-items: center;
+}
+
+/* Type picker rows. */
+.dd-popover-types {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.dd-type-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.dd-type-group-label {
+  font-size: var(--blockr-font-size-xs, 0.75rem);
+  color: var(--blockr-grey-400, #9ca3af);
+  font-weight: var(--blockr-font-weight-medium, 500);
+  white-space: nowrap;
+}
+.dd-cfg-types {
+  display: flex;
+  gap: 0;
+  border: 1px solid var(--blockr-color-border, #e5e7eb);
+  border-radius: 6px;
+  overflow: hidden;
+}
+.dd-type-btn {
+  background: #fff;
+  border: none;
+  border-right: 1px solid var(--blockr-color-border, #e5e7eb);
+  padding: 4px 10px;
+  font-size: var(--blockr-font-size-xs, 0.75rem);
+  color: var(--blockr-grey-500, #6b7280);
+  cursor: pointer;
+  text-transform: capitalize;
+}
+.dd-type-btn:last-child { border-right: none; }
+.dd-type-btn:hover { background: var(--blockr-grey-50, #f9fafb); }
+.dd-type-btn.dd-type-active {
+  background: #eff6ff;
+  color: var(--blockr-color-primary, #2563eb);
+  font-weight: var(--blockr-font-weight-medium, 500);
+}
+
+/* Sliders. */
+.dd-slider-wrap {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  column-gap: 10px;
+  align-items: center;
+}
+.dd-slider {
+  width: 100%;
+  accent-color: var(--blockr-color-primary, #0072B2);
+  cursor: pointer;
+}
+.dd-slider-value {
+  font-variant-numeric: tabular-nums;
+  font-size: var(--blockr-font-size-sm, 0.8125rem);
+  color: var(--blockr-grey-600, #4b5563);
+  min-width: 3ch;
+  text-align: right;
+}
+
+/* Keyboard accessibility: visible focus on every band control. */
+.dd-popover .dd-type-btn:focus-visible,
+.dd-popover .blockr-pill:focus-visible,
+.dd-popover .dd-add-trigger:focus-visible,
+.dd-popover .dd-add-item:focus-visible,
+.dd-popover .dd-role-remove:focus-visible,
+.dd-popover .dd-cfg-select:focus-visible,
+.dd-popover .blockr-gear-btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--blockr-color-focus, rgba(37, 99, 235, 0.45));
+  border-radius: 6px;
+}
+.blockr-gear-btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--blockr-color-focus, rgba(37, 99, 235, 0.45));
+  border-radius: 6px;
+}
+
+/* ===== gg-* (blockr.ggplot own) ========================================== */
+
+/* The nine chart-type buttons overflow one strip in narrow panels. */
+.gg-settings .dd-cfg-types {
+  flex-wrap: wrap;
+}
+
+/* Phase 2 (grid/facet): the R-rendered layout preview lives inside the
+   container after the band; it is a configuration aid, so it shows only
+   while the settings band is open. */
+.gg-block-container:not(.gg-settings-open) .gg-preview {
+  display: none;
+}
