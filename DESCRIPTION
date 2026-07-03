@@ -43,14 +43,11 @@ Remotes:
 Imports:
     blockr.core (>= 0.1.1),
     blockr.dplyr,
-    colourpicker,
     ggplot2,
     glue,
     htmltools,
     patchwork,
-    shiny,
-    shinyjs,
-    shinyWidgets
+    shiny
 Suggests:
     blockr.theme,
     cowplot,

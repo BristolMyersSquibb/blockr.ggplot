@@ -1,876 +1,112 @@
 # UI Development Guidelines
 
-This guide documents the UI patterns and design principles for [blockr.ggplot](https://github.com/BristolMyersSquibb/blockr.ggplot) blocks. Follow these guidelines to create consistent, professional, and responsive block interfaces.
-
-## Table of Contents
-
-1. [UI Philosophy](#ui-philosophy)
-2. [Responsive Layout System](#responsive-layout-system)
-3. [Advanced Options Toggle](#advanced-options-toggle)
-4. [Two-Column Layout with Preview Sidebar](#two-column-layout-with-preview-sidebar)
-5. [Preview Components](#preview-components)
-6. [Color & Styling](#color--styling)
-7. [Complete Examples](#complete-examples)
-8. [Quick Reference](#quick-reference)
-
----
-
-## UI Philosophy
-
-### Core Principles
-
-1. **Minimalist & Professional**: Clean, uncluttered interfaces with subtle styling
-2. **Responsive**: Automatically adapts from narrow (1 column) to wide (4 columns)
-3. **Consistent**: All inputs have uniform width and spacing
-4. **Progressive Disclosure**: Hide advanced options by default
-5. **Visual Feedback**: Show previews and status indicators where helpful
-
-### Design Goals
-
-- **Uniform Input Width**: All controls (select, slider, checkbox) have same width
-- **Light Color Palette**: Gray/white tones, no flashy colors
-- **Subtle Indicators**: Status colors used sparingly and with low opacity
-- **Clean Typography**: Clear hierarchy with section headers
-- **Below-Input Previews**: Visual feedback appears under related controls
-
----
-
-## Responsive Layout System
-
-### The Grid Pattern
-
-Use the `block_responsive_css()` function for automatic responsive layout:
-
-```r
-ui <- function(id) {
-  tagList(
-    # Add responsive CSS
-    block_responsive_css(),
-
-    div(
-      class = "block-container",
-      div(
-        class = "block-form-grid",
-
-        # Your sections and inputs here
-      )
-    )
-  )
-}
-```
-
-### How It Works
-
-**CSS Grid with Auto-Fit:**
-```css
-.block-form-grid {
-  display: grid;
-  gap: 15px;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-}
-```
-
-**Responsive Behavior:**
-- **Narrow (< 250px)**: 1 column
-- **Medium (250-500px)**: 1 column
-- **Wide (500-750px)**: 2 columns
-- **Very Wide (750-1000px)**: 3 columns
-- **Extra Wide (> 1000px)**: 4 columns
-
-**Key Features:**
-- All inputs automatically share same grid tracks
-- Uniform width across different input types
-- No manual media queries needed
-- Sections use `display: contents` to flatten structure
-
-### Section Structure
-
-```r
-# Section with header
-div(
-  class = "block-section",
-  tags$h4("Section Title"),
-  div(
-    class = "block-section-grid",
-
-    # Inputs go here - each wrapped in block-input-wrapper
-    div(
-      class = "block-input-wrapper",
-      selectInput(NS(id, "param"), "Label", choices = ...)
-    ),
-
-    div(
-      class = "block-input-wrapper",
-      sliderInput(NS(id, "value"), "Value", ...)
-    )
-  )
-)
-```
-
-**CSS Behavior:**
-- `.block-section` and `.block-section-grid` use `display: contents`
-- This "flattens" them so inputs participate directly in parent grid
-- Headers (`h4`) span full width: `grid-column: 1 / -1`
-- Result: uniform input widths regardless of input type
-
-### Help Text
-
-```r
-div(
-  class = "block-help-text",
-  "Explanatory text goes here"
-)
-```
-
-Help text automatically:
-- Spans full width
-- Uses subtle gray color (#666)
-- Has proper spacing from inputs above
-
----
-
-## Advanced Options Toggle
-
-### The Pattern
-
-Hide advanced options behind a collapsible section with smooth animation:
-
-```r
-ui <- function(id) {
-  tagList(
-    # CSS for collapsible section
-    tags$style(HTML(sprintf("
-      #%s-advanced-options {
-        max-height: 0;
-        overflow: hidden;
-        transition: max-height 0.3s ease-out;
-        grid-column: 1 / -1;
-        display: grid;
-        grid-template-columns: subgrid;
-        gap: 15px;
-      }
-      #%s-advanced-options.expanded {
-        max-height: 2000px;
-        overflow: visible;
-        transition: max-height 0.5s ease-in;
-      }
-      .advanced-toggle {
-        cursor: pointer;
-        user-select: none;
-        padding: 8px 0;
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        grid-column: 1 / -1;
-        color: #6c757d;
-        font-size: 0.875rem;
-      }
-      .advanced-toggle .chevron {
-        transition: transform 0.2s;
-        display: inline-block;
-        font-size: 14px;
-        font-weight: bold;
-      }
-      .advanced-toggle .chevron.rotated {
-        transform: rotate(90deg);
-      }
-    ", id, id))),
-
-    # Toggle button
-    div(
-      class = "block-section",
-      div(
-        class = "advanced-toggle text-muted",
-        id = NS(id, "advanced-toggle"),
-        onclick = sprintf("
-          const section = document.getElementById('%s');
-          const chevron = document.querySelector('#%s .chevron');
-          section.classList.toggle('expanded');
-          chevron.classList.toggle('rotated');
-        ", NS(id, "advanced-options"), NS(id, "advanced-toggle")),
-        tags$span(class = "chevron", "\u203A"),  # Right chevron
-        "Show advanced options"
-      )
-    ),
-
-    # Collapsible section
-    div(
-      id = NS(id, "advanced-options"),
-
-      # Advanced inputs go here
-      div(
-        class = "block-section",
-        tags$h4("Advanced Settings"),
-        div(
-          class = "block-section-grid",
-          # ... advanced inputs ...
-        )
-      )
-    )
-  )
-}
-```
-
-### Key Features
-
-- **Smooth Animation**: `max-height` transition (300ms collapse, 500ms expand)
-- **Chevron Rotation**: Rotates 90° when expanded
-- **Subgrid Layout**: Advanced section inherits parent grid
-- **Full Width**: Spans all columns when expanded
-- **Subtle Styling**: Gray text, small font
-
-### Usage Guidelines
-
-**Use for:**
-- Non-essential customization options
-- Advanced/expert settings
-- Options that most users won't need
-
-**Keep in basic section:**
-- Required fields
-- Core functionality
-- Commonly used options
-
----
-
-## Two-Column Layout with Preview Sidebar
-
-### The Pattern
-
-For blocks with previews or supplementary content, use a two-column layout: inputs (2/3 width) on left, preview/sidebar (1/3 width) on right. This layout is responsive and collapses to a single column on narrow screens.
-
-### Structure
-
-```r
-ui <- function(id) {
-  tagList(
-    block_responsive_css(),
-
-    # Two-column responsive CSS
-    tags$style(HTML("
-      /* Two-column layout - responsive wrapper */
-      @media (min-width: 700px) {
-        .my-layout-wrapper {
-          display: grid;
-          grid-template-columns: 2fr 1fr;
-          gap: 20px;
-          align-items: start;
-        }
-        .my-preview-sidebar {
-          position: sticky;
-          top: 20px;
-        }
-      }
-
-      @media (max-width: 699px) {
-        .my-layout-wrapper {
-          display: block;
-        }
-        .my-preview-sidebar {
-          margin-top: 20px;
-        }
-      }
-    ")),
-
-    div(
-      class = "block-container",
-
-      # Two-column wrapper
-      div(
-        class = "my-layout-wrapper",
-
-        # Left: Inputs (2/3 width)
-        div(
-          class = "my-inputs",
-          div(
-            class = "block-form-grid",
-
-            # All sections and inputs here
-            div(
-              class = "block-section",
-              tags$h4("Options"),
-              div(
-                class = "block-section-grid",
-                div(class = "block-input-wrapper",
-                    selectInput(NS(id, "x"), "X-axis", ...)
-                )
-              )
-            )
-          )
-        ),
-
-        # Right: Preview/Sidebar (1/3 width)
-        div(
-          class = "my-preview-sidebar",
-          uiOutput(NS(id, "preview"))
-        )
-      )
-    )
-  )
-}
-```
-
-### Responsive Behavior
-
-| Screen Width | Layout | Description |
-|-------------|--------|-------------|
-| **≥ 700px** | Side-by-side | Inputs (2/3) left, preview (1/3) right with sticky positioning |
-| **< 700px** | Stacked | Inputs full-width on top, preview full-width below |
-
-**Key CSS Features:**
-- **Grid layout**: `grid-template-columns: 2fr 1fr` creates 2:1 ratio
-- **Sticky preview**: `position: sticky; top: 20px` keeps preview visible while scrolling
-- **Responsive gap**: `gap: 20px` for spacing between columns
-- **Block fallback**: On narrow screens, wrapper uses `display: block` for stacking
-
-### When to Use
-
-Use the two-column layout when:
-- ✅ Block has visual preview or supplementary information
-- ✅ Preview is helpful but not essential for input selection
-- ✅ Preview doesn't require full width to be useful
-- ✅ You want preview visible while changing inputs (wide screens)
-
-**Examples:**
-- **Facet block**: Layout preview shows facet grid configuration
-- **ggplot block**: Chart preview or aesthetic guidance
-- **Plot grid block**: Grid arrangement preview
-
-Don't use when:
-- ❌ Preview requires full width (use below-input placement instead)
-- ❌ Block has no preview/sidebar content
-- ❌ Content is primarily vertical (tables, lists)
-
-### Implementation Pattern
-
-**Step 1: Create wrapper classes**
-```r
-# Use descriptive, unique class names
-div(class = "facet-layout-wrapper",       # Wrapper
-  div(class = "facet-inputs", ...),       # Left column
-  div(class = "facet-preview-sidebar",    # Right column
-    ...)
-)
-```
-
-**Step 2: Add responsive CSS**
-```css
-/* Wide screens: side-by-side */
-@media (min-width: 700px) {
-  .{name}-layout-wrapper {
-    display: grid;
-    grid-template-columns: 2fr 1fr;
-    gap: 20px;
-    align-items: start;
-  }
-  .{name}-preview-sidebar {
-    position: sticky;
-    top: 20px;
-  }
-}
-
-/* Narrow screens: stacked */
-@media (max-width: 699px) {
-  .{name}-layout-wrapper {
-    display: block;
-  }
-  .{name}-preview-sidebar {
-    margin-top: 20px;
-  }
-}
-```
-
-**Step 3: Wrap form grid**
-```r
-# The left column contains block-form-grid
-div(
-  class = "{name}-inputs",
-  div(
-    class = "block-form-grid",
-    # All your existing sections
-  )
-)
-```
-
-### Naming Convention
-
-Follow this naming pattern for consistency:
-
-| Element | Class Name | Purpose |
-|---------|-----------|----------|
-| Wrapper | `.{name}-layout-wrapper` | Container for two columns |
-| Left Column | `.{name}-inputs` | Contains form grid with inputs |
-| Right Column | `.{name}-preview-sidebar` | Contains preview/supplementary content |
-
-**Example:**
-- Facet block: `.facet-layout-wrapper`, `.facet-inputs`, `.facet-preview-sidebar`
-- ggplot block: `.ggplot-layout-wrapper`, `.ggplot-inputs`, `.ggplot-preview-sidebar`
-
-### Complete Example
-
-See the facet block implementation in [facet-block.R](../R/facet-block.R) for a complete working example with:
-- Two-column responsive wrapper
-- Sticky preview sidebar
-- SVG preview with status indicators
-- Proper HTML structure and closing tags
-
----
-
-## Preview Components
-
-### SVG Layout Previews
-
-Visual previews show layout configurations below the related inputs.
-
-#### Example: Grid/Facet Preview
-
-```r
-# In server function
-output$layout_preview <- renderUI({
-  preview <- create_preview_svg(...)  # Your preview logic
-
-  tags$div(
-    tags$div(
-      class = "preview-svg-container",
-      preview$svg
-    ),
-    tags$div(
-      class = paste("preview-status", preview$status_class),
-      preview$status_text
-    )
-  )
-})
-
-# In UI
-div(
-  class = "preview-container",
-  uiOutput(NS(id, "layout_preview"))
-)
-```
-
-#### Preview SVG Pattern
-
-```r
-create_preview_svg <- function(...) {
-  # Calculate dimensions
-  cell_size <- 60
-  n_rows <- 2
-  n_cols <- 3
-
-  # Create SVG cells
-  cells <- list()
-  for (row in 0:(n_rows - 1)) {
-    for (col in 0:(n_cols - 1)) {
-      cells[[length(cells) + 1]] <- tags$rect(
-        x = col * cell_size,
-        y = row * cell_size,
-        width = cell_size - 4,
-        height = cell_size - 4,
-        fill = "rgba(76, 175, 80, 0.3)",  # Light green
-        stroke = "#4CAF50",                # Green
-        `stroke-width` = "2",
-        rx = "3"
-      )
-    }
-  }
-
-  svg <- tags$svg(
-    width = n_cols * cell_size,
-    height = n_rows * cell_size,
-    style = "border: 1px solid #ddd; background: white; border-radius: 4px;",
-    do.call(tagList, cells)
-  )
-
-  list(
-    svg = svg,
-    status_text = "2 × 3 grid (6 total)",
-    status_class = "valid"
-  )
-}
-```
-
-### Preview CSS
-
-```css
-/* Preview container */
-.preview-svg-container {
-  text-align: center;
-  margin-bottom: 8px;
-}
-
-/* Status text below preview */
-.preview-status {
-  font-size: 0.875rem;
-  color: #6c757d;
-  text-align: center;
-  padding: 6px 8px;
-  border-radius: 4px;
-  background-color: #f8f9fa;
-}
-
-.preview-status.valid {
-  color: #28a745;
-}
-
-.preview-status.warning {
-  color: #ffc107;
-}
-
-.preview-status.error {
-  color: #dc3545;
-}
-```
-
-### Status Colors
-
-Use subtle, low-opacity fills with solid strokes:
-
-| Status | Fill | Stroke | When to Use |
-|--------|------|--------|-------------|
-| Valid (Green) | `rgba(76, 175, 80, 0.3)` | `#4CAF50` | Perfect configuration |
-| Warning (Blue) | `rgba(33, 150, 243, 0.3)` | `#2196F3` | Works, but has empty slots |
-| Error (Red) | `rgba(244, 67, 54, 0.3)` | `#f44336` | Invalid configuration |
-
-### Preview Placement
-
-**Always place previews:**
-- ✅ **Below** the relevant inputs
-- ✅ In a separate column or section
-- ✅ With status text below the visual
-- ❌ Not above inputs
-- ❌ Not interrupting input flow
-
----
-
-## Color & Styling
-
-### Button Styles
-
-**Use light/gray buttons for all controls:**
-
-```r
-# shinyWidgets buttons
-shinyWidgets::radioGroupButtons(
-  inputId = NS(id, "type"),
-  label = "Chart Type",
-  choices = c("Scatter", "Bar", "Line"),
-  status = "light",  # ← Always use "light"
-  size = "sm"
-)
-```
-
-**Status colors available:**
-- `status = "light"` → Gray/white (preferred for blockr)
-- ❌ `status = "primary"` → Blue (too flashy)
-- ❌ `status = "success"` → Green (too flashy)
-- ❌ `status = "warning"` → Orange (too flashy)
-
-### Color Palette
-
-**UI Elements (Minimalist Grays):**
-```css
-/* Primary text */
-color: #333;
-
-/* Secondary/muted text */
-color: #6c757d;
-
-/* Help text */
-color: #666;
-
-/* Borders */
-border-color: #ddd;
-
-/* Backgrounds */
-background: #f8f9fa;
-background: white;
-```
-
-**Status Colors (Subtle Usage):**
-```css
-/* Success/Valid - Green */
-color: #28a745;          /* text */
-fill: rgba(76, 175, 80, 0.3);  /* SVG fill */
-stroke: #4CAF50;         /* SVG stroke */
-
-/* Warning - Blue */
-color: #ffc107;
-fill: rgba(33, 150, 243, 0.3);
-stroke: #2196F3;
-
-/* Error - Red */
-color: #dc3545;
-fill: rgba(244, 67, 54, 0.3);
-stroke: #f44336;
-```
-
-### Typography
-
-```css
-/* Section headers */
-h4 {
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: #333;
-  margin-top: 5px;
-  margin-bottom: 0px;
-}
-
-/* Help text */
-.block-help-text {
-  font-size: 0.875rem;
-  color: #666;
-}
-
-/* Advanced toggle */
-.advanced-toggle {
-  font-size: 0.875rem;
-  color: #6c757d;
-}
-
-/* Preview status */
-.preview-status {
-  font-size: 0.875rem;
-  color: #6c757d;
-}
-```
-
-### Spacing & Layout
-
-```css
-/* Grid gap between inputs */
-gap: 15px;
-
-/* Section spacing */
-.block-section:not(:first-child) {
-  margin-top: 20px;
-}
-
-/* Input margins */
-.block-input-wrapper .form-group {
-  margin-bottom: 10px;
-}
-
-/* Container padding */
-.block-container {
-  padding-bottom: 15px;
-}
-```
-
----
-
-## Complete Examples
-
-### Example 1: Basic Block with Responsive Layout
-
-```r
-new_my_block <- function(x = character(), y = character(), ...) {
-  new_ggplot_block(
-    server = function(id, data) {
-      moduleServer(id, function(input, output, session) {
-        # ... server logic ...
-      })
-    },
-    ui = function(id) {
-      tagList(
-        block_responsive_css(),
-
-        div(
-          class = "block-container",
-          div(
-            class = "block-form-grid",
-
-            # Main Section
-            div(
-              class = "block-section",
-              tags$h4("Basic Options"),
-              div(
-                class = "block-section-grid",
-                div(
-                  class = "block-input-wrapper",
-                  selectInput(NS(id, "x"), "X-axis", choices = x)
-                ),
-                div(
-                  class = "block-input-wrapper",
-                  selectInput(NS(id, "y"), "Y-axis", choices = y)
-                )
-              )
-            )
-          )
-        )
-      )
-    },
-    class = "my_block",
-    ...
-  )
-}
-```
-
-### Example 2: Block with Advanced Options
-
-```r
-ui <- function(id) {
-  tagList(
-    block_responsive_css(),
-
-    # Advanced toggle CSS
-    tags$style(HTML(sprintf("
-      #%s-advanced-options {
-        max-height: 0;
-        overflow: hidden;
-        transition: max-height 0.3s ease-out;
-        grid-column: 1 / -1;
-        display: grid;
-        grid-template-columns: subgrid;
-        gap: 15px;
-      }
-      #%s-advanced-options.expanded {
-        max-height: 2000px;
-        transition: max-height 0.5s ease-in;
-      }
-      .advanced-toggle {
-        cursor: pointer;
-        padding: 8px 0;
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        grid-column: 1 / -1;
-        color: #6c757d;
-        font-size: 0.875rem;
-      }
-      .advanced-toggle .chevron {
-        transition: transform 0.2s;
-      }
-      .advanced-toggle .chevron.rotated {
-        transform: rotate(90deg);
-      }
-    ", id, id))),
-
-    div(
-      class = "block-container",
-      div(
-        class = "block-form-grid",
-
-        # Basic Section
-        div(
-          class = "block-section",
-          tags$h4("Basic Options"),
-          div(
-            class = "block-section-grid",
-            div(class = "block-input-wrapper",
-                selectInput(NS(id, "x"), "X-axis", choices = ...)
-            )
-          )
-        ),
-
-        # Advanced Toggle
-        div(
-          class = "block-section",
-          div(
-            class = "advanced-toggle",
-            id = NS(id, "advanced-toggle"),
-            onclick = sprintf("
-              const section = document.getElementById('%s');
-              const chevron = document.querySelector('#%s .chevron');
-              section.classList.toggle('expanded');
-              chevron.classList.toggle('rotated');
-            ", NS(id, "advanced-options"), NS(id, "advanced-toggle")),
-            tags$span(class = "chevron", "\u203A"),
-            "Show advanced options"
-          )
-        ),
-
-        # Advanced Section (Collapsible)
-        div(
-          id = NS(id, "advanced-options"),
-          div(
-            class = "block-section",
-            tags$h4("Advanced Options"),
-            div(
-              class = "block-section-grid",
-              div(class = "block-input-wrapper",
-                  sliderInput(NS(id, "alpha"), "Transparency", ...)
-              )
-            )
-          )
-        )
-      )
-    )
-  )
-}
-```
-
-### Example 3: Block with Preview
-
-```r
-ui <- function(id) {
-  tagList(
-    shinyjs::useShinyjs(),
-    block_responsive_css(),
-
-    # Preview CSS
-    tags$style(HTML("
-      .preview-svg-container {
-        text-align: center;
-        margin-bottom: 8px;
-      }
-      .preview-status {
-        font-size: 0.875rem;
-        color: #6c757d;
-        text-align: center;
-        padding: 6px 8px;
-        border-radius: 4px;
-        background-color: #f8f9fa;
-      }
-      .preview-status.valid { color: #28a745; }
-      .preview-status.warning { color: #ffc107; }
-      .preview-status.error { color: #dc3545; }
-    ")),
-
-    div(
-      class = "block-container",
-      div(
-        class = "block-form-grid",
-
-        # Inputs Section
-        div(
-          class = "block-section",
-          tags$h4("Layout"),
-          div(
-            class = "block-section-grid",
-            div(class = "block-input-wrapper",
-                selectInput(NS(id, "ncol"), "Columns", ...)
-            ),
-            div(class = "block-input-wrapper",
-                selectInput(NS(id, "nrow"), "Rows", ...)
-            )
-          )
-        ),
-
-        # Preview Section (below inputs)
-        div(
-          class = "block-section",
-          tags$h4("Preview"),
-          div(
-            class = "block-section-grid",
-            div(
-              style = "grid-column: 1 / -1;",
-              uiOutput(NS(id, "layout_preview"))
-            )
-          )
-        )
-      )
-    )
-  )
-}
-```
-
----
-
-## Related Documentation
-
-- **Quick Reference:** [../CLAUDE.md](../CLAUDE.md)
-- **Example Blocks:**
-  - [facet-block.R](../R/facet-block.R) - Advanced toggle + preview
-  - [plot-grid-block.R](../R/plot-grid-block.R) - Grid preview
-  - [ggplot-block.R](../R/ggplot-block.R) - Dynamic UI
+This guide documents the UI architecture of
+[blockr.ggplot](https://github.com/BristolMyersSquibb/blockr.ggplot) blocks
+after the settings-band rework (2026-07), which aligned the package with the
+blockr design system as piloted by **blockr.viz** (see
+`blockr.docs/design-system/target/design-system.html` and
+`blockr.viz/dev/table-and-chart-architecture.md`).
+
+The pre-rework Shiny-first guidelines (responsive `block-form-grid`,
+"Show advanced options" toggle, `block_responsive_css()`) are obsolete —
+those helpers were removed from `R/utils.R`.
+
+## Architecture: JS-first settings band
+
+Every block follows the blockr.viz pattern:
+
+- The constructor's `ui` (the expr-UI slot) renders **only** the html
+  dependencies (`ggplot_block_deps()`, `R/ggplot-dep.R`) plus one empty
+  container:
+
+  ```r
+  div(id = NS(id, "gg_block"), class = "gg-block-container",
+      `data-gg-block` = "ggplot")   # or "theme" / "facet" / "grid"
+  ```
+
+- `inst/js/gg-blocks.js` binds the container (`Shiny.InputBinding`), builds
+  a gear header (`.blockr-gear-header` > `.blockr-gear-btn`) and an
+  **in-flow settings band** (`.blockr-settings`, design-system gear-panel
+  proposal B: no body portal, no fixed positioning; opening pushes the plot
+  down so the result stays visible).
+
+- The band content is rendered by the shared **`Blockr.DrilldownConfig`**
+  engine (`inst/js/drilldown-config.js`, copied from blockr.viz — see the
+  CANONICAL SOURCE header) from a declarative spec per block in
+  `gg-blocks.js` (`SPECS`): role catalog (`kind: column | select | columns |
+  segmented | slider | text | color`) plus per-type sections
+  (requiredMap / optionalMap / mapping / presentation).
+
+- The plot itself stays `block_ui`'s server-rendered `plotOutput`
+  **below** the container — unlike blockr.viz (client-side ECharts), JS
+  owns only the configuration UI.
+
+## R <-> JS protocol
+
+- **R -> JS**: one `shiny::observe()` per block sends the custom message
+  `gg-block-data` with `{id, block, columns, config}` (plus `choices` for
+  runtime-dependent option lists, e.g. the theme block's `base_theme`).
+  Column metadata is `{name, type, n_unique, label?, levels?}`; no data
+  frame is shipped.
+
+- **JS -> R**: every change echoes the FULL config through
+  `Shiny.setInputValue('<id>_action', {action: 'config', ...})`. The server
+  applies it in one `observeEvent(input$gg_block_action)` where every write
+  goes through the `identical()` guard:
+
+  ```r
+  upd <- function(rv, v) if (!identical(isolate(rv()), v)) rv(v)
+  ```
+
+  This guard is mandatory — a blind `reactiveVal` write re-triggers the
+  push observer and echoes back to JS (R->JS->R loop). See
+  `blockr.viz/R/chart-block.R` for the original pattern and rationale.
+
+- **External control / restore** work for free: any state write re-runs the
+  push observer, and JS re-renders the band from the new config.
+
+## Keep in sync
+
+- `chart_aesthetics` (R/ggplot-block.R) <-> `GG_TYPE_ROLES`
+  (inst/js/gg-blocks.js): the R list stays authoritative for expression
+  generation; the JS mirror drives which controls the band shows.
+- The typed `new_block_args()` registry in `R/zzz.R` (read by blockr.ai)
+  must match the constructor signatures — the rework did not change any.
+- Copied shared assets carry `CANONICAL SOURCE` headers
+  (`drilldown-config.js`, `settings-band.js`, `settings-band.css`,
+  the `dd-*` rules in `gg-blocks.css`): keep them in sync with blockr.viz
+  until they graduate to blockr.ui. Local engine extensions (slider
+  min/max/step/unit, `kind: 'color'`, select `ph` placeholder) are
+  upstream candidates.
+
+## CSS namespaces
+
+- `.blockr-*` — reserved for the shared layer (blockr.dplyr today,
+  blockr.ui later). Never mint new ones here.
+- `.dd-*` — emitted by the copied DrilldownConfig engine; rules copied
+  verbatim from `blockr.viz/inst/css/chart.css`. Do not rename.
+- `.gg-*` — blockr.ggplot's own prefix (container, previews, color swatch).
+
+## Previews (grid / facet)
+
+The SVG layout previews (`create_grid_preview_svg()`,
+`create_facet_preview_svg()`) survive as R-rendered `uiOutput`s placed
+inside the container after the band (`div(class = "gg-preview", ...)`).
+`gg-blocks.js` inserts the gear/band **before** existing children
+(append-only DOM building — never clear the container), and
+`gg-blocks.css` shows the preview only while the band is open.
+
+## Testing
+
+- Server tests drive the config transport, not per-field inputs:
+
+  ```r
+  expr <- session$makeScope("expr")
+  expr$setInputs(gg_block_action = list(action = "config", x = "hp"))
+  ```
+
+- `tests/testthat/test-ggplot-block-config-action.R` covers the transport
+  invariants (full echo, identical() guard, donut on/off mapping, "(none)"
+  restore parity).
+- JS is type-checked, no build step: `npx -p typescript tsc`
+  (tsconfig.json; opt-in per file via `// @ts-check`).

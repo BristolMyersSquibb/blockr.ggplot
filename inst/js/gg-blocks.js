@@ -79,6 +79,214 @@
   /** @param {string} t */
   const ggSections = (t) => GG_TYPE_ROLES[t] || GG_TYPE_ROLES.point;
 
+  // -- theme block spec ---------------------------------------------------
+  // Mirrors the constructor args / expr logic in R/theme-block.R. base_theme
+  // options are runtime-dependent (gated on installed theme packages), so
+  // the R server ships them in the push message (`choices`), not here.
+
+  /** @type {Record<string, any>} */
+  const THEME_ROLES = {
+    base_theme:      { label: 'Base theme',      kind: 'select', options: [] },
+    legend_position: {
+      label: 'Legend position', kind: 'select',
+      options: [
+        { value: 'auto', label: 'Auto (theme default)' },
+        { value: 'right', label: 'Right' },
+        { value: 'left', label: 'Left' },
+        { value: 'top', label: 'Top' },
+        { value: 'bottom', label: 'Bottom' },
+        { value: 'none', label: 'None' }
+      ]
+    },
+    palette_fill:    { label: 'Fill palette',    kind: 'select', options: [] },
+    palette_colour:  { label: 'Colour palette',  kind: 'select', options: [] },
+    panel_bg:        { label: 'Panel background', kind: 'color' },
+    plot_bg:         { label: 'Plot background',  kind: 'color' },
+    grid_color:      { label: 'Grid color',       kind: 'color' },
+    base_size: {
+      label: 'Base font size', kind: 'select',
+      options: [
+        { value: 'auto', label: 'Auto (theme default)' },
+        '8', '9', '10', '11', '12', '13', '14', '16', '18', '20'
+      ]
+    },
+    base_family: {
+      label: 'Font family', kind: 'select',
+      options: [
+        { value: 'auto', label: 'Auto (theme default)' },
+        { value: 'sans', label: 'Sans serif' },
+        { value: 'serif', label: 'Serif' },
+        { value: 'mono', label: 'Monospace' }
+      ]
+    },
+    show_major_grid: {
+      label: 'Major grid', kind: 'segmented',
+      options: [
+        { value: 'auto', label: 'Auto' },
+        { value: 'show', label: 'Show' },
+        { value: 'hide', label: 'Hide' }
+      ]
+    },
+    show_minor_grid: {
+      label: 'Minor grid', kind: 'segmented',
+      options: [
+        { value: 'auto', label: 'Auto' },
+        { value: 'show', label: 'Show' },
+        { value: 'hide', label: 'Hide' }
+      ]
+    },
+    show_panel_border: {
+      label: 'Panel border', kind: 'segmented',
+      options: [
+        { value: 'auto', label: 'Auto' },
+        { value: 'show', label: 'Show' },
+        { value: 'hide', label: 'Hide' }
+      ]
+    }
+  };
+
+  // Both viridis palettes share the same option list.
+  const PALETTE_OPTIONS = [
+    { value: 'auto', label: 'Auto (keep upstream)' },
+    { value: 'viridis_d', label: 'Viridis (categorical)' },
+    { value: 'viridis_c', label: 'Viridis (continuous)' },
+    { value: 'magma_d', label: 'Magma (categorical)' },
+    { value: 'magma_c', label: 'Magma (continuous)' },
+    { value: 'plasma_d', label: 'Plasma (categorical)' },
+    { value: 'plasma_c', label: 'Plasma (continuous)' },
+    { value: 'ggplot2', label: 'ggplot2 default' }
+  ];
+  THEME_ROLES.palette_fill.options = PALETTE_OPTIONS;
+  THEME_ROLES.palette_colour.options = PALETTE_OPTIONS.slice();
+
+  // Ordered by causality: theme -> legend/palettes -> colors -> typography
+  // -> grid & border.
+  const THEME_SECTIONS = {
+    requiredMap: [],
+    optionalMap: [],
+    mapping: [],
+    presentation: [
+      'base_theme', 'legend_position', 'palette_fill', 'palette_colour',
+      'panel_bg', 'plot_bg', 'base_size', 'base_family',
+      'show_major_grid', 'show_minor_grid', 'grid_color', 'show_panel_border'
+    ]
+  };
+
+  // -- facet block spec -----------------------------------------------------
+  // Mirrors R/facet-block.R: facet_wrap ("wrap") vs facet_grid ("grid"),
+  // toggled by the engine's type picker instead of the old radio buttons +
+  // shinyjs show/hide. The multi-column pickers are `columns` roles
+  // (Blockr.Select.multi; empty selection = no faceting).
+
+  /** @type {Record<string, any>} */
+  const FACET_ROLES = {
+    facets: { label: 'Facet by', kind: 'columns', placeholder: 'None' },
+    rows:   { label: 'Rows',     kind: 'columns', placeholder: 'None' },
+    cols:   { label: 'Columns',  kind: 'columns', placeholder: 'None' },
+    ncol: {
+      label: 'Columns', kind: 'select', ph: 'Auto',
+      options: [{ value: '', label: 'Auto' }, '1', '2', '3', '4', '5']
+    },
+    nrow: {
+      label: 'Rows', kind: 'select', ph: 'Auto',
+      options: [{ value: '', label: 'Auto' }, '1', '2', '3', '4', '5']
+    },
+    scales: {
+      label: 'Scales', kind: 'select',
+      options: [
+        { value: 'fixed', label: 'Fixed' },
+        { value: 'free', label: 'Free' },
+        { value: 'free_x', label: 'Free X' },
+        { value: 'free_y', label: 'Free Y' }
+      ]
+    },
+    labeller: {
+      label: 'Labels', kind: 'select',
+      options: [
+        { value: 'label_value', label: 'Value only' },
+        { value: 'label_both', label: 'Variable and value' },
+        { value: 'label_parsed', label: 'Parsed expressions' }
+      ]
+    },
+    dir: {
+      // Two distinct values, not on/off -> stays a cycling pill.
+      label: 'Direction', kind: 'segmented',
+      options: [
+        { value: 'h', label: 'Horizontal' },
+        { value: 'v', label: 'Vertical' }
+      ]
+    },
+    space: {
+      label: 'Space', kind: 'select',
+      options: [
+        { value: 'fixed', label: 'Fixed' },
+        { value: 'free_x', label: 'Free X' },
+        { value: 'free_y', label: 'Free Y' }
+      ]
+    }
+  };
+
+  /** @type {Record<string, { requiredMap: string[], optionalMap: string[], mapping: any[], presentation: any[] }>} */
+  const FACET_TYPE_ROLES = {
+    wrap: {
+      requiredMap: [], optionalMap: [],
+      mapping: ['facets'],
+      presentation: ['ncol', 'nrow', 'scales', 'labeller', 'dir']
+    },
+    grid: {
+      requiredMap: [], optionalMap: [],
+      mapping: ['rows', 'cols'],
+      presentation: ['scales', 'labeller', 'space']
+    }
+  };
+
+  // -- grid block spec ------------------------------------------------------
+  // Mirrors R/grid-block.R (patchwork panel layout): no columns, no type
+  // picker — layout selects, annotation text inputs, auto-tag style.
+
+  /** @type {Record<string, any>} */
+  const GRID_ROLES = {
+    ncol: {
+      label: 'Columns', kind: 'select', ph: 'Auto',
+      options: [{ value: '', label: 'Auto' }, '1', '2', '3', '4', '5']
+    },
+    nrow: {
+      label: 'Rows', kind: 'select', ph: 'Auto',
+      options: [{ value: '', label: 'Auto' }, '1', '2', '3', '4', '5']
+    },
+    guides: {
+      label: 'Legends', kind: 'select',
+      options: [
+        { value: 'auto', label: 'Auto' },
+        { value: 'collect', label: 'Collect' },
+        { value: 'keep', label: 'Keep separate' }
+      ]
+    },
+    title:    { label: 'Title',    kind: 'text' },
+    subtitle: { label: 'Subtitle', kind: 'text' },
+    caption:  { label: 'Caption',  kind: 'text' },
+    tag_levels: {
+      label: 'Auto-tag plots', kind: 'select', ph: 'None',
+      options: [
+        { value: '', label: 'None' },
+        { value: 'A', label: 'A, B, C…' },
+        { value: 'a', label: 'a, b, c…' },
+        { value: '1', label: '1, 2, 3…' },
+        { value: 'I', label: 'I, II, III…' },
+        { value: 'i', label: 'i, ii, iii…' }
+      ]
+    }
+  };
+
+  const GRID_SECTIONS = {
+    requiredMap: [],
+    optionalMap: [],
+    mapping: [],
+    presentation: [
+      'ncol', 'nrow', 'guides', 'title', 'subtitle', 'caption', 'tag_levels'
+    ]
+  };
+
   /** @type {Record<string, any>} */
   const SPECS = {
     ggplot: {
@@ -92,6 +300,42 @@
       configKeys: [
         'type', 'x', 'y', 'color', 'fill', 'size', 'shape', 'linetype',
         'group', 'alpha', 'density_alpha', 'position', 'bins', 'donut'
+      ]
+    },
+    theme: {
+      roles: THEME_ROLES,
+      typeKey: null,
+      typeGroups: null,
+      sectionsFor: () => THEME_SECTIONS,
+      title: 'Theme settings',
+      configKeys: [
+        'base_theme', 'legend_position', 'palette_fill', 'palette_colour',
+        'panel_bg', 'plot_bg', 'base_size', 'base_family',
+        'show_major_grid', 'show_minor_grid', 'grid_color',
+        'show_panel_border'
+      ]
+    },
+    facet: {
+      roles: FACET_ROLES,
+      typeKey: 'facet_type',
+      typeGroups: [{ label: 'Layout', types: ['wrap', 'grid'] }],
+      sectionsFor: (/** @type {string} */ t) =>
+        FACET_TYPE_ROLES[t] || FACET_TYPE_ROLES.wrap,
+      title: 'Facet settings',
+      configKeys: [
+        'facet_type', 'facets', 'rows', 'cols', 'ncol', 'nrow',
+        'scales', 'labeller', 'dir', 'space'
+      ]
+    },
+    grid: {
+      roles: GRID_ROLES,
+      typeKey: null,
+      typeGroups: null,
+      sectionsFor: () => GRID_SECTIONS,
+      title: 'Grid settings',
+      configKeys: [
+        'ncol', 'nrow', 'guides', 'title', 'subtitle', 'caption',
+        'tag_levels'
       ]
     }
   };
@@ -161,10 +405,15 @@
         roles: this.spec.roles,
         config: () => this.config,
         columns: () => this.columns,
-        // context keys the per-type extras (position optionsBy).
-        context: () => this.config[this.spec.typeKey],
-        currentType: () => this.config[this.spec.typeKey] || null,
-        sections: () => this.spec.sectionsFor(this.config[this.spec.typeKey]),
+        // context keys per-type extras (position optionsBy). Blocks without
+        // a type picker use their block kind as a constant context.
+        context: () => this.spec.typeKey
+          ? this.config[this.spec.typeKey]
+          : (this.el.getAttribute('data-gg-block') || 'ggplot'),
+        currentType: () => this.spec.typeKey
+          ? (this.config[this.spec.typeKey] || null) : null,
+        sections: () => this.spec.sectionsFor(
+          this.spec.typeKey ? this.config[this.spec.typeKey] : null),
         sectionsForFamily: (/** @type {string} */ fam) => this.spec.sectionsFor(fam),
         secondary: GG_SECONDARY,
         typeKey: this.spec.typeKey,

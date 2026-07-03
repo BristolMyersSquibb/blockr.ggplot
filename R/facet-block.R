@@ -354,174 +354,92 @@ new_facet_block <- function(
             )
           })
 
-          # Reactive values
+          # Reactive values. ncol/nrow normalize the character() constructor
+          # default to "" (the "Auto" select value) so the expr reactive's
+          # `!= ""` checks are length-safe before the first config echo.
           r_facet_type <- reactiveVal(facet_type)
           r_facets <- reactiveVal(facets)
           r_rows <- reactiveVal(rows)
           r_cols <- reactiveVal(cols)
-          r_ncol <- reactiveVal(ncol)
-          r_nrow <- reactiveVal(nrow)
+          r_ncol <- reactiveVal(if (length(ncol)) ncol else "")
+          r_nrow <- reactiveVal(if (length(nrow)) nrow else "")
           r_scales <- reactiveVal(scales)
           r_labeller <- reactiveVal(labeller)
           r_dir <- reactiveVal(dir)
           r_space <- reactiveVal(space)
 
-          # Update reactive values from inputs
-          observeEvent(input$facet_type, {
-            r_facet_type(input$facet_type)
-
-            # Toggle visibility of variable selectors based on facet type
-            if (input$facet_type == "wrap") {
-              shinyjs::show("wrap_vars")
-              shinyjs::hide("grid_vars_row")
-              shinyjs::hide("grid_vars_col")
-              shinyjs::show("layout_section")
-              shinyjs::show("layout_options_section")
-              shinyjs::hide("space_option")
-            } else {
-              shinyjs::hide("wrap_vars")
-              shinyjs::show("grid_vars_row")
-              shinyjs::show("grid_vars_col")
-              shinyjs::hide("layout_section")
-              shinyjs::hide("layout_options_section")
-              shinyjs::show("space_option")
+          # Column metadata for the JS settings band, extracted from the
+          # upstream ggplot's data (same shape as the ggplot block).
+          r_col_meta <- reactive({
+            d <- if (inherits(data(), "ggplot")) data()$data else NULL
+            if (!is.data.frame(d)) {
+              return(list())
             }
+            lapply(names(d), function(col) {
+              vals <- d[[col]]
+              lbl <- attr(vals, "label")
+              res <- list(
+                name = col,
+                type = if (is.numeric(vals)) "numeric" else "categorical",
+                n_unique = length(unique(vals))
+              )
+              if (!is.null(lbl) && nzchar(lbl)) res$label <- lbl
+              if (is.factor(vals)) res$levels <- as.list(levels(vals))
+              res
+            })
           })
 
-          observeEvent(input$facets, r_facets(input$facets), ignoreNULL = FALSE)
-          observeEvent(input$rows, r_rows(input$rows), ignoreNULL = FALSE)
-          observeEvent(input$cols, r_cols(input$cols), ignoreNULL = FALSE)
-          observeEvent(input$ncol, r_ncol(input$ncol))
-          observeEvent(input$nrow, r_nrow(input$nrow))
-          observeEvent(input$scales, r_scales(input$scales))
-          observeEvent(input$labeller, r_labeller(input$labeller))
-          observeEvent(input$dir, r_dir(input$dir))
-          observeEvent(input$space, r_space(input$space))
+          # Length-1-or-empty transport helper (ncol/nrow may be "" or "3").
+          s1 <- function(v) if (length(v) == 1) v else ""
 
-          # Reverse sync: external_ctrl -> UI
-          observeEvent(r_facet_type(), {
-            if (!identical(input$facet_type, r_facet_type())) {
-              shinyWidgets::updateRadioGroupButtons(
-                session, "facet_type", selected = r_facet_type()
-              )
-            }
-            # Toggle visibility (replicate input$facet_type handler)
-            if (r_facet_type() == "wrap") {
-              shinyjs::show("wrap_vars")
-              shinyjs::hide("grid_vars_row")
-              shinyjs::hide("grid_vars_col")
-              shinyjs::show("layout_section")
-              shinyjs::show("layout_options_section")
-              shinyjs::hide("space_option")
-            } else {
-              shinyjs::hide("wrap_vars")
-              shinyjs::show("grid_vars_row")
-              shinyjs::show("grid_vars_col")
-              shinyjs::hide("layout_section")
-              shinyjs::hide("layout_options_section")
-              shinyjs::show("space_option")
-            }
-          }, ignoreInit = TRUE)
-          observeEvent(r_facets(), {
-            if (!identical(input$facets, r_facets())) {
-              updateSelectizeInput(
-                session, "facets", selected = r_facets()
-              )
-            }
-          }, ignoreInit = TRUE)
-          observeEvent(r_rows(), {
-            if (!identical(input$rows, r_rows())) {
-              updateSelectizeInput(session, "rows", selected = r_rows())
-            }
-          }, ignoreInit = TRUE)
-          observeEvent(r_cols(), {
-            if (!identical(input$cols, r_cols())) {
-              updateSelectizeInput(session, "cols", selected = r_cols())
-            }
-          }, ignoreInit = TRUE)
-          observeEvent(r_ncol(), {
-            if (!identical(input$ncol, r_ncol())) {
-              updateSelectInput(session, "ncol", selected = r_ncol())
-            }
-          }, ignoreInit = TRUE)
-          observeEvent(r_nrow(), {
-            if (!identical(input$nrow, r_nrow())) {
-              updateSelectInput(session, "nrow", selected = r_nrow())
-            }
-          }, ignoreInit = TRUE)
-          observeEvent(r_scales(), {
-            if (!identical(input$scales, r_scales())) {
-              updateSelectInput(session, "scales", selected = r_scales())
-            }
-          }, ignoreInit = TRUE)
-          observeEvent(r_labeller(), {
-            if (!identical(input$labeller, r_labeller())) {
-              updateSelectInput(
-                session, "labeller", selected = r_labeller()
-              )
-            }
-          }, ignoreInit = TRUE)
-          observeEvent(r_dir(), {
-            if (!identical(input$dir, r_dir())) {
-              updateSelectInput(session, "dir", selected = r_dir())
-            }
-          }, ignoreInit = TRUE)
-          observeEvent(r_space(), {
-            if (!identical(input$space, r_space())) {
-              updateSelectInput(session, "space", selected = r_space())
-            }
-          }, ignoreInit = TRUE)
-
-          # Initialize visibility based on default facet_type
+          # Push columns + config to JS (single observe; see ggplot-block.R).
+          # Multi-column values go through as.list() so a length-1 selection
+          # still serializes as a JSON array.
           observe({
-            # This runs once on initialization
-            if (facet_type == "wrap") {
-              shinyjs::show("wrap_vars")
-              shinyjs::hide("grid_vars_row")
-              shinyjs::hide("grid_vars_col")
-              shinyjs::show("layout_section")
-              shinyjs::show("layout_options_section")
-              shinyjs::hide("space_option")
-            } else {
-              shinyjs::hide("wrap_vars")
-              shinyjs::show("grid_vars_row")
-              shinyjs::show("grid_vars_col")
-              shinyjs::hide("layout_section")
-              shinyjs::hide("layout_options_section")
-              shinyjs::show("space_option")
-            }
+            session$sendCustomMessage("gg-block-data", list(
+              id = session$ns("gg_block"),
+              block = "facet",
+              columns = r_col_meta(),
+              config = list(
+                facet_type = r_facet_type(),
+                facets = as.list(r_facets()),
+                rows = as.list(r_rows()),
+                cols = as.list(r_cols()),
+                ncol = s1(r_ncol()),
+                nrow = s1(r_nrow()),
+                scales = r_scales(),
+                labeller = r_labeller(),
+                dir = r_dir(),
+                space = r_space()
+              )
+            ))
           })
 
-          # Update column choices when data changes
-          observeEvent(
-            cols_data(),
-            {
-              available_cols <- cols_data()
-              if (length(available_cols) > 0) {
-                # Update facets selector
-                shiny::updateSelectizeInput(
-                  session,
-                  inputId = "facets",
-                  choices = available_cols,
-                  selected = r_facets()
-                )
-                # Update rows selector
-                shiny::updateSelectizeInput(
-                  session,
-                  inputId = "rows",
-                  choices = available_cols,
-                  selected = r_rows()
-                )
-                # Update cols selector
-                shiny::updateSelectizeInput(
-                  session,
-                  inputId = "cols",
-                  choices = available_cols,
-                  selected = r_cols()
-                )
-              }
+          # JS -> R: full-config echo through one action input, with the
+          # identical() guard against R->JS->R loops (see ggplot-block.R).
+          # Multi-column values arrive as lists -> character vectors.
+          upd <- function(rv, v) {
+            if (!identical(isolate(rv()), v)) rv(v)
+          }
+          chr_vec <- function(v) as.character(unlist(v))
+
+          observeEvent(input$gg_block_action, {
+            msg <- input$gg_block_action
+            if (!identical(msg$action, "config")) {
+              return()
             }
-          )
+            if (!is.null(msg$facet_type)) upd(r_facet_type, msg$facet_type)
+            if (!is.null(msg$facets)) upd(r_facets, chr_vec(msg$facets))
+            if (!is.null(msg$rows)) upd(r_rows, chr_vec(msg$rows))
+            if (!is.null(msg$cols)) upd(r_cols, chr_vec(msg$cols))
+            if (!is.null(msg$ncol)) upd(r_ncol, msg$ncol)
+            if (!is.null(msg$nrow)) upd(r_nrow, msg$nrow)
+            if (!is.null(msg$scales)) upd(r_scales, msg$scales)
+            if (!is.null(msg$labeller)) upd(r_labeller, msg$labeller)
+            if (!is.null(msg$dir)) upd(r_dir, msg$dir)
+            if (!is.null(msg$space)) upd(r_space, msg$space)
+          })
+
 
           # Layout preview output
           output$layout_preview <- renderUI({
@@ -752,419 +670,23 @@ new_facet_block <- function(
       )
     },
     ui = function(id) {
+      # JS-first UI (settings-band pattern, see ggplot-block.R): the html
+      # dependencies plus a container; inst/js/gg-blocks.js builds the gear
+      # header and settings band (spec "facet") ABOVE the existing children,
+      # so the SVG layout preview below survives band re-renders. The
+      # preview shows only while the band is open (gg-blocks.css).
       tagList(
-        shinyjs::useShinyjs(),
-
-        # CSS for collapsible section
-        tags$style(HTML(sprintf(
-          "
-          #%s-advanced-options {
-            max-height: 0;
-            overflow: hidden;
-            transition: max-height 0.3s ease-out;
-            grid-column: 1 / -1;
-            display: grid;
-            grid-template-columns: subgrid;
-            gap: 15px;
-          }
-          #%s-advanced-options.expanded {
-            max-height: 2000px;
-            overflow: visible;
-            transition: max-height 0.5s ease-in;
-          }
-          .block-advanced-toggle {
-            cursor: pointer;
-            user-select: none;
-            padding: 8px 0;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            grid-column: 1 / -1;
-            color: #6c757d;
-            font-size: 0.875rem;
-          }
-          .block-advanced-toggle .block-chevron {
-            transition: transform 0.2s;
-            display: inline-block;
-            font-size: 14px;
-            font-weight: bold;
-          }
-          .block-advanced-toggle .block-chevron.rotated {
-            transform: rotate(90deg);
-          }
-        ",
-          id,
-          id
-        ))),
-
+        ggplot_block_deps(),
         div(
-          class = "block-container",
-
-          # Add responsive CSS
-          block_responsive_css(),
-
-          # Add custom CSS for facet type selector
-          tags$style(HTML(
-            "
-            .facet-type-selector .btn-group-toggle,
-            .facet-type-selector .btn-group {
-              display: grid !important;
-              grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
-              gap: 5px;
-            }
-            .facet-type-selector .btn {
-              display: flex;
-              flex-direction: column;
-              align-items: center;
-              padding: 8px 12px;
-              white-space: nowrap;
-              width: 100%;
-            }
-            .facet-type-selector .btn i {
-              font-size: 1.2em;
-              margin-bottom: 4px;
-            }
-            .facet-type-selector .btn span {
-              font-size: 0.85em;
-              white-space: nowrap;
-            }
-
-            /* Responsive layout for inputs and preview */
-            @media (min-width: 700px) {
-              .facet-layout-wrapper {
-                display: grid;
-                grid-template-columns: 2fr 1fr;
-                gap: 20px;
-                align-items: start;
-              }
-              .facet-preview-sidebar {
-                position: sticky;
-                top: 20px;
-              }
-            }
-
-            @media (max-width: 699px) {
-              .facet-layout-wrapper {
-                display: block;
-              }
-              .facet-preview-sidebar {
-                margin-top: 20px;
-              }
-            }
-
-            /* Subtle preview status */
-            .preview-svg-container {
-              text-align: center;
-              margin-bottom: 8px;
-            }
-
-            .preview-status {
-              font-size: 0.875rem;
-              color: #6c757d;
-              text-align: center;
-              padding: 6px 8px;
-              border-radius: 4px;
-              background-color: #f8f9fa;
-            }
-
-            .preview-status.valid {
-              color: #28a745;
-            }
-
-            .preview-status.warning {
-              color: #ffc107;
-            }
-
-            .preview-status.error {
-              color: #dc3545;
-            }
-          "
-          )),
-
-          # Set container query context
-          block_container_script(),
-
-          # Responsive wrapper for inputs and preview
+          id = NS(id, "gg_block"),
+          class = "gg-block-container",
+          `data-gg-block` = "facet",
           div(
-            class = "facet-layout-wrapper",
-
-            # Left side: Form inputs
-            div(
-              class = "facet-inputs",
-              div(
-                class = "block-form-grid",
-
-                # Facet Type Section
-                div(
-                  class = "block-section",
-                  tags$h4("Facet Type"),
-                  div(
-                    class = "block-section-grid",
-                    div(
-                      class = "block-input-wrapper facet-type-selector",
-                      style = "grid-column: 1 / -1;",
-                      shinyWidgets::radioGroupButtons(
-                        inputId = NS(id, "facet_type"),
-                        label = NULL,
-                        choiceNames = list(
-                          tags$div(icon("border-all"), tags$span("Wrap")),
-                          tags$div(icon("th"), tags$span("Grid"))
-                        ),
-                        choiceValues = c("wrap", "grid"),
-                        selected = facet_type,
-                        status = "light",
-                        size = "sm",
-                        justified = FALSE,
-                        individual = FALSE,
-                        checkIcon = list(
-                          yes = tags$i(
-                            class = "fa fa-check",
-                            style = "display: none;"
-                          ),
-                          no = tags$i(style = "display: none;")
-                        )
-                      )
-                    )
-                  )
-                ),
-
-                # Variables Section - changes based on facet type
-                div(
-                  class = "block-section",
-                  tags$h4("Variables"),
-                  div(
-                    class = "block-section-grid",
-                    # For facet_wrap
-                    shinyjs::hidden(
-                      div(
-                        id = NS(id, "wrap_vars"),
-                        class = "block-input-wrapper",
-                        selectizeInput(
-                          NS(id, "facets"),
-                          "Facet By",
-                          choices = facets,
-                          selected = facets,
-                          multiple = TRUE,
-                          width = "100%",
-                          options = list(
-                            placeholder = "Select column(s) to facet by",
-                            plugins = list("remove_button")
-                          )
-                        )
-                      )
-                    ),
-                    # For facet_grid
-                    shinyjs::hidden(
-                      div(
-                        id = NS(id, "grid_vars_row"),
-                        class = "block-input-wrapper",
-                        selectizeInput(
-                          NS(id, "rows"),
-                          "Row Facets",
-                          choices = rows,
-                          selected = rows,
-                          multiple = TRUE,
-                          width = "100%",
-                          options = list(
-                            placeholder = "Select column(s) for rows",
-                            plugins = list("remove_button")
-                          )
-                        )
-                      )
-                    ),
-                    shinyjs::hidden(
-                      div(
-                        id = NS(id, "grid_vars_col"),
-                        class = "block-input-wrapper",
-                        selectizeInput(
-                          NS(id, "cols"),
-                          "Column Facets",
-                          choices = cols,
-                          selected = cols,
-                          multiple = TRUE,
-                          width = "100%",
-                          options = list(
-                            placeholder = "Select column(s) for columns",
-                            plugins = list("remove_button")
-                          )
-                        )
-                      )
-                    )
-                  )
-                ),
-
-                # Layout Section (for facet_wrap only)
-                shinyjs::hidden(
-                  div(
-                    id = NS(id, "layout_section"),
-                    class = "block-section",
-                    tags$h4("Layout"),
-                    div(
-                      class = "block-section-grid",
-                      div(
-                        class = "block-input-wrapper",
-                        selectInput(
-                          NS(id, "ncol"),
-                          "Columns",
-                          choices = c(
-                            "Auto" = "",
-                            "1" = "1",
-                            "2" = "2",
-                            "3" = "3",
-                            "4" = "4",
-                            "5" = "5"
-                          ),
-                          selected = ncol,
-                          width = "100%"
-                        )
-                      ),
-                      div(
-                        class = "block-input-wrapper",
-                        selectInput(
-                          NS(id, "nrow"),
-                          "Rows",
-                          choices = c(
-                            "Auto" = "",
-                            "1" = "1",
-                            "2" = "2",
-                            "3" = "3",
-                            "4" = "4",
-                            "5" = "5"
-                          ),
-                          selected = nrow,
-                          width = "100%"
-                        )
-                      )
-                    )
-                  )
-                ),
-
-                # Options Section
-                div(
-                  class = "block-section",
-                  tags$h4("Options"),
-                  div(
-                    class = "block-section-grid",
-                    div(
-                      class = "block-input-wrapper",
-                      selectInput(
-                        NS(id, "scales"),
-                        "Scales",
-                        choices = c(
-                          "Fixed" = "fixed",
-                          "Free" = "free",
-                          "Free X" = "free_x",
-                          "Free Y" = "free_y"
-                        ),
-                        selected = scales,
-                        width = "100%"
-                      )
-                    )
-                  )
-                ),
-
-                # Advanced Options Toggle
-                div(
-                  class = "block-section",
-                  div(
-                    class = "block-advanced-toggle text-muted",
-                    id = NS(id, "advanced-toggle"),
-                    onclick = sprintf(
-                      "
-                  const section = document.getElementById('%s');
-                  const chevron = document.querySelector('#%s .block-chevron');
-                  section.classList.toggle('expanded');
-                  chevron.classList.toggle('rotated');
-                ",
-                      NS(id, "advanced-options"),
-                      NS(id, "advanced-toggle")
-                    ),
-                    tags$span(class = "block-chevron", "\u203A"),
-                    "Show advanced options"
-                  )
-                ),
-
-                # Advanced Options Section (Collapsible)
-                div(
-                  id = NS(id, "advanced-options"),
-
-                  # Layout Options (for facet_wrap only)
-                  shinyjs::hidden(
-                    div(
-                      id = NS(id, "layout_options_section"),
-                      class = "block-section",
-                      tags$h4("Layout Options"),
-                      div(
-                        class = "block-section-grid",
-                        div(
-                          class = "block-input-wrapper",
-                          selectInput(
-                            NS(id, "dir"),
-                            "Direction",
-                            choices = c(
-                              "Horizontal" = "h",
-                              "Vertical" = "v"
-                            ),
-                            selected = dir,
-                            width = "100%"
-                          )
-                        )
-                      )
-                    )
-                  ),
-
-                  # Display Options
-                  div(
-                    class = "block-section",
-                    tags$h4("Display Options"),
-                    div(
-                      class = "block-section-grid",
-                      div(
-                        class = "block-input-wrapper",
-                        selectInput(
-                          NS(id, "labeller"),
-                          "Labels",
-                          choices = c(
-                            "Value only" = "label_value",
-                            "Variable and value" = "label_both",
-                            "Parsed expressions" = "label_parsed"
-                          ),
-                          selected = labeller,
-                          width = "100%"
-                        )
-                      ),
-                      # Space option for facet_grid only
-                      shinyjs::hidden(
-                        div(
-                          id = NS(id, "space_option"),
-                          class = "block-input-wrapper",
-                          selectInput(
-                            NS(id, "space"),
-                            "Space",
-                            choices = c(
-                              "Fixed" = "fixed",
-                              "Free X" = "free_x",
-                              "Free Y" = "free_y"
-                            ),
-                            selected = space,
-                            width = "100%"
-                          )
-                        )
-                      )
-                    )
-                  )
-                )
-              )
-            ), # Close facet-inputs div
-
-            # Right side: Preview sidebar
-            div(
-              class = "facet-preview-sidebar",
-              uiOutput(NS(id, "layout_preview"))
-            )
-          ) # Close facet-layout-wrapper div
-        ) # Close block-container div
-      ) # Close tagList
+            class = "gg-preview",
+            uiOutput(NS(id, "layout_preview"))
+          )
+        )
+      )
     },
     dat_valid = function(data) {
       stopifnot(inherits(data, "ggplot"))

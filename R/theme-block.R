@@ -216,228 +216,104 @@ new_theme_block <- function(
           r_palette_fill <- reactiveVal(palette_fill)
           r_palette_colour <- reactiveVal(palette_colour)
 
-          # Observe input changes
-          # (convert "transparent" or "#00000000" to empty string for colors)
-          observeEvent(
-            input$panel_bg,
-            {
-              if (!is.null(input$panel_bg)) {
-                val <- input$panel_bg
-                # Treat transparent, #00000000 (transparent black),
-                # or empty as "auto"
-                r_panel_bg(
-                  if (val %in% c("transparent", "#00000000", "")) "" else val
-                )
+          # Flattened base_theme options for the JS settings band: the
+          # grouped build_theme_choices() list is runtime-dependent
+          # (installed theme packages), so it travels with the push
+          # message as {value, label} pairs.
+          theme_choice_options <- function() {
+            choices <- build_theme_choices()
+            out <- list()
+            for (i in seq_along(choices)) {
+              nm <- names(choices)[i]
+              entry <- choices[[i]]
+              if (is.list(entry)) {
+                grp <- sub(" \\(.*$", "", nm)
+                for (j in seq_along(entry)) {
+                  out[[length(out) + 1]] <- list(
+                    value = entry[[j]],
+                    label = paste0(names(entry)[j], " (", grp, ")")
+                  )
+                }
+              } else {
+                out[[length(out) + 1]] <- list(value = entry, label = nm)
               }
-            },
-            ignoreNULL = FALSE
-          )
-          observeEvent(
-            input$plot_bg,
-            {
-              if (!is.null(input$plot_bg)) {
-                val <- input$plot_bg
-                # Treat transparent, #00000000 (transparent black),
-                # or empty as "auto"
-                r_plot_bg(
-                  if (val %in% c("transparent", "#00000000", "")) "" else val
-                )
-              }
-            },
-            ignoreNULL = FALSE
-          )
-          observeEvent(
-            input$base_size,
-            {
-              if (!is.null(input$base_size)) {
-                val <- input$base_size
-                r_base_size(
-                  if (val == "auto") "auto" else as.numeric(val)
-                )
-              }
-            },
-            ignoreNULL = FALSE
-          )
-          observeEvent(
-            input$base_family,
-            {
-              if (!is.null(input$base_family)) {
-                r_base_family(input$base_family)
-              }
-            },
-            ignoreNULL = FALSE
-          )
-          observeEvent(
-            input$show_major_grid,
-            {
-              if (!is.null(input$show_major_grid)) {
-                r_show_major_grid(input$show_major_grid)
-              }
-            },
-            ignoreNULL = FALSE
-          )
-          observeEvent(
-            input$show_minor_grid,
-            {
-              if (!is.null(input$show_minor_grid)) {
-                r_show_minor_grid(input$show_minor_grid)
-              }
-            },
-            ignoreNULL = FALSE
-          )
-          observeEvent(
-            input$grid_color,
-            {
-              if (!is.null(input$grid_color)) {
-                val <- input$grid_color
-                # Treat transparent, #00000000 (transparent black),
-                # or empty as "auto"
-                r_grid_color(
-                  if (val %in% c("transparent", "#00000000", "")) "" else val
-                )
-              }
-            },
-            ignoreNULL = FALSE
-          )
-          observeEvent(
-            input$show_panel_border,
-            {
-              if (!is.null(input$show_panel_border)) {
-                r_show_panel_border(input$show_panel_border)
-              }
-            },
-            ignoreNULL = FALSE
-          )
-          observeEvent(
-            input$legend_position,
-            {
-              if (!is.null(input$legend_position)) {
-                r_legend_position(input$legend_position)
-              }
-            },
-            ignoreNULL = FALSE
-          )
-          observeEvent(
-            input$base_theme,
-            {
-              if (!is.null(input$base_theme)) {
-                r_base_theme(input$base_theme)
-              }
-            },
-            ignoreNULL = FALSE
-          )
-          observeEvent(
-            input$palette_fill,
-            {
-              if (!is.null(input$palette_fill)) {
-                r_palette_fill(input$palette_fill)
-              }
-            },
-            ignoreNULL = FALSE
-          )
-          observeEvent(
-            input$palette_colour,
-            {
-              if (!is.null(input$palette_colour)) {
-                r_palette_colour(input$palette_colour)
-              }
-            },
-            ignoreNULL = FALSE
-          )
+            }
+            out
+          }
 
-          # Reverse sync: external_ctrl -> UI
-          observeEvent(r_panel_bg(), {
-            ui_val <- if (r_panel_bg() == "") "transparent" else r_panel_bg()
-            if (!identical(input$panel_bg, ui_val)) {
-              colourpicker::updateColourInput(
-                session, "panel_bg", value = ui_val
+          # Push config to JS (single observe; see ggplot-block.R). The
+          # theme block has a ggplot input, so no column metadata is sent.
+          # base_size travels as character ("auto" or the number).
+          observe({
+            session$sendCustomMessage("gg-block-data", list(
+              id = session$ns("gg_block"),
+              block = "theme",
+              columns = list(),
+              choices = list(base_theme = theme_choice_options()),
+              config = list(
+                base_theme = r_base_theme(),
+                legend_position = r_legend_position(),
+                palette_fill = r_palette_fill(),
+                palette_colour = r_palette_colour(),
+                panel_bg = r_panel_bg(),
+                plot_bg = r_plot_bg(),
+                base_size = as.character(r_base_size()),
+                base_family = r_base_family(),
+                show_major_grid = r_show_major_grid(),
+                show_minor_grid = r_show_minor_grid(),
+                grid_color = r_grid_color(),
+                show_panel_border = r_show_panel_border()
               )
+            ))
+          })
+
+          # JS -> R: full-config echo through one action input, with the
+          # identical() guard against R->JS->R loops (see ggplot-block.R).
+          # Color values arrive as "" (theme default) or a hex string — no
+          # "transparent" normalization needed anymore.
+          upd <- function(rv, v) {
+            if (!identical(isolate(rv()), v)) rv(v)
+          }
+
+          observeEvent(input$gg_block_action, {
+            msg <- input$gg_block_action
+            if (!identical(msg$action, "config")) {
+              return()
             }
-          }, ignoreInit = TRUE)
-          observeEvent(r_plot_bg(), {
-            ui_val <- if (r_plot_bg() == "") "transparent" else r_plot_bg()
-            if (!identical(input$plot_bg, ui_val)) {
-              colourpicker::updateColourInput(
-                session, "plot_bg", value = ui_val
-              )
+            if (!is.null(msg$base_theme)) upd(r_base_theme, msg$base_theme)
+            if (!is.null(msg$legend_position)) {
+              upd(r_legend_position, msg$legend_position)
             }
-          }, ignoreInit = TRUE)
-          observeEvent(r_grid_color(), {
-            ui_val <- if (r_grid_color() == "") {
-              "transparent"
-            } else {
-              r_grid_color()
+            if (!is.null(msg$palette_fill)) {
+              upd(r_palette_fill, msg$palette_fill)
             }
-            if (!identical(input$grid_color, ui_val)) {
-              colourpicker::updateColourInput(
-                session, "grid_color", value = ui_val
-              )
+            if (!is.null(msg$palette_colour)) {
+              upd(r_palette_colour, msg$palette_colour)
             }
-          }, ignoreInit = TRUE)
-          observeEvent(r_base_size(), {
-            if (!identical(input$base_size, as.character(r_base_size()))) {
-              updateSelectInput(
-                session, "base_size", selected = as.character(r_base_size())
-              )
+            if (!is.null(msg$panel_bg)) upd(r_panel_bg, msg$panel_bg)
+            if (!is.null(msg$plot_bg)) upd(r_plot_bg, msg$plot_bg)
+            if (!is.null(msg$base_size)) {
+              upd(r_base_size, if (identical(msg$base_size, "auto")) {
+                "auto"
+              } else {
+                as.numeric(msg$base_size)
+              })
             }
-          }, ignoreInit = TRUE)
-          observeEvent(r_base_family(), {
-            if (!identical(input$base_family, r_base_family())) {
-              updateSelectInput(
-                session, "base_family", selected = r_base_family()
-              )
+            if (!is.null(msg$base_family)) {
+              upd(r_base_family, msg$base_family)
             }
-          }, ignoreInit = TRUE)
-          observeEvent(r_show_major_grid(), {
-            if (!identical(input$show_major_grid, r_show_major_grid())) {
-              updateSelectInput(
-                session, "show_major_grid", selected = r_show_major_grid()
-              )
+            if (!is.null(msg$show_major_grid)) {
+              upd(r_show_major_grid, msg$show_major_grid)
             }
-          }, ignoreInit = TRUE)
-          observeEvent(r_show_minor_grid(), {
-            if (!identical(input$show_minor_grid, r_show_minor_grid())) {
-              updateSelectInput(
-                session, "show_minor_grid", selected = r_show_minor_grid()
-              )
+            if (!is.null(msg$show_minor_grid)) {
+              upd(r_show_minor_grid, msg$show_minor_grid)
             }
-          }, ignoreInit = TRUE)
-          observeEvent(r_show_panel_border(), {
-            if (!identical(input$show_panel_border, r_show_panel_border())) {
-              updateSelectInput(
-                session, "show_panel_border",
-                selected = r_show_panel_border()
-              )
+            if (!is.null(msg$grid_color)) upd(r_grid_color, msg$grid_color)
+            if (!is.null(msg$show_panel_border)) {
+              upd(r_show_panel_border, msg$show_panel_border)
             }
-          }, ignoreInit = TRUE)
-          observeEvent(r_legend_position(), {
-            if (!identical(input$legend_position, r_legend_position())) {
-              updateSelectInput(
-                session, "legend_position", selected = r_legend_position()
-              )
-            }
-          }, ignoreInit = TRUE)
-          observeEvent(r_base_theme(), {
-            if (!identical(input$base_theme, r_base_theme())) {
-              updateSelectInput(
-                session, "base_theme", selected = r_base_theme()
-              )
-            }
-          }, ignoreInit = TRUE)
-          observeEvent(r_palette_fill(), {
-            if (!identical(input$palette_fill, r_palette_fill())) {
-              updateSelectInput(
-                session, "palette_fill", selected = r_palette_fill()
-              )
-            }
-          }, ignoreInit = TRUE)
-          observeEvent(r_palette_colour(), {
-            if (!identical(input$palette_colour, r_palette_colour())) {
-              updateSelectInput(
-                session, "palette_colour", selected = r_palette_colour()
-              )
-            }
-          }, ignoreInit = TRUE)
+          })
+
 
           list(
             expr = reactive({
@@ -700,316 +576,15 @@ new_theme_block <- function(
       )
     },
     function(id) {
-      # Helper function for theme color inputs with sub-label
-      make_theme_color_input <- function(
-        id_suffix,
-        label_text,
-        init_value,
-        sub_label = "Transparent: theme default"
-      ) {
-        div(
-          colourpicker::colourInput(
-            inputId = NS(id, id_suffix),
-            label = label_text,
-            value = if (init_value == "") "transparent" else init_value,
-            showColour = "both",
-            palette = "square",
-            allowTransparent = TRUE
-          ),
-          tags$small(
-            class = "text-muted",
-            style = "margin-top: -8px; margin-bottom: 8px; display: block;",
-            sub_label
-          )
-        )
-      }
-
+      # JS-first UI (settings-band pattern, see ggplot-block.R): only the
+      # html dependencies plus an empty container; inst/js/gg-blocks.js
+      # builds the gear header and settings band (spec "theme").
       tagList(
-        shinyjs::useShinyjs(),
-
-        # CSS for collapsible section
-        tags$style(HTML(sprintf(
-          "
-          #%s-advanced-options {
-            max-height: 0;
-            overflow: hidden;
-            transition: max-height 0.3s ease-out;
-            grid-column: 1 / -1;
-            display: grid;
-            grid-template-columns: subgrid;
-            gap: 15px;
-          }
-          #%s-advanced-options.expanded {
-            max-height: 2000px;
-            overflow: visible;
-            transition: max-height 0.5s ease-in;
-          }
-          .block-advanced-toggle {
-            cursor: pointer;
-            user-select: none;
-            padding: 8px 0;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            grid-column: 1 / -1;
-            color: #6c757d;
-          }
-          .block-advanced-toggle .block-chevron {
-            transition: transform 0.2s;
-            display: inline-block;
-            font-size: 14px;
-            font-weight: bold;
-          }
-          .block-advanced-toggle .block-chevron.rotated {
-            transform: rotate(90deg);
-          }
-        ",
-          id,
-          id
-        ))),
-
+        ggplot_block_deps(),
         div(
-          class = "block-container",
-
-          # Add responsive CSS
-          block_responsive_css(),
-
-          # Set container query context
-          block_container_script(),
-
-          div(
-            class = "block-form-grid",
-
-            # Main Section: Always Visible
-            div(
-              class = "block-section",
-              div(
-                class = "block-section-grid",
-                div(
-                  class = "block-input-wrapper",
-                  selectInput(
-                    inputId = NS(id, "base_theme"),
-                    label = "Base Theme",
-                    choices = build_theme_choices(),
-                    selected = base_theme,
-                    width = "100%"
-                  )
-                ),
-                div(
-                  class = "block-input-wrapper",
-                  selectInput(
-                    inputId = NS(id, "legend_position"),
-                    label = "Legend Position",
-                    choices = c(
-                      "Auto (theme default)" = "auto",
-                      "Right" = "right",
-                      "Left" = "left",
-                      "Top" = "top",
-                      "Bottom" = "bottom",
-                      "None" = "none"
-                    ),
-                    selected = legend_position,
-                    width = "100%"
-                  )
-                ),
-                div(
-                  class = "block-input-wrapper",
-                  selectInput(
-                    inputId = NS(id, "palette_fill"),
-                    label = "Fill Palette",
-                    choices = c(
-                      "Auto (keep upstream)" = "auto",
-                      "Viridis (categorical)" = "viridis_d",
-                      "Viridis (continuous)" = "viridis_c",
-                      "Magma (categorical)" = "magma_d",
-                      "Magma (continuous)" = "magma_c",
-                      "Plasma (categorical)" = "plasma_d",
-                      "Plasma (continuous)" = "plasma_c",
-                      "ggplot2 Default" = "ggplot2"
-                    ),
-                    selected = palette_fill,
-                    width = "100%"
-                  )
-                ),
-                div(
-                  class = "block-input-wrapper",
-                  selectInput(
-                    inputId = NS(id, "palette_colour"),
-                    label = "Colour Palette",
-                    choices = c(
-                      "Auto (keep upstream)" = "auto",
-                      "Viridis (categorical)" = "viridis_d",
-                      "Viridis (continuous)" = "viridis_c",
-                      "Magma (categorical)" = "magma_d",
-                      "Magma (continuous)" = "magma_c",
-                      "Plasma (categorical)" = "plasma_d",
-                      "Plasma (continuous)" = "plasma_c",
-                      "ggplot2 Default" = "ggplot2"
-                    ),
-                    selected = palette_colour,
-                    width = "100%"
-                  )
-                )
-              )
-            ),
-
-            # Advanced Options Toggle - wrapped in block-section for full width
-            div(
-              class = "block-section",
-              div(
-                class = "block-advanced-toggle text-muted",
-                id = NS(id, "advanced-toggle"),
-                onclick = sprintf(
-                  "
-                  const section = document.getElementById('%s');
-                  const chevron = document.querySelector('#%s .block-chevron');
-                  section.classList.toggle('expanded');
-                  chevron.classList.toggle('rotated');
-                ",
-                  NS(id, "advanced-options"),
-                  NS(id, "advanced-toggle")
-                ),
-                # Single right-pointing angle quotation mark (prettier chevron)
-                tags$span(class = "block-chevron", "\u203A"),
-                "Show advanced options"
-              )
-            ),
-
-            # Advanced Options Section (Collapsible)
-            div(
-              id = NS(id, "advanced-options"),
-
-              # Section 1: Colors & Backgrounds
-              div(
-                class = "block-section",
-                tags$h4("Colors & Backgrounds"),
-                div(
-                  class = "block-section-grid",
-                  div(
-                    class = "block-input-wrapper",
-                    make_theme_color_input(
-                      "panel_bg",
-                      "Panel Background",
-                      panel_bg
-                    )
-                  ),
-                  div(
-                    class = "block-input-wrapper",
-                    make_theme_color_input(
-                      "plot_bg",
-                      "Plot Background",
-                      plot_bg
-                    )
-                  ),
-                  div(
-                    class = "block-input-wrapper",
-                    make_theme_color_input(
-                      "grid_color",
-                      "Grid Color",
-                      grid_color
-                    )
-                  )
-                )
-              ),
-
-              # Section 2: Typography
-              div(
-                class = "block-section",
-                tags$h4("Typography"),
-                div(
-                  class = "block-section-grid",
-                  div(
-                    class = "block-input-wrapper",
-                    selectInput(
-                      inputId = NS(id, "base_size"),
-                      label = "Base Font Size",
-                      choices = c(
-                        "Auto (theme default)" = "auto",
-                        "8" = "8",
-                        "9" = "9",
-                        "10" = "10",
-                        "11" = "11",
-                        "12" = "12",
-                        "13" = "13",
-                        "14" = "14",
-                        "16" = "16",
-                        "18" = "18",
-                        "20" = "20"
-                      ),
-                      selected = as.character(base_size),
-                      width = "100%"
-                    )
-                  ),
-                  div(
-                    class = "block-input-wrapper",
-                    selectInput(
-                      inputId = NS(id, "base_family"),
-                      label = "Font Family",
-                      choices = c(
-                        "Auto (theme default)" = "auto",
-                        "Sans Serif" = "sans",
-                        "Serif" = "serif",
-                        "Monospace" = "mono"
-                      ),
-                      selected = base_family,
-                      width = "100%"
-                    )
-                  )
-                )
-              ),
-
-              # Section 3: Grid & Borders
-              div(
-                class = "block-section",
-                tags$h4("Grid & Borders"),
-                div(
-                  class = "block-section-grid",
-                  div(
-                    class = "block-input-wrapper",
-                    selectInput(
-                      inputId = NS(id, "show_major_grid"),
-                      label = "Major Grid Lines",
-                      choices = c(
-                        "Auto (theme default)" = "auto",
-                        "Show" = "show",
-                        "Hide" = "hide"
-                      ),
-                      selected = show_major_grid,
-                      width = "100%"
-                    )
-                  ),
-                  div(
-                    class = "block-input-wrapper",
-                    selectInput(
-                      inputId = NS(id, "show_minor_grid"),
-                      label = "Minor Grid Lines",
-                      choices = c(
-                        "Auto (theme default)" = "auto",
-                        "Show" = "show",
-                        "Hide" = "hide"
-                      ),
-                      selected = show_minor_grid,
-                      width = "100%"
-                    )
-                  ),
-                  div(
-                    class = "block-input-wrapper",
-                    selectInput(
-                      inputId = NS(id, "show_panel_border"),
-                      label = "Panel Border",
-                      choices = c(
-                        "Auto (theme default)" = "auto",
-                        "Show" = "show",
-                        "Hide" = "hide"
-                      ),
-                      selected = show_panel_border,
-                      width = "100%"
-                    )
-                  )
-                )
-              )
-            )
-          )
+          id = NS(id, "gg_block"),
+          class = "gg-block-container",
+          `data-gg-block` = "theme"
         )
       )
     },

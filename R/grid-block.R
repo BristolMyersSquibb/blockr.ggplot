@@ -234,62 +234,57 @@ new_grid_block <- function(
             set_names(names(...args), dot_args_names(...args))
           )
 
-          # Reactive values for UI inputs
-          r_ncol <- reactiveVal(ncol)
-          r_nrow <- reactiveVal(nrow)
-          r_title <- reactiveVal(title)
-          r_subtitle <- reactiveVal(subtitle)
-          r_caption <- reactiveVal(caption)
-          r_tag_levels <- reactiveVal(tag_levels)
+          # Reactive values for the settings band. Character() constructor
+          # defaults normalize to "" so the expr reactive's `!= ""` checks
+          # are length-safe before the first config echo.
+          chr1 <- function(v) if (length(v)) v else ""
+          r_ncol <- reactiveVal(chr1(ncol))
+          r_nrow <- reactiveVal(chr1(nrow))
+          r_title <- reactiveVal(chr1(title))
+          r_subtitle <- reactiveVal(chr1(subtitle))
+          r_caption <- reactiveVal(chr1(caption))
+          r_tag_levels <- reactiveVal(chr1(tag_levels))
           r_guides <- reactiveVal(guides)
 
-          # Update reactive values from inputs
-          observeEvent(input$ncol, r_ncol(input$ncol))
-          observeEvent(input$nrow, r_nrow(input$nrow))
-          observeEvent(input$title, r_title(input$title))
-          observeEvent(input$subtitle, r_subtitle(input$subtitle))
-          observeEvent(input$caption, r_caption(input$caption))
-          observeEvent(input$tag_levels, r_tag_levels(input$tag_levels))
-          observeEvent(input$guides, r_guides(input$guides))
-
-          # Reverse sync: external_ctrl -> UI
-          observeEvent(r_ncol(), {
-            if (!identical(input$ncol, r_ncol())) {
-              updateTextInput(session, "ncol", value = r_ncol())
-            }
-          }, ignoreInit = TRUE)
-          observeEvent(r_nrow(), {
-            if (!identical(input$nrow, r_nrow())) {
-              updateTextInput(session, "nrow", value = r_nrow())
-            }
-          }, ignoreInit = TRUE)
-          observeEvent(r_title(), {
-            if (!identical(input$title, r_title())) {
-              updateTextInput(session, "title", value = r_title())
-            }
-          }, ignoreInit = TRUE)
-          observeEvent(r_subtitle(), {
-            if (!identical(input$subtitle, r_subtitle())) {
-              updateTextInput(session, "subtitle", value = r_subtitle())
-            }
-          }, ignoreInit = TRUE)
-          observeEvent(r_caption(), {
-            if (!identical(input$caption, r_caption())) {
-              updateTextInput(session, "caption", value = r_caption())
-            }
-          }, ignoreInit = TRUE)
-          observeEvent(r_tag_levels(), {
-            if (!identical(input$tag_levels, r_tag_levels())) {
-              updateSelectInput(
-                session, "tag_levels", selected = r_tag_levels()
+          # Push config to JS (single observe; see ggplot-block.R). The grid
+          # block combines upstream plots, so no column metadata is sent.
+          observe({
+            session$sendCustomMessage("gg-block-data", list(
+              id = session$ns("gg_block"),
+              block = "grid",
+              columns = list(),
+              config = list(
+                ncol = r_ncol(),
+                nrow = r_nrow(),
+                guides = r_guides(),
+                title = r_title(),
+                subtitle = r_subtitle(),
+                caption = r_caption(),
+                tag_levels = r_tag_levels()
               )
+            ))
+          })
+
+          # JS -> R: full-config echo through one action input, with the
+          # identical() guard against R->JS->R loops (see ggplot-block.R).
+          upd <- function(rv, v) {
+            if (!identical(isolate(rv()), v)) rv(v)
+          }
+
+          observeEvent(input$gg_block_action, {
+            msg <- input$gg_block_action
+            if (!identical(msg$action, "config")) {
+              return()
             }
-          }, ignoreInit = TRUE)
-          observeEvent(r_guides(), {
-            if (!identical(input$guides, r_guides())) {
-              updateSelectInput(session, "guides", selected = r_guides())
-            }
-          }, ignoreInit = TRUE)
+            if (!is.null(msg$ncol)) upd(r_ncol, msg$ncol)
+            if (!is.null(msg$nrow)) upd(r_nrow, msg$nrow)
+            if (!is.null(msg$guides)) upd(r_guides, msg$guides)
+            if (!is.null(msg$title)) upd(r_title, msg$title)
+            if (!is.null(msg$subtitle)) upd(r_subtitle, msg$subtitle)
+            if (!is.null(msg$caption)) upd(r_caption, msg$caption)
+            if (!is.null(msg$tag_levels)) upd(r_tag_levels, msg$tag_levels)
+          })
+
 
           # Layout preview output
           output$layout_preview <- renderUI({
@@ -409,200 +404,24 @@ new_grid_block <- function(
       )
     },
     ui = function(id) {
+      # JS-first UI (settings-band pattern, see ggplot-block.R): the html
+      # dependencies plus a container; inst/js/gg-blocks.js builds the gear
+      # header and settings band (spec "grid") ABOVE the existing children,
+      # so the SVG layout preview below survives band re-renders. The
+      # preview shows only while the band is open (gg-blocks.css).
       tagList(
+        ggplot_block_deps(),
         div(
-          class = "block-container",
-
-          # Add responsive CSS
-          block_responsive_css(),
-
-          # Two-column responsive CSS
-          tags$style(HTML("
-            /* Responsive layout for inputs and preview */
-            @media (min-width: 700px) {
-              .grid-layout-wrapper {
-                display: grid;
-                grid-template-columns: 2fr 1fr;
-                gap: 20px;
-                align-items: start;
-              }
-              .grid-preview-sidebar {
-                position: sticky;
-                top: 20px;
-              }
-            }
-
-            @media (max-width: 699px) {
-              .grid-layout-wrapper {
-                display: block;
-              }
-              .grid-preview-sidebar {
-                margin-top: 20px;
-              }
-            }
-
-            /* Subtle preview status */
-            .preview-svg-container {
-              text-align: center;
-              margin-bottom: 8px;
-            }
-
-            .preview-status {
-              font-size: 0.875rem;
-              color: #6c757d;
-              text-align: center;
-              padding: 6px 8px;
-              border-radius: 4px;
-              background-color: #f8f9fa;
-            }
-
-            .preview-status.valid {
-              color: #28a745;
-            }
-
-            .preview-status.warning {
-              color: #ffc107;
-            }
-
-            .preview-status.error {
-              color: #dc3545;
-            }
-          ")),
-
-          # Set container query context
-          block_container_script(),
-
-          # Two-column wrapper
+          id = NS(id, "gg_block"),
+          class = "gg-block-container",
+          `data-gg-block` = "grid",
           div(
-            class = "grid-layout-wrapper",
-
-            # Left: Inputs (2/3 width)
-            div(
-              class = "grid-inputs",
-              div(
-                class = "block-form-grid",
-
-            # Layout Section
-            div(
-              class = "block-section",
-              tags$h4("Layout"),
-              div(
-                class = "block-section-grid",
-                div(
-                  class = "block-input-wrapper",
-                  selectInput(
-                    NS(id, "ncol"),
-                    "Columns",
-                    choices = c(
-                      "Auto" = "",
-                      "1" = "1",
-                      "2" = "2",
-                      "3" = "3",
-                      "4" = "4",
-                      "5" = "5"
-                    ),
-                    selected = ncol,
-                    width = "100%"
-                  )
-                ),
-                div(
-                  class = "block-input-wrapper",
-                  selectInput(
-                    NS(id, "nrow"),
-                    "Rows",
-                    choices = c(
-                      "Auto" = "",
-                      "1" = "1",
-                      "2" = "2",
-                      "3" = "3",
-                      "4" = "4",
-                      "5" = "5"
-                    ),
-                    selected = nrow,
-                    width = "100%"
-                  )
-                ),
-                div(
-                  class = "block-input-wrapper",
-                  selectInput(
-                    NS(id, "guides"),
-                    "Legends",
-                    choices = c(
-                      "Auto" = "auto",
-                      "Collect" = "collect",
-                      "Keep separate" = "keep"
-                    ),
-                    selected = guides,
-                    width = "100%"
-                  )
-                )
-              )
-            ),
-
-            # Annotation Section
-            div(
-              class = "block-section",
-              tags$h4("Annotation"),
-              div(
-                class = "block-section-grid",
-                div(
-                  class = "block-input-wrapper",
-                  textInput(
-                    NS(id, "title"),
-                    "Title",
-                    value = title,
-                    width = "100%"
-                  )
-                ),
-                div(
-                  class = "block-input-wrapper",
-                  textInput(
-                    NS(id, "subtitle"),
-                    "Subtitle",
-                    value = subtitle,
-                    width = "100%"
-                  )
-                ),
-                div(
-                  class = "block-input-wrapper",
-                  textInput(
-                    NS(id, "caption"),
-                    "Caption",
-                    value = caption,
-                    width = "100%"
-                  )
-                ),
-                div(
-                  class = "block-input-wrapper",
-                  selectInput(
-                    NS(id, "tag_levels"),
-                    "Auto-tag plots",
-                    choices = c(
-                      "None" = "",
-                      "A, B, C..." = "A",
-                      "a, b, c..." = "a",
-                      "1, 2, 3..." = "1",
-                      "I, II, III..." = "I",
-                      "i, ii, iii..." = "i"
-                    ),
-                    selected = tag_levels,
-                    width = "100%"
-                  )
-                )
-              )
-            )
-          )
-          ), # Close grid-inputs div (and block-form-grid div)
-
-          # Right: Preview sidebar (1/3 width)
-          div(
-            class = "grid-preview-sidebar",
+            class = "gg-preview",
             uiOutput(NS(id, "layout_preview"))
           )
-        ) # Close grid-layout-wrapper div
-      ) # Close block-container div
-    ) # Close tagList
-  },
+        )
+      )
+    },
     dat_valid = function(...args) {
       stopifnot(length(...args) >= 1L)
     },

@@ -4,6 +4,10 @@
  * are copied until they graduate to blockr.ui). Local extension vs canonical:
  * _buildSlider reads role.min/max/step/unit (upstream candidate).
  *
+ * Second local extension vs canonical: kind 'color' — a native color swatch
+ * paired with a "Theme default" checkbox ('' = default); used by the theme
+ * block in place of colourpicker (upstream candidate).
+ *
  * DrilldownConfig — the shared gear-popover config engine for blockr drilldown
  * blocks (chart, table, …). Host-agnostic: it renders a grouped, role-spec
  * driven popover (Mapping / Presentation + a Drill-down section) and calls
@@ -526,7 +530,47 @@
         parent.appendChild(inp);
       } else if (role.kind === 'slider') {
         this._buildSlider(parent, key);
+      } else if (role.kind === 'color') {
+        this._buildColor(parent, key, cb);
       }
+    }
+
+    // blockr.ggplot extension: color control = native swatch + "Theme
+    // default" checkbox. '' (empty) means "keep the theme default"; a hex
+    // value overrides it. Picking a color unchecks the default box; checking
+    // it clears the value (the swatch keeps its last hex for re-enabling).
+    /** @param {HTMLElement} parent @param {string} key @param {() => void} cb */
+    _buildColor(parent, key, cb) {
+      const cfg = this._cfg();
+      const role = this._role(key);
+      const cur = cfg[key];
+      const hasColor = this._hasVal(cur);
+      const wrap = document.createElement('div');
+      wrap.className = 'dd-color-wrap' + (hasColor ? '' : ' dd-color-default');
+      const input = document.createElement('input');
+      input.type = 'color';
+      input.className = 'dd-color-swatch';
+      input.value = hasColor ? cur : (role.fallback || '#ffffff');
+      wrap.appendChild(input);
+      /** @type {{ set: (v: boolean) => void } | null} */
+      let box = null;
+      input.addEventListener('input', () => {
+        cfg[key] = input.value;
+        wrap.classList.remove('dd-color-default');
+        if (box) box.set(false);
+        cb();
+        this.h.onChange(key);
+      });
+      if (typeof Blockr !== 'undefined' && typeof Blockr.checkbox === 'function') {
+        box = Blockr.checkbox('Theme default', !hasColor, (checked) => {
+          cfg[key] = checked ? '' : input.value;
+          wrap.classList.toggle('dd-color-default', checked);
+          cb();
+          this.h.onChange(key);
+        });
+        wrap.appendChild(/** @type {any} */ (box).el);
+      }
+      parent.appendChild(wrap);
     }
 
     // Build a Blockr.Select (or native fallback). `decorate` shows
@@ -537,7 +581,10 @@
      */
     _mkSelect(wrap, opts, selected, onSel, key, decorate) {
       if (typeof Blockr !== 'undefined' && Blockr.Select) {
-        this._selects[key] = Blockr.Select.single(wrap, { options: opts, selected, onChange: onSel });
+        // blockr.ggplot extension: role.ph doubles as the select placeholder
+        // so ''-valued options ("Auto", "None") don't render an empty control.
+        const ph = (this._role(key) || {}).ph;
+        this._selects[key] = Blockr.Select.single(wrap, { options: opts, selected, placeholder: ph, onChange: onSel });
       } else {
         const s = document.createElement('select');
         s.className = 'dd-cfg-select';

@@ -247,6 +247,27 @@
   border-radius: 6px;
 }
 
+/* Color control (blockr.ggplot engine extension, kind 'color'): a native
+   swatch beside the "Theme default" checkbox; dimmed while the default is
+   active. */
+.dd-color-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.dd-color-swatch {
+  width: 42px;
+  height: 30px;
+  padding: 2px;
+  border: 1px solid var(--blockr-color-border, #e5e7eb);
+  border-radius: 6px;
+  background: #fff;
+  cursor: pointer;
+}
+.dd-color-wrap.dd-color-default .dd-color-swatch {
+  opacity: 0.35;
+}
+
 /* ===== gg-* (blockr.ggplot own) ========================================== */
 
 /* The nine chart-type buttons overflow one strip in narrow panels. */
@@ -254,9 +275,35 @@
   flex-wrap: wrap;
 }
 
-/* Phase 2 (grid/facet): the R-rendered layout preview lives inside the
-   container after the band; it is a configuration aid, so it shows only
-   while the settings band is open. */
+/* Grid/facet: the R-rendered layout preview lives inside the container
+   after the band; it is a configuration aid, so it shows only while the
+   settings band is open, styled as the band's footer. */
 .gg-block-container:not(.gg-settings-open) .gg-preview {
   display: none;
 }
+.gg-preview {
+  border: 1px solid var(--blockr-color-border, #e5e7eb);
+  border-top: none;
+  border-radius: 0 0 8px 8px;
+  margin-top: -10px;
+  margin-bottom: 10px;
+  padding: 10px 14px;
+  background: #fff;
+}
+
+/* Preview status line (SVG layout previews, from the old facet/grid UI). */
+.preview-svg-container {
+  text-align: center;
+  margin-bottom: 8px;
+}
+.preview-status {
+  font-size: var(--blockr-font-size-sm, 0.875rem);
+  color: var(--blockr-grey-500, #6c757d);
+  text-align: center;
+  padding: 6px 8px;
+  border-radius: 4px;
+  background-color: var(--blockr-grey-50, #f8f9fa);
+}
+.preview-status.valid { color: var(--blockr-color-success, #28a745); }
+.preview-status.warning { color: var(--blockr-color-warning, #ffc107); }
+.preview-status.error { color: var(--blockr-color-danger, #dc3545); }

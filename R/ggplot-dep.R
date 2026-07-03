@@ -2,29 +2,20 @@
 #'
 #' Mirrors blockr.viz/R/chart-dep.R: the base design-system layer (gear,
 #' popover rows, pills, the Blockr namespace and Blockr.Select component)
-#' is reused from the installed blockr.dplyr package; the settings band and
-#' the DrilldownConfig engine are local copies of the blockr.viz assets
+#' comes from blockr.dplyr's exported dependency helpers; the settings band
+#' and the DrilldownConfig engine are local copies of the blockr.viz assets
 #' (see the CANONICAL SOURCE headers in inst/js and inst/css).
 #'
 #' Load order is enforced by the dependency structure: blockr.dplyr CSS/JS
 #' (Blockr namespace + Select) -> settings-band.js (Blockr.checkbox) ->
 #' drilldown-config.js (Blockr.DrilldownConfig) -> gg-blocks.js (uses both).
 #'
+#' @importFrom blockr.dplyr blockr_blocks_css_dep blockr_select_dep
 #' @noRd
 ggplot_block_deps <- function() {
   htmltools::tagList(
-    htmltools::htmlDependency(
-      name = "blockr-blocks-css",
-      version = paste0(utils::packageVersion("blockr.dplyr"), ".2"),
-      src = system.file("css", package = "blockr.dplyr"),
-      stylesheet = c("blockr-blocks.css", "blockr-select.css")
-    ),
-    htmltools::htmlDependency(
-      name = "blockr-select-js",
-      version = paste0(utils::packageVersion("blockr.dplyr"), ".2"),
-      src = system.file("js", package = "blockr.dplyr"),
-      script = c("blockr-core.js", "blockr-select.js")
-    ),
+    blockr_blocks_css_dep(),
+    blockr_select_dep(),
     htmltools::htmlDependency(
       name = "gg-settings-band",
       version = utils::packageVersion("blockr.ggplot"),
@@ -34,7 +25,7 @@ ggplot_block_deps <- function() {
     ),
     htmltools::htmlDependency(
       name = "gg-blocks-js",
-      version = paste0(utils::packageVersion("blockr.ggplot"), ".1"),
+      version = paste0(utils::packageVersion("blockr.ggplot"), ".2"),
       src = system.file("js", package = "blockr.ggplot"),
       # drilldown-config.js (the shared gear/settings-band engine) must load
       # BEFORE gg-blocks.js, which references Blockr.DrilldownConfig.
@@ -42,7 +33,7 @@ ggplot_block_deps <- function() {
     ),
     htmltools::htmlDependency(
       name = "gg-blocks-css",
-      version = paste0(utils::packageVersion("blockr.ggplot"), ".1"),
+      version = paste0(utils::packageVersion("blockr.ggplot"), ".2"),
       src = system.file("css", package = "blockr.ggplot"),
       stylesheet = "gg-blocks.css"
     )
