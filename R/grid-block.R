@@ -164,21 +164,35 @@ create_grid_preview_svg <- function(n_plots, ncol_val, nrow_val) {
   )
 }
 
-# Helper function to extract argument names for variadic blocks
-# Copied from blockr.core:::dot_args_names (not exported)
-dot_args_names <- function(x) {
-  res <- names(x)
-  unnamed <- grepl("^[1-9][0-9]*$", res)
+# Variadic `...args` helpers under blockr.core's name-or-position convention
+# (core #251): unnamed slots are referenced as .arg1, .arg2, ... in the eval
+# environment, named slots by their link name, and slot values are accessed
+# through `.()` calls. Copied from blockr.core (not exported):
+# dot_sym/arg_refs/dot_arg_refs from R/utils-misc.R, as_dot_call from
+# R/utils-expr.R — keep in sync. `names(...args)` dispatches on core's
+# exported names.reactives method, so these work on the `reactives` object
+# a variadic block server receives.
+dot_sym <- function(i) {
+  paste0(".arg", i)
+}
 
-  if (all(unnamed)) {
-    return(NULL)
+arg_refs <- function(nms) {
+  unnamed <- !nzchar(nms)
+  replace(nms, unnamed, dot_sym(seq_len(sum(unnamed))))
+}
+
+dot_arg_refs <- function(x) {
+  nms <- names(x)
+
+  if (is.null(nms)) {
+    nms <- character(length(x))
   }
 
-  if (any(unnamed)) {
-    return(replace(res, unnamed, ""))
-  }
+  set_names(arg_refs(nms), nms)
+}
 
-  res
+as_dot_call <- function(x) {
+  call(".", as.name(x))
 }
 
 #' Grid Block
@@ -230,8 +244,10 @@ new_grid_block <- function(
       moduleServer(
         id,
         function(input, output, session) {
+          # Eval-env references for the connected inputs (named slots by
+          # link name, unnamed as .argN); reactive on the link set.
           arg_names <- reactive(
-            set_names(names(...args), dot_args_names(...args))
+            dot_arg_refs(...args)
           )
 
           # Reactive values for the settings band. Character() constructor
@@ -288,8 +304,7 @@ new_grid_block <- function(
 
           # Layout preview output
           output$layout_preview <- renderUI({
-            args_list <- shiny::reactiveValuesToList(...args)
-            n_plots <- sum(!sapply(args_list, is.null))
+            n_plots <- length(arg_names())
             ncol_val <- r_ncol()
             nrow_val <- r_nrow()
 
@@ -332,14 +347,13 @@ new_grid_block <- function(
 
           list(
             expr = reactive({
-              # Filter out NULL inputs
-              args_list <- shiny::reactiveValuesToList(...args)
-              non_null_names <- names(args_list)[!sapply(args_list, is.null)]
-
-              # Base wrap_plots expression (only non-NULL inputs)
+              # Base wrap_plots expression over all connected inputs,
+              # referenced via `.()` calls (see blockr.core's rbind_block).
+              # Readiness gating happens upstream (inputs_ready), so no
+              # NULL-filtering is needed anymore.
               base_expr <- bquote(
                 patchwork::wrap_plots(..(dat)),
-                list(dat = lapply(non_null_names, as.name)),
+                list(dat = lapply(arg_names(), as_dot_call)),
                 splice = TRUE
               )
 
@@ -428,6 +442,10 @@ new_grid_block <- function(
     allow_empty_state = TRUE,
     class = c("grid_block", "rbind_block"),
     external_ctrl = TRUE,
+    # The expr references variadic inputs via `.()` calls (see
+    # blockr.core's rbind_block); "bquoted" makes core resolve them
+    # against the eval environment.
+    expr_type = "bquoted",
     ...
   )
 }
