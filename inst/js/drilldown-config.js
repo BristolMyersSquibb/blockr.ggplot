@@ -11,7 +11,11 @@
  * Further local extensions (all upstream candidates): host.typeIcon(t) may
  * return an inline SVG rendered before the type-button label; the
  * add-mapping menu closes on outside click (dropdown behavior, paired with
- * the .dd-add-menu dropdown styling in gg-blocks.css).
+ * the .dd-add-menu dropdown styling in gg-blocks.css); host.typeTiles
+ * renders the type picker as an icon-over-label tile grid (design-system
+ * type-picker proposal B) instead of the grouped strip — group labels
+ * become a field label above the grid (or per-group headings when there is
+ * more than one group).
  *
  * DrilldownConfig — the shared gear-popover config engine for blockr drilldown
  * blocks (chart, table, …). Host-agnostic: it renders a grouped, role-spec
@@ -196,7 +200,40 @@
       pop.appendChild(title);
 
       // Type picker (optional — chart only)
-      if (this.h.typeGroups && this.h.typeGroups.length) {
+      if (this.h.typeGroups && this.h.typeGroups.length && this.h.typeTiles) {
+        // blockr.ggplot extension: icon tile grid (proposal B). One group ->
+        // its label is a normal field label above the grid; several groups
+        // -> per-group micro-headings inside one grid.
+        const typesRow = document.createElement('div');
+        typesRow.className = 'blockr-popover-row dd-popover-types dd-popover-types-tiles';
+        const single = this.h.typeGroups.length === 1;
+        for (const g of this.h.typeGroups) {
+          if (g.label) {
+            const glabel = document.createElement('div');
+            glabel.className = single
+              ? 'blockr-popover-label dd-type-grid-label'
+              : 'dd-type-group-head';
+            glabel.textContent = g.label;
+            typesRow.appendChild(glabel);
+          }
+          const grid = document.createElement('div');
+          grid.className = 'dd-type-grid';
+          for (const t of g.types) {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'dd-type-tile' +
+              (t === cfg[this.h.typeKey] ? ' dd-type-active' : '');
+            btn.title = t;
+            const ic = this.h.typeIcon ? this.h.typeIcon(t) : '';
+            btn.innerHTML = (ic ? '<span class="dd-type-tile-icon">' + ic + '</span>' : '') +
+              '<span class="dd-type-tile-label">' + t + '</span>';
+            btn.addEventListener('click', () => this._onType(t));
+            grid.appendChild(btn);
+          }
+          typesRow.appendChild(grid);
+        }
+        pop.appendChild(typesRow);
+      } else if (this.h.typeGroups && this.h.typeGroups.length) {
         const typesRow = document.createElement('div');
         typesRow.className = 'blockr-popover-row dd-popover-types';
         for (const g of this.h.typeGroups) {

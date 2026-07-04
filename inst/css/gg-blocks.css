@@ -275,9 +275,29 @@
   flex-wrap: wrap;
 }
 
+/* Advanced band (opens directly under the gear header — placement P1):
+   connector T1, a beak on the band's top edge pointing at the gear that
+   opened it; the gear itself keeps .blockr-gear-active while open. The
+   26px gear is the last element on the right of the header. */
+.gg-settings-adv {
+  position: relative;
+}
+.gg-settings-adv.blockr-settings--open::before {
+  content: "";
+  position: absolute;
+  top: -6px;
+  right: 8px;
+  width: 10px;
+  height: 10px;
+  background: #fff;
+  border-left: 1px solid var(--blockr-color-border, #e5e7eb);
+  border-top: 1px solid var(--blockr-color-border, #e5e7eb);
+  transform: rotate(45deg);
+}
+
 /* Main settings area: always visible (the pre-band "main UI"), so it
    drops the band's box chrome and its title — only the gear-toggled
-   advanced band below reads as a panel. */
+   advanced band above reads as a panel. */
 .gg-settings-main {
   border: none;
   padding: 0 0 2px;
@@ -288,8 +308,8 @@
   display: none;
 }
 
-/* Larger type-picker buttons with a subtle leading icon (the historical
-   icon strip, toned down: the text label stays primary). */
+/* Larger type-picker buttons with a subtle leading icon (used by the
+   segmented strip, e.g. the facet block's wrap/grid picker). */
 .gg-settings .dd-type-btn {
   display: inline-flex;
   align-items: center;
@@ -303,6 +323,75 @@
 }
 .gg-settings .dd-type-btn.dd-type-active svg {
   opacity: 0.85;
+}
+
+/* Icon tile grid for the type picker (design-system type-picker proposal
+   B, engine extension `typeTiles`): uniform icon-over-label tiles in an
+   auto-fill grid — wraps into even rows at any width. */
+.dd-popover-types-tiles {
+  display: block;
+}
+.dd-type-grid-label {
+  margin-bottom: 5px;
+}
+.dd-type-grid {
+  display: grid;
+  /* 72px fits the longest label ("Histogram") without truncation. */
+  grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
+  gap: 6px;
+}
+.dd-type-group-head {
+  font-size: var(--blockr-font-size-xs, 0.75rem);
+  font-weight: var(--blockr-font-weight-medium, 500);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--blockr-grey-400, #9ca3af);
+  margin: 8px 0 4px;
+}
+.dd-type-group-head:first-child {
+  margin-top: 0;
+}
+.dd-type-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  padding: 9px 4px 7px;
+  background: #fff;
+  border: 1px solid var(--blockr-color-border, #e5e7eb);
+  border-radius: var(--blockr-radius-md, 6px);
+  font-size: var(--blockr-font-size-xs, 0.75rem);
+  color: var(--blockr-grey-500, #6b7280);
+  cursor: pointer;
+  text-transform: capitalize;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.dd-type-tile:hover {
+  background: var(--blockr-grey-50, #f9fafb);
+  border-color: var(--blockr-grey-300, #d1d5db);
+}
+.dd-type-tile.dd-type-active {
+  background: #eff6ff;
+  border-color: var(--blockr-color-primary, #2563eb);
+  color: var(--blockr-color-primary, #2563eb);
+  font-weight: var(--blockr-font-weight-medium, 500);
+}
+.dd-type-tile-icon svg {
+  display: block;
+  opacity: 0.5;
+}
+.dd-type-tile.dd-type-active .dd-type-tile-icon svg {
+  opacity: 0.9;
+}
+.dd-type-tile-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+.gg-settings .dd-type-tile:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--blockr-color-focus, rgba(37, 99, 235, 0.45));
 }
 
 /* Add-mapping menu as a real dropdown (local deviation from blockr.viz's

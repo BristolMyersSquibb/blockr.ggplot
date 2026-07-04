@@ -392,8 +392,10 @@
     ggplot: {
       roles: GG_ROLES,
       typeKey: 'type',
-      typeGroups: [{ label: 'Type', types: GG_TYPE_ORDER }],
+      typeGroups: [{ label: 'Chart type', types: GG_TYPE_ORDER }],
       typeIcons: GG_TYPE_ICONS,
+      // Icon tile grid (design-system type-picker proposal B).
+      typeTiles: true,
       mainFor: ggMainFor,
       advFor: ggAdvFor,
       fullFor: ggSections,
@@ -516,21 +518,23 @@
         this.el.insertBefore(gearHeader, first);
       }
 
-      // Always-open main area: same band layout, lighter chrome (no box).
-      this.mainEl = document.createElement('div');
-      this.mainEl.className =
-        'blockr-settings blockr-settings--open dd-popover gg-settings gg-settings-main';
-      this.el.insertBefore(this.mainEl, first);
-
       if (this.spec.advFor) {
-        // In-flow advanced band (design-system: gear-panel proposal B). No
-        // <body> portal, no fixed positioning; opening pushes the plot
-        // below down so the result stays visible.
+        // In-flow advanced band, opening directly under the gear header
+        // (placement P1 + connector T1 of the type-picker proposals: a beak
+        // on the band points at the gear, which stays active while open).
+        // No <body> portal, no fixed positioning; opening pushes the main
+        // settings and plot down so everything stays visible.
         this.advEl = document.createElement('div');
         this.advEl.className =
           'blockr-settings dd-popover gg-settings gg-settings-adv';
         this.el.insertBefore(this.advEl, first);
       }
+
+      // Always-open main area: same band layout, lighter chrome (no box).
+      this.mainEl = document.createElement('div');
+      this.mainEl.className =
+        'blockr-settings blockr-settings--open dd-popover gg-settings gg-settings-main';
+      this.el.insertBefore(this.mainEl, first);
     }
 
     /** @param {'main' | 'adv'} which */
@@ -562,6 +566,7 @@
         typeGroups: main ? this.spec.typeGroups : null,
         typeIcon: (/** @type {string} */ t) =>
           (this.spec.typeIcons && this.spec.typeIcons[t]) || '',
+        typeTiles: main ? !!this.spec.typeTiles : false,
         // Each chart type is its own "family": a type switch runs the
         // engine's carry logic (keep fitting mappings, stash the rest in
         // sticky role memory).
