@@ -275,17 +275,74 @@
   flex-wrap: wrap;
 }
 
-/* Grid/facet: the R-rendered layout preview lives inside the container
-   after the band; it is a configuration aid, so it shows only while the
-   settings band is open, styled as the band's footer. */
-.gg-block-container:not(.gg-settings-open) .gg-preview {
+/* Main settings area: always visible (the pre-band "main UI"), so it
+   drops the band's box chrome and its title — only the gear-toggled
+   advanced band below reads as a panel. */
+.gg-settings-main {
+  border: none;
+  padding: 0 0 2px;
+  margin-bottom: 6px;
+  background: transparent;
+}
+.gg-settings-main > .dd-popover-title {
   display: none;
 }
+
+/* Larger type-picker buttons with a subtle leading icon (the historical
+   icon strip, toned down: the text label stays primary). */
+.gg-settings .dd-type-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  font-size: var(--blockr-font-size-sm, 0.8125rem);
+}
+.gg-settings .dd-type-btn svg {
+  opacity: 0.5;
+  flex-shrink: 0;
+}
+.gg-settings .dd-type-btn.dd-type-active svg {
+  opacity: 0.85;
+}
+
+/* Add-mapping menu as a real dropdown (local deviation from blockr.viz's
+   inline chip strip, per design feedback; the engine copy closes it on
+   outside click): anchored under the trigger, vertical, floating. */
+.gg-settings .dd-add-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 30;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 2px;
+  min-width: 160px;
+  margin-top: 4px;
+  padding: 4px;
+  background: #fff;
+  border: 1px solid var(--blockr-color-border, #e5e7eb);
+  border-radius: 8px;
+  box-shadow: var(--blockr-shadow-dropdown, 0 4px 12px rgba(0, 0, 0, 0.08));
+}
+.gg-settings .dd-add-item {
+  border: none;
+  background: transparent;
+  text-align: left;
+  padding: 6px 10px;
+  border-radius: 4px;
+}
+.gg-settings .dd-add-item:hover {
+  border: none;
+  background: var(--blockr-grey-50, #f9fafb);
+  color: inherit;
+}
+
+/* Grid/facet: the R-rendered SVG layout preview lives inside the
+   container below the settings areas — always visible, like the old
+   preview sidebar. */
 .gg-preview {
   border: 1px solid var(--blockr-color-border, #e5e7eb);
-  border-top: none;
-  border-radius: 0 0 8px 8px;
-  margin-top: -10px;
+  border-radius: 8px;
   margin-bottom: 10px;
   padding: 10px 14px;
   background: #fff;

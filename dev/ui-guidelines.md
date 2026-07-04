@@ -24,18 +24,24 @@ Every block follows the blockr.viz pattern:
       `data-gg-block` = "ggplot")   # or "theme" / "facet" / "grid"
   ```
 
-- `inst/js/gg-blocks.js` binds the container (`Shiny.InputBinding`), builds
-  a gear header (`.blockr-gear-header` > `.blockr-gear-btn`) and an
-  **in-flow settings band** (`.blockr-settings`, design-system gear-panel
-  proposal B: no body portal, no fixed positioning; opening pushes the plot
-  down so the result stays visible).
+- `inst/js/gg-blocks.js` binds the container (`Shiny.InputBinding`) and
+  builds **two settings areas**, keeping the pre-rework main-vs-advanced
+  split: an always-visible main area (`.gg-settings-main` — type picker
+  with subtle inline-SVG icons, main mappings, "+ Add mapping" dropdown)
+  and, when the block has advanced settings, a gear-toggled **in-flow
+  advanced band** (`.gg-settings-adv`, design-system gear-panel proposal B:
+  no body portal, no fixed positioning; opening pushes the plot down).
+  The grid block has no advanced settings, so no gear.
 
-- The band content is rendered by the shared **`Blockr.DrilldownConfig`**
+- Both areas are rendered by the shared **`Blockr.DrilldownConfig`**
   engine (`inst/js/drilldown-config.js`, copied from blockr.viz — see the
-  CANONICAL SOURCE header) from a declarative spec per block in
-  `gg-blocks.js` (`SPECS`): role catalog (`kind: column | select | columns |
-  segmented | slider | text | color`) plus per-type sections
-  (requiredMap / optionalMap / mapping / presentation).
+  CANONICAL SOURCE header): two engine instances share one config object,
+  driven by per-block `mainFor`/`advFor` section functions in `SPECS`
+  (`fullFor` is the union the type-switch carry logic runs against; the
+  main engine's `afterTypeChange` re-renders the advanced band). Role
+  catalog kinds: `column | select | columns | segmented | slider | text |
+  color`. Advanced aesthetic roles render as always-visible `mapping`
+  entries (selects with "(none)"), matching the old advanced section.
 
 - The plot itself stays `block_ui`'s server-rendered `plotOutput`
   **below** the container — unlike blockr.viz (client-side ECharts), JS

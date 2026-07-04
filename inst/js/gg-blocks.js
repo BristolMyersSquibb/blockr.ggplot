@@ -79,6 +79,79 @@
   /** @param {string} t */
   const ggSections = (t) => GG_TYPE_ROLES[t] || GG_TYPE_ROLES.point;
 
+  // Main-vs-advanced split, mirroring the pre-band UI: x/y/color/fill/size
+  // lived in the always-visible mappings section; shape/linetype/group/alpha
+  // and the chart-specific extras sat behind "Show advanced options".
+  const GG_MAIN_OPTIONAL = ['y', 'color', 'fill', 'size'];
+  const GG_ADV_OPTIONAL = ['shape', 'linetype', 'group', 'alpha'];
+
+  /** @param {string} t */
+  const ggMainFor = (t) => {
+    const s = ggSections(t);
+    return {
+      requiredMap: s.requiredMap,
+      optionalMap: s.optionalMap.filter((k) => GG_MAIN_OPTIONAL.includes(k)),
+      mapping: [],
+      presentation: []
+    };
+  };
+
+  /** @param {string} t */
+  const ggAdvFor = (t) => {
+    const s = ggSections(t);
+    return {
+      requiredMap: [],
+      optionalMap: [],
+      // The old advanced selects were always visible (with "(none)"), so
+      // they render as always-on mapping entries, not add-as-needed rows.
+      mapping: s.optionalMap.filter((k) => GG_ADV_OPTIONAL.includes(k)),
+      presentation: s.presentation
+    };
+  };
+
+  // Subtle inline chart-type icons (successors of the old FontAwesome strip;
+  // hand-drawn so no icon-font dependency). 14px, currentColor, dimmed via
+  // CSS so the text label stays primary.
+  /** @type {Record<string, string>} */
+  const GG_TYPE_ICONS = {
+    point:
+      '<svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">' +
+      '<circle cx="4" cy="11" r="1.6"/><circle cx="8" cy="6" r="1.6"/>' +
+      '<circle cx="12" cy="9" r="1.6"/><circle cx="13" cy="3" r="1.6"/></svg>',
+    bar:
+      '<svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">' +
+      '<rect x="2" y="8" width="3" height="6"/><rect x="6.5" y="4" width="3" height="10"/>' +
+      '<rect x="11" y="10" width="3" height="4"/></svg>',
+    line:
+      '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" ' +
+      'stroke="currentColor" stroke-width="1.6" stroke-linecap="round">' +
+      '<path d="M2 12 L6 7 L10 9 L14 3"/></svg>',
+    boxplot:
+      '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" ' +
+      'stroke="currentColor" stroke-width="1.4">' +
+      '<rect x="4" y="5" width="8" height="6"/>' +
+      '<path d="M4 8 h8 M8 2 v3 M8 11 v3 M6 2 h4 M6 14 h4"/></svg>',
+    pie:
+      '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" ' +
+      'stroke="currentColor" stroke-width="1.4">' +
+      '<circle cx="8" cy="8" r="6"/><path d="M8 8 V2 M8 8 L13 11"/></svg>',
+    histogram:
+      '<svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">' +
+      '<rect x="2" y="9" width="3" height="5"/><rect x="5" y="5" width="3" height="9"/>' +
+      '<rect x="8" y="7" width="3" height="7"/><rect x="11" y="11" width="3" height="3"/></svg>',
+    density:
+      '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" ' +
+      'stroke="currentColor" stroke-width="1.6" stroke-linecap="round">' +
+      '<path d="M2 13 C5 13 5 4 8 4 C11 4 11 13 14 13"/></svg>',
+    violin:
+      '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" ' +
+      'stroke="currentColor" stroke-width="1.4">' +
+      '<path d="M8 2 C10 5 12 6 12 9 C12 12 10 14 8 14 C6 14 4 12 4 9 C4 6 6 5 8 2 Z"/></svg>',
+    area:
+      '<svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">' +
+      '<path d="M2 14 L2 11 L6 6 L10 8 L14 3 L14 14 Z" opacity="0.85"/></svg>'
+  };
+
   // -- theme block spec ---------------------------------------------------
   // Mirrors the constructor args / expr logic in R/theme-block.R. base_theme
   // options are runtime-dependent (gated on installed theme packages), so
@@ -159,14 +232,22 @@
   THEME_ROLES.palette_fill.options = PALETTE_OPTIONS;
   THEME_ROLES.palette_colour.options = PALETTE_OPTIONS.slice();
 
-  // Ordered by causality: theme -> legend/palettes -> colors -> typography
-  // -> grid & border.
-  const THEME_SECTIONS = {
+  // Main-vs-advanced split, mirroring the pre-band theme UI: base theme,
+  // legend and palettes were always visible; colors & backgrounds,
+  // typography and grid & borders sat behind "Show advanced options".
+  const THEME_MAIN = {
     requiredMap: [],
     optionalMap: [],
     mapping: [],
     presentation: [
-      'base_theme', 'legend_position', 'palette_fill', 'palette_colour',
+      'base_theme', 'legend_position', 'palette_fill', 'palette_colour'
+    ]
+  };
+  const THEME_ADV = {
+    requiredMap: [],
+    optionalMap: [],
+    mapping: [],
+    presentation: [
       'panel_bg', 'plot_bg', 'base_size', 'base_family',
       'show_major_grid', 'show_minor_grid', 'grid_color', 'show_panel_border'
     ]
@@ -226,17 +307,31 @@
     }
   };
 
+  // Main-vs-advanced split, mirroring the pre-band facet UI: variables,
+  // layout (ncol/nrow) and scales were always visible; labels, direction
+  // and space sat behind "Show advanced options".
   /** @type {Record<string, { requiredMap: string[], optionalMap: string[], mapping: any[], presentation: any[] }>} */
-  const FACET_TYPE_ROLES = {
+  const FACET_TYPE_MAIN = {
     wrap: {
       requiredMap: [], optionalMap: [],
       mapping: ['facets'],
-      presentation: ['ncol', 'nrow', 'scales', 'labeller', 'dir']
+      presentation: ['ncol', 'nrow', 'scales']
     },
     grid: {
       requiredMap: [], optionalMap: [],
       mapping: ['rows', 'cols'],
-      presentation: ['scales', 'labeller', 'space']
+      presentation: ['scales']
+    }
+  };
+  /** @type {Record<string, { requiredMap: string[], optionalMap: string[], mapping: any[], presentation: any[] }>} */
+  const FACET_TYPE_ADV = {
+    wrap: {
+      requiredMap: [], optionalMap: [], mapping: [],
+      presentation: ['labeller', 'dir']
+    },
+    grid: {
+      requiredMap: [], optionalMap: [], mapping: [],
+      presentation: ['labeller', 'space']
     }
   };
 
@@ -287,14 +382,23 @@
     ]
   };
 
+  // Each block spec provides TWO section functions: `mainFor` renders into
+  // the always-visible main area (the pre-band "main UI"), `advFor` into the
+  // gear-toggled advanced band (null = block has no advanced settings, so no
+  // gear at all). `fullFor` is the union spec the engine's type-switch carry
+  // logic runs against (so a type change preserves advanced mappings too).
   /** @type {Record<string, any>} */
   const SPECS = {
     ggplot: {
       roles: GG_ROLES,
       typeKey: 'type',
       typeGroups: [{ label: 'Type', types: GG_TYPE_ORDER }],
-      sectionsFor: ggSections,
+      typeIcons: GG_TYPE_ICONS,
+      mainFor: ggMainFor,
+      advFor: ggAdvFor,
+      fullFor: ggSections,
       title: 'Chart settings',
+      advTitle: 'Advanced options',
       // Keys echoed back to R on every change (full-config echo, like the
       // blockr.viz chart). Must match the config list the R server pushes.
       configKeys: [
@@ -306,8 +410,11 @@
       roles: THEME_ROLES,
       typeKey: null,
       typeGroups: null,
-      sectionsFor: () => THEME_SECTIONS,
+      mainFor: () => THEME_MAIN,
+      advFor: () => THEME_ADV,
+      fullFor: () => THEME_MAIN,
       title: 'Theme settings',
+      advTitle: 'Advanced options',
       configKeys: [
         'base_theme', 'legend_position', 'palette_fill', 'palette_colour',
         'panel_bg', 'plot_bg', 'base_size', 'base_family',
@@ -319,9 +426,14 @@
       roles: FACET_ROLES,
       typeKey: 'facet_type',
       typeGroups: [{ label: 'Layout', types: ['wrap', 'grid'] }],
-      sectionsFor: (/** @type {string} */ t) =>
-        FACET_TYPE_ROLES[t] || FACET_TYPE_ROLES.wrap,
+      mainFor: (/** @type {string} */ t) =>
+        FACET_TYPE_MAIN[t] || FACET_TYPE_MAIN.wrap,
+      advFor: (/** @type {string} */ t) =>
+        FACET_TYPE_ADV[t] || FACET_TYPE_ADV.wrap,
+      fullFor: (/** @type {string} */ t) =>
+        FACET_TYPE_MAIN[t] || FACET_TYPE_MAIN.wrap,
       title: 'Facet settings',
+      advTitle: 'Advanced options',
       configKeys: [
         'facet_type', 'facets', 'rows', 'cols', 'ncol', 'nrow',
         'scales', 'labeller', 'dir', 'space'
@@ -331,7 +443,10 @@
       roles: GRID_ROLES,
       typeKey: null,
       typeGroups: null,
-      sectionsFor: () => GRID_SECTIONS,
+      // The pre-band grid UI had no advanced toggle — everything visible.
+      mainFor: () => GRID_SECTIONS,
+      advFor: null,
+      fullFor: () => GRID_SECTIONS,
       title: 'Grid settings',
       configKeys: [
         'ncol', 'nrow', 'guides', 'title', 'subtitle', 'caption',
@@ -356,52 +471,78 @@
       /** @type {Record<string, any>} */
       this.config = {};
       this._open = false;
-      /** @type {HTMLButtonElement} */
-      this.gearBtn;
+      /** @type {HTMLButtonElement | null} */
+      this.gearBtn = null;
       /** @type {HTMLDivElement} */
-      this.bandEl;
+      this.mainEl;
+      /** @type {HTMLDivElement | null} */
+      this.advEl = null;
+      /** @type {any} */
+      this._cfgAdv = null;
       this._buildDOM();
-      this._cfg = this._makeConfig();
+      // Advanced engine first: the main engine's afterTypeChange re-renders
+      // it, so it must exist before the first main render.
+      if (this.advEl) this._cfgAdv = this._makeEngine('adv');
+      this._cfgMain = this._makeEngine('main');
     }
 
     // Append-only DOM build: the container may hold R-rendered children (the
-    // grid/facet blocks keep their SVG layout preview inside it), so the gear
-    // header + band are inserted BEFORE any existing content, never replacing
-    // it.
+    // grid/facet blocks keep their SVG layout preview inside it), so the
+    // settings areas are inserted BEFORE any existing content, never
+    // replacing it. Two areas: the always-visible main band (the pre-band
+    // "main UI") and, when the spec has advanced settings, a gear-toggled
+    // advanced band below it.
     _buildDOM() {
-      const gearHeader = document.createElement('div');
-      gearHeader.className = 'blockr-gear-header';
-      this.gearBtn = document.createElement('button');
-      this.gearBtn.type = 'button';
-      this.gearBtn.className = 'blockr-gear-btn';
-      this.gearBtn.innerHTML = (typeof Blockr !== 'undefined' && Blockr.icons)
-        ? Blockr.icons.gear : '⚙';
-      this.gearBtn.title = this.spec.title;
-      this.gearBtn.setAttribute('aria-label', this.spec.title);
-      this.gearBtn.setAttribute('aria-haspopup', 'dialog');
-      this.gearBtn.setAttribute('aria-expanded', 'false');
-      this.gearBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        this._toggleBand();
-      });
-      gearHeader.appendChild(this.gearBtn);
+      const first = this.el.firstChild;
 
-      // In-flow settings band (design-system: gear-panel proposal B). No
-      // <body> portal, no fixed positioning, no outside-click dismissal —
-      // opening pushes the plot below down so the result stays visible.
-      this.bandEl = document.createElement('div');
-      this.bandEl.className = 'blockr-settings dd-popover gg-settings';
+      if (this.spec.advFor) {
+        const gearHeader = document.createElement('div');
+        gearHeader.className = 'blockr-gear-header';
+        const gear = document.createElement('button');
+        this.gearBtn = gear;
+        gear.type = 'button';
+        gear.className = 'blockr-gear-btn';
+        gear.innerHTML = (typeof Blockr !== 'undefined' && Blockr.icons)
+          ? Blockr.icons.gear : '⚙';
+        gear.title = this.spec.advTitle;
+        gear.setAttribute('aria-label', this.spec.advTitle);
+        gear.setAttribute('aria-haspopup', 'dialog');
+        gear.setAttribute('aria-expanded', 'false');
+        gear.addEventListener('click', (e) => {
+          e.stopPropagation();
+          this._toggleBand();
+        });
+        gearHeader.appendChild(gear);
+        this.el.insertBefore(gearHeader, first);
+      }
 
-      this.el.insertBefore(this.bandEl, this.el.firstChild);
-      this.el.insertBefore(gearHeader, this.bandEl);
+      // Always-open main area: same band layout, lighter chrome (no box).
+      this.mainEl = document.createElement('div');
+      this.mainEl.className =
+        'blockr-settings blockr-settings--open dd-popover gg-settings gg-settings-main';
+      this.el.insertBefore(this.mainEl, first);
+
+      if (this.spec.advFor) {
+        // In-flow advanced band (design-system: gear-panel proposal B). No
+        // <body> portal, no fixed positioning; opening pushes the plot
+        // below down so the result stays visible.
+        this.advEl = document.createElement('div');
+        this.advEl.className =
+          'blockr-settings dd-popover gg-settings gg-settings-adv';
+        this.el.insertBefore(this.advEl, first);
+      }
     }
 
-    _makeConfig() {
+    /** @param {'main' | 'adv'} which */
+    _makeEngine(which) {
       const DCfg = /** @type {typeof VizDrilldownConfig} */ (
         (typeof Blockr !== 'undefined' && Blockr.DrilldownConfig) ||
         window.DrilldownConfig);
+      const main = which === 'main';
+      const cur = () => this.spec.typeKey
+        ? this.config[this.spec.typeKey] : null;
       return new DCfg({
-        popoverEl: () => this.bandEl,
+        popoverEl: () => (main ? this.mainEl : /** @type {HTMLDivElement} */ (this.advEl)),
         roles: this.spec.roles,
         config: () => this.config,
         columns: () => this.columns,
@@ -410,19 +551,27 @@
         context: () => this.spec.typeKey
           ? this.config[this.spec.typeKey]
           : (this.el.getAttribute('data-gg-block') || 'ggplot'),
-        currentType: () => this.spec.typeKey
-          ? (this.config[this.spec.typeKey] || null) : null,
-        sections: () => this.spec.sectionsFor(
-          this.spec.typeKey ? this.config[this.spec.typeKey] : null),
-        sectionsForFamily: (/** @type {string} */ fam) => this.spec.sectionsFor(fam),
+        currentType: () => cur() || null,
+        sections: () => (main ? this.spec.mainFor : this.spec.advFor)(cur()),
+        // The type-switch carry runs against the FULL per-type spec so
+        // advanced mappings survive a switch too.
+        sectionsForFamily: (/** @type {string} */ fam) => this.spec.fullFor(fam),
         secondary: GG_SECONDARY,
-        typeKey: this.spec.typeKey,
-        typeGroups: this.spec.typeGroups,
+        // Type picker (and its carry logic) lives on the main band only.
+        typeKey: main ? this.spec.typeKey : null,
+        typeGroups: main ? this.spec.typeGroups : null,
+        typeIcon: (/** @type {string} */ t) =>
+          (this.spec.typeIcons && this.spec.typeIcons[t]) || '',
         // Each chart type is its own "family": a type switch runs the
         // engine's carry logic (keep fitting mappings, stash the rest in
         // sticky role memory).
         familyFor: (/** @type {string} */ t) => t,
-        title: this.spec.title,
+        title: main ? this.spec.title : this.spec.advTitle,
+        // The main band re-renders on type switches; keep the advanced band
+        // in sync (it shows the type-specific extras).
+        afterTypeChange: main
+          ? () => { if (this._cfgAdv) this._cfgAdv.render(); }
+          : undefined,
         // The plot renders server-side: any change just echoes the config to
         // R; the state reactives re-run the plot expression.
         onChange: () => this._sendConfig(),
@@ -431,8 +580,8 @@
         // No default-column auto-picking: the block starts with a blank plot
         // until the user maps x (behavior parity with the old Shiny UI).
         ensureDefaults: () => {},
-        isOpen: () => this._open,
-        reopen: () => this._openBand()
+        isOpen: () => (main ? true : this._open),
+        reopen: () => { if (!main) this._openBand(); }
       });
     }
 
@@ -450,7 +599,8 @@
           if (this.spec.roles[key]) this.spec.roles[key].options = msg.choices[key];
         }
       }
-      this._cfg.render();
+      // Main render re-renders the advanced band via afterTypeChange.
+      this._cfgMain.render();
     }
 
     _sendConfig() {
@@ -464,19 +614,21 @@
       Shiny.setInputValue(this.el.id + '_action', out, { priority: 'event' });
     }
 
-    // -- band toggle (class flips only; the band is in flow) ------------------
+    // -- advanced-band toggle (class flips only; the band is in flow) ---------
     _toggleBand() {
       this._open ? this._closeBand() : this._openBand();
     }
     _openBand() {
-      this.bandEl.classList.add('blockr-settings--open');
+      if (!this.advEl || !this.gearBtn) return;
+      this.advEl.classList.add('blockr-settings--open');
       this.el.classList.add('gg-settings-open');
       this._open = true;
       this.gearBtn.classList.add('blockr-gear-active');
       this.gearBtn.setAttribute('aria-expanded', 'true');
     }
     _closeBand() {
-      this.bandEl.classList.remove('blockr-settings--open');
+      if (!this.advEl || !this.gearBtn) return;
+      this.advEl.classList.remove('blockr-settings--open');
       this.el.classList.remove('gg-settings-open');
       this._open = false;
       this.gearBtn.classList.remove('blockr-gear-active');

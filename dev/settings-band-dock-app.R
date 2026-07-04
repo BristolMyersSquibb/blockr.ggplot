@@ -8,6 +8,7 @@
 suppressMessages({
   library(blockr.core)
   library(blockr.dock)
+  library(blockr.viz)
 })
 
 devtools::load_all(".", quiet = TRUE)

@@ -8,6 +8,11 @@
  * paired with a "Theme default" checkbox ('' = default); used by the theme
  * block in place of colourpicker (upstream candidate).
  *
+ * Further local extensions (all upstream candidates): host.typeIcon(t) may
+ * return an inline SVG rendered before the type-button label; the
+ * add-mapping menu closes on outside click (dropdown behavior, paired with
+ * the .dd-add-menu dropdown styling in gg-blocks.css).
+ *
  * DrilldownConfig — the shared gear-popover config engine for blockr drilldown
  * blocks (chart, table, …). Host-agnostic: it renders a grouped, role-spec
  * driven popover (Mapping / Presentation + a Drill-down section) and calls
@@ -206,7 +211,16 @@
           for (const t of g.types) {
             const btn = document.createElement('button');
             btn.className = 'dd-type-btn' + (t === cfg[this.h.typeKey] ? ' dd-type-active' : '');
-            btn.textContent = t;
+            // blockr.ggplot extension: optional subtle icon before the label.
+            const ic = this.h.typeIcon ? this.h.typeIcon(t) : '';
+            if (ic) {
+              btn.innerHTML = ic;
+              const lbl = document.createElement('span');
+              lbl.textContent = t;
+              btn.appendChild(lbl);
+            } else {
+              btn.textContent = t;
+            }
             btn.addEventListener('click', () => this._onType(t));
             btns.appendChild(btn);
           }
@@ -703,6 +717,15 @@
         e.stopPropagation();
         menu.style.display = (menu.style.display === 'none') ? '' : 'none';
       });
+      // blockr.ggplot extension: the menu is a dropdown (see gg-blocks.css),
+      // so it dismisses on outside click like any menu.
+      if (typeof Blockr !== 'undefined' && typeof Blockr.onDocClick === 'function') {
+        Blockr.onDocClick(wrap, (/** @type {MouseEvent} */ e) => {
+          if (!wrap.contains(/** @type {Node} */ (e.target))) {
+            menu.style.display = 'none';
+          }
+        });
+      }
       bar.appendChild(btn);
       wrap.appendChild(bar);
       wrap.appendChild(menu);
