@@ -62,7 +62,9 @@ test_that("histogram - changing x input updates mapping - testServer", {
       result <- session$returned$result()
       expect_equal(rlang::as_name(result$mapping$x), "mpg")
 
-      expr$setInputs(x = "hp")
+      expr$setInputs(
+        gg_block_action = list(action = "config", x = "hp")
+      )
       session$flushReact()
 
       result <- session$returned$result()
@@ -119,7 +121,9 @@ test_that("histogram - changing fill input updates mapping - testServer", {
       result <- session$returned$result()
       expect_null(result$mapping$fill)
 
-      expr$setInputs(fill = "cyl")
+      expr$setInputs(
+        gg_block_action = list(action = "config", fill = "cyl")
+      )
       session$flushReact()
 
       result <- session$returned$result()
@@ -182,7 +186,9 @@ test_that("histogram - changing color input updates mapping - testServer", {
       # Warning is thrown during setInputs (which triggers internal flush)
       expect_warning(
         {
-          expr$setInputs(color = "am")
+          expr$setInputs(
+            gg_block_action = list(action = "config", color = "am")
+          )
           session$flushReact()
         },
         "aesthetics were dropped"
@@ -245,7 +251,9 @@ test_that("histogram - changing alpha input updates mapping - testServer", {
       # Warning is thrown during setInputs (which triggers internal flush)
       expect_warning(
         {
-          expr$setInputs(alpha = "wt")
+          expr$setInputs(
+            gg_block_action = list(action = "config", alpha = "wt")
+          )
           session$flushReact()
         },
         "aesthetics were dropped"
@@ -307,7 +315,9 @@ test_that("histogram - changing bins input - testServer", {
       layer <- result$layers[[1]]
       expect_equal(layer$stat_params$bins, 30)
 
-      expr$setInputs(bins = 10)
+      expr$setInputs(
+        gg_block_action = list(action = "config", bins = 10)
+      )
       session$flushReact()
 
       result <- session$returned$result()
@@ -364,7 +374,9 @@ test_that("histogram - changing position input - testServer", {
       layer <- result$layers[[1]]
       expect_true(inherits(layer$position, "PositionStack"))
 
-      expr$setInputs(position = "identity")
+      expr$setInputs(
+        gg_block_action = list(action = "config", position = "identity")
+      )
       session$flushReact()
 
       result <- session$returned$result()

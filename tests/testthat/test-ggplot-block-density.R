@@ -62,7 +62,9 @@ test_that("density plot - changing x input updates mapping - testServer", {
       result <- session$returned$result()
       expect_equal(rlang::as_name(result$mapping$x), "mpg")
 
-      expr$setInputs(x = "hp")
+      expr$setInputs(
+        gg_block_action = list(action = "config", x = "hp")
+      )
       session$flushReact()
 
       result <- session$returned$result()
@@ -123,7 +125,9 @@ test_that("density plot - changing fill input updates mapping - testServer", {
       result <- session$returned$result()
       expect_null(result$mapping$fill)
 
-      expr$setInputs(fill = "cyl")
+      expr$setInputs(
+        gg_block_action = list(action = "config", fill = "cyl")
+      )
       session$flushReact()
 
       result <- session$returned$result()
@@ -183,7 +187,9 @@ test_that("density plot - changing density_alpha input - testServer", {
       layer <- result$layers[[1]]
       expect_equal(layer$aes_params$alpha, 0.8)
 
-      expr$setInputs(density_alpha = 0.3)
+      expr$setInputs(
+        gg_block_action = list(action = "config", density_alpha = 0.3)
+      )
       session$flushReact()
 
       result <- session$returned$result()

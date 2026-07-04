@@ -91,7 +91,9 @@ test_that("pie chart - changing x input updates mapping - testServer", {
       fill_expr <- deparse(result$mapping$fill)
       expect_true(grepl("cyl", fill_expr))
 
-      expr$setInputs(x = "gear")
+      expr$setInputs(
+        gg_block_action = list(action = "config", x = "gear")
+      )
       session$flushReact()
 
       result <- session$returned$result()
@@ -152,7 +154,9 @@ test_that("pie chart - changing fill input updates mapping - testServer", {
       expect_true(grepl("cyl", fill_expr))
 
       # Set explicit fill
-      expr$setInputs(fill = "am")
+      expr$setInputs(
+        gg_block_action = list(action = "config", fill = "am")
+      )
       session$flushReact()
 
       result <- session$returned$result()
@@ -214,7 +218,9 @@ test_that("pie chart - changing alpha input updates mapping - testServer", {
       # Alpha is dropped during stat_count, expect warning
       expect_warning(
         {
-          expr$setInputs(alpha = "mpg")
+          expr$setInputs(
+            gg_block_action = list(action = "config", alpha = "mpg")
+          )
           session$flushReact()
         },
         "aesthetics were dropped"
@@ -279,7 +285,9 @@ test_that("pie chart - changing donut input - testServer", {
       expect_true(inherits(result, "ggplot"))
 
       # Change to donut
-      expr$setInputs(donut = TRUE)
+      expr$setInputs(
+        gg_block_action = list(action = "config", donut = "on")
+      )
       session$flushReact()
 
       result <- session$returned$result()

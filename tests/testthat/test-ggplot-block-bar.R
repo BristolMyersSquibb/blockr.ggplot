@@ -95,7 +95,9 @@ test_that("bar plot - changing x input updates mapping - testServer", {
       expect_equal(rlang::as_name(result$mapping$x), "cyl")
 
       # Change x input
-      expr$setInputs(x = "gear")
+      expr$setInputs(
+        gg_block_action = list(action = "config", x = "gear")
+      )
       session$flushReact()
 
       result <- session$returned$result()
@@ -125,7 +127,9 @@ test_that("bar plot - changing y input updates mapping - testServer", {
       expect_null(result$mapping$y)
 
       # Add y input - should switch to geom_col
-      expr$setInputs(y = "mpg")
+      expr$setInputs(
+        gg_block_action = list(action = "config", y = "mpg")
+      )
       session$flushReact()
 
       result <- session$returned$result()
@@ -182,7 +186,9 @@ test_that("bar plot - changing fill input updates mapping - testServer", {
       result <- session$returned$result()
       expect_null(result$mapping$fill)
 
-      expr$setInputs(fill = "gear")
+      expr$setInputs(
+        gg_block_action = list(action = "config", fill = "gear")
+      )
       session$flushReact()
 
       result <- session$returned$result()
@@ -239,7 +245,9 @@ test_that("bar plot (geom_col) - color input updates mapping", {
       result <- session$returned$result()
       expect_null(result$mapping$colour)
 
-      expr$setInputs(color = "am")
+      expr$setInputs(
+        gg_block_action = list(action = "config", color = "am")
+      )
       session$flushReact()
 
       result <- session$returned$result()
@@ -292,7 +300,9 @@ test_that("bar plot (geom_col) - alpha input updates mapping", {
       result <- session$returned$result()
       expect_null(result$mapping$alpha)
 
-      expr$setInputs(alpha = "wt")
+      expr$setInputs(
+        gg_block_action = list(action = "config", alpha = "wt")
+      )
       session$flushReact()
 
       result <- session$returned$result()
@@ -355,7 +365,9 @@ test_that("bar plot - changing position input - testServer", {
       expect_true(inherits(layer$position, "PositionStack"))
 
       # Change to dodge
-      expr$setInputs(position = "dodge")
+      expr$setInputs(
+        gg_block_action = list(action = "config", position = "dodge")
+      )
       session$flushReact()
 
       result <- session$returned$result()
