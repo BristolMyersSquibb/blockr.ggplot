@@ -527,7 +527,7 @@
         // settings and plot down so everything stays visible.
         this.advEl = document.createElement('div');
         this.advEl.className =
-          'blockr-settings dd-popover gg-settings gg-settings-adv';
+          'blockr-settings blockr-settings--beak dd-popover gg-settings gg-settings-adv';
         this.el.insertBefore(this.advEl, first);
       }
 

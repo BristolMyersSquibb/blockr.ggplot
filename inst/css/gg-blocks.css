@@ -275,25 +275,9 @@
   flex-wrap: wrap;
 }
 
-/* Advanced band (opens directly under the gear header — placement P1):
-   connector T1, a beak on the band's top edge pointing at the gear that
-   opened it; the gear itself keeps .blockr-gear-active while open. The
-   26px gear is the last element on the right of the header. */
-.gg-settings-adv {
-  position: relative;
-}
-.gg-settings-adv.blockr-settings--open::before {
-  content: "";
-  position: absolute;
-  top: -6px;
-  right: 8px;
-  width: 10px;
-  height: 10px;
-  background: #fff;
-  border-left: 1px solid var(--blockr-color-border, #e5e7eb);
-  border-top: 1px solid var(--blockr-color-border, #e5e7eb);
-  transform: rotate(45deg);
-}
+/* Advanced band: opens directly under the gear header (placement P1);
+   the T1 beak connector comes from the shared settings-band.css via the
+   .blockr-settings--beak opt-in class on the band element. */
 
 /* Main settings area: always visible (the pre-band "main UI"), so it
    drops the band's box chrome and its title — only the gear-toggled

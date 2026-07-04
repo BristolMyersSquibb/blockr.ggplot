@@ -35,6 +35,28 @@
   gap: 0 14px;
 }
 
+/* Gear connector (design-system type-picker proposals, T1): bands opened
+   by a gear opt in via .blockr-settings--beak and grow a notch on their
+   top edge pointing at the 26px gear, which is the last element on the
+   right of the .blockr-gear-header above; the gear itself keeps
+   .blockr-gear-active while the band is open. Opt-in so always-open main
+   areas (e.g. blockr.ggplot's) don't get a beak. */
+.blockr-settings--beak {
+  position: relative;
+}
+.blockr-settings--beak.blockr-settings--open::before {
+  content: "";
+  position: absolute;
+  top: -6px;
+  right: 8px;
+  width: 10px;
+  height: 10px;
+  background: #fff;
+  border-left: 1px solid var(--blockr-color-border, #e5e7eb);
+  border-top: 1px solid var(--blockr-color-border, #e5e7eb);
+  transform: rotate(45deg);
+}
+
 /* Micro-label heading. The engine's title element keeps its dd-popover-title
    class; restyle it as the band heading. */
 .blockr-settings .dd-popover-title,

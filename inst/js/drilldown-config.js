@@ -1,21 +1,10 @@
 /**
  * CANONICAL SOURCE: blockr.viz/inst/js/drilldown-config.js — keep in sync.
- * Copied into blockr.ggplot per the design-system convention (shared assets
- * are copied until they graduate to blockr.ui). Local extension vs canonical:
- * _buildSlider reads role.min/max/step/unit (upstream candidate).
- *
- * Second local extension vs canonical: kind 'color' — a native color swatch
- * paired with a "Theme default" checkbox ('' = default); used by the theme
- * block in place of colourpicker (upstream candidate).
- *
- * Further local extensions (all upstream candidates): host.typeIcon(t) may
- * return an inline SVG rendered before the type-button label; the
- * add-mapping menu closes on outside click (dropdown behavior, paired with
- * the .dd-add-menu dropdown styling in gg-blocks.css); host.typeTiles
- * renders the type picker as an icon-over-label tile grid (design-system
- * type-picker proposal B) instead of the grouped strip — group labels
- * become a field label above the grid (or per-group headings when there is
- * more than one group).
+ * Copied verbatim (below this header) into blockr.ggplot per the
+ * design-system convention (shared assets are copied until they graduate
+ * to blockr.ui). The former local extensions (typeTiles, typeIcon, slider
+ * bounds, kind 'color', select ph, add-menu outside-click) are upstreamed
+ * and canonical now.
  *
  * DrilldownConfig — the shared gear-popover config engine for blockr drilldown
  * blocks (chart, table, …). Host-agnostic: it renders a grouped, role-spec
@@ -36,6 +25,11 @@
  *   secondary        -> Set of paired-tail role keys (skipped in section loops)
  *   typeKey          -> the config key the type picker writes (e.g. 'chart_type')
  *   typeGroups       -> [{label, types:[...]}] for the type picker, or null
+ *   typeTiles        -> render the type picker as an icon-over-label tile grid
+ *                       (design-system type-picker proposal B) instead of the
+ *                       segmented strip; group labels become a field label
+ *                       above the grid, or per-group headings with 2+ groups
+ *   typeIcon(t)      -> inline SVG for a type button/tile, or '' (optional)
  *   familyFor(type)  -> family string for a type, or null (no families)
  *   entryRequired(role) -> mark a section role required (chart: metric in aggregated)
  *   drillAutoLabel() -> label for the drill "Auto" option, or null (no drill section)
@@ -201,7 +195,7 @@
 
       // Type picker (optional — chart only)
       if (this.h.typeGroups && this.h.typeGroups.length && this.h.typeTiles) {
-        // blockr.ggplot extension: icon tile grid (proposal B). One group ->
+        // Tile type picker (design-system type-picker proposal B). One group ->
         // its label is a normal field label above the grid; several groups
         // -> per-group micro-headings inside one grid.
         const typesRow = document.createElement('div');
@@ -248,7 +242,7 @@
           for (const t of g.types) {
             const btn = document.createElement('button');
             btn.className = 'dd-type-btn' + (t === cfg[this.h.typeKey] ? ' dd-type-active' : '');
-            // blockr.ggplot extension: optional subtle icon before the label.
+            // Optional subtle icon before the label (host.typeIcon).
             const ic = this.h.typeIcon ? this.h.typeIcon(t) : '';
             if (ic) {
               btn.innerHTML = ic;
@@ -586,7 +580,7 @@
       }
     }
 
-    // blockr.ggplot extension: color control = native swatch + "Theme
+    // Color control (kind 'color') = native swatch + "Theme
     // default" checkbox. '' (empty) means "keep the theme default"; a hex
     // value overrides it. Picking a color unchecks the default box; checking
     // it clears the value (the swatch keeps its last hex for re-enabling).
@@ -632,8 +626,8 @@
      */
     _mkSelect(wrap, opts, selected, onSel, key, decorate) {
       if (typeof Blockr !== 'undefined' && Blockr.Select) {
-        // blockr.ggplot extension: role.ph doubles as the select placeholder
-        // so ''-valued options ("Auto", "None") don't render an empty control.
+        // role.ph doubles as the select placeholder so ''-valued options
+        // ("Auto", "None") don't render an empty control.
         const ph = (this._role(key) || {}).ph;
         this._selects[key] = Blockr.Select.single(wrap, { options: opts, selected, placeholder: ph, onChange: onSel });
       } else {
@@ -754,8 +748,8 @@
         e.stopPropagation();
         menu.style.display = (menu.style.display === 'none') ? '' : 'none';
       });
-      // blockr.ggplot extension: the menu is a dropdown (see gg-blocks.css),
-      // so it dismisses on outside click like any menu.
+      // The menu is a dropdown (styled in chart.css), so it dismisses on
+      // outside click like any menu.
       if (typeof Blockr !== 'undefined' && typeof Blockr.onDocClick === 'function') {
         Blockr.onDocClick(wrap, (/** @type {MouseEvent} */ e) => {
           if (!wrap.contains(/** @type {Node} */ (e.target))) {
