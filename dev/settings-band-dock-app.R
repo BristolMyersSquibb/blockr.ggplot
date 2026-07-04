@@ -8,7 +8,7 @@
 suppressMessages({
   library(blockr.core)
   library(blockr.dock)
-  library(blockr.viz)
+  pkgload::load_all("../blockr.viz")
   library(blockr.dm)
 })
 
