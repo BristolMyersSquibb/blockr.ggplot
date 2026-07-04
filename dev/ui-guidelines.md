@@ -40,8 +40,10 @@ Every block follows the blockr.viz pattern:
   (`fullFor` is the union the type-switch carry logic runs against; the
   main engine's `afterTypeChange` re-renders the advanced band). Role
   catalog kinds: `column | select | columns | segmented | slider | text |
-  color`. Advanced aesthetic roles render as always-visible `mapping`
-  entries (selects with "(none)"), matching the old advanced section.
+  color`. For the ggplot block, ALL optional aesthetics live in the main
+  "+ Add mapping" dropdown (they only show once added); the advanced band
+  holds just the chart-specific extras, and the gear hides entirely for
+  types without any (`_syncAdvVisibility`).
 
 - The plot itself stays `block_ui`'s server-rendered `plotOutput`
   **below** the container — unlike blockr.viz (client-side ECharts), JS

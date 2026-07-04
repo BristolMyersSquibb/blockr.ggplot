@@ -79,18 +79,18 @@
   /** @param {string} t */
   const ggSections = (t) => GG_TYPE_ROLES[t] || GG_TYPE_ROLES.point;
 
-  // Main-vs-advanced split, mirroring the pre-band UI: x/y/color/fill/size
-  // lived in the always-visible mappings section; shape/linetype/group/alpha
-  // and the chart-specific extras sat behind "Show advanced options".
-  const GG_MAIN_OPTIONAL = ['y', 'color', 'fill', 'size'];
-  const GG_ADV_OPTIONAL = ['shape', 'linetype', 'group', 'alpha'];
-
+  // Main-vs-advanced split: ALL optional aesthetics live in the main area's
+  // "+ Add mapping" dropdown (they only show once added, so they don't
+  // clutter it — no need for a separate advanced tier like the pre-band
+  // UI had). The advanced band holds only the chart-specific presentation
+  // extras (position, bins, donut, density opacity); for types without
+  // any, the gear is hidden entirely.
   /** @param {string} t */
   const ggMainFor = (t) => {
     const s = ggSections(t);
     return {
       requiredMap: s.requiredMap,
-      optionalMap: s.optionalMap.filter((k) => GG_MAIN_OPTIONAL.includes(k)),
+      optionalMap: s.optionalMap,
       mapping: [],
       presentation: []
     };
@@ -102,9 +102,7 @@
     return {
       requiredMap: [],
       optionalMap: [],
-      // The old advanced selects were always visible (with "(none)"), so
-      // they render as always-on mapping entries, not add-as-needed rows.
-      mapping: s.optionalMap.filter((k) => GG_ADV_OPTIONAL.includes(k)),
+      mapping: [],
       presentation: s.presentation
     };
   };
@@ -475,6 +473,8 @@
       this._open = false;
       /** @type {HTMLButtonElement | null} */
       this.gearBtn = null;
+      /** @type {HTMLDivElement | null} */
+      this.gearHeaderEl = null;
       /** @type {HTMLDivElement} */
       this.mainEl;
       /** @type {HTMLDivElement | null} */
@@ -499,6 +499,7 @@
 
       if (this.spec.advFor) {
         const gearHeader = document.createElement('div');
+        this.gearHeaderEl = gearHeader;
         gearHeader.className = 'blockr-gear-header';
         const gear = document.createElement('button');
         this.gearBtn = gear;
@@ -573,9 +574,13 @@
         familyFor: (/** @type {string} */ t) => t,
         title: main ? this.spec.title : this.spec.advTitle,
         // The main band re-renders on type switches; keep the advanced band
-        // in sync (it shows the type-specific extras).
+        // in sync (it shows the type-specific extras) and hide the gear
+        // entirely when the current type has no advanced settings.
         afterTypeChange: main
-          ? () => { if (this._cfgAdv) this._cfgAdv.render(); }
+          ? () => {
+            if (this._cfgAdv) this._cfgAdv.render();
+            this._syncAdvVisibility();
+          }
           : undefined,
         // The plot renders server-side: any change just echoes the config to
         // R; the state reactives re-run the plot expression.
@@ -617,6 +622,21 @@
         out[k] = (v === null || v === undefined) ? '' : v;
       }
       Shiny.setInputValue(this.el.id + '_action', out, { priority: 'event' });
+    }
+
+    // Hide the gear (and close the band) when the current type has no
+    // advanced settings — e.g. point/line/boxplot have no chart-specific
+    // extras, so there is nothing behind the gear.
+    _syncAdvVisibility() {
+      if (!this.advEl || !this.gearHeaderEl) return;
+      const cur = this.spec.typeKey ? this.config[this.spec.typeKey] : null;
+      const s = this.spec.advFor(cur);
+      const empty = !s || (
+        !s.requiredMap.length && !s.optionalMap.length &&
+        !s.mapping.length && !s.presentation.length
+      );
+      if (empty && this._open) this._closeBand();
+      this.gearHeaderEl.style.display = empty ? 'none' : '';
     }
 
     // -- advanced-band toggle (class flips only; the band is in flow) ---------
