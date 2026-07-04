@@ -17,10 +17,6 @@ Blocks for creating plots with ggplot2
 
 Internal UI components and helper functions
 
-- [`block_container_script()`](https://bristolmyerssquibb.github.io/blockr.ggplot/reference/block_container_script.md)
-  : Generate container query script for responsive blocks
-- [`block_responsive_css()`](https://bristolmyerssquibb.github.io/blockr.ggplot/reference/block_responsive_css.md)
-  : Generate responsive CSS for blockr blocks
 - [`new_ggplot_transform_block()`](https://bristolmyerssquibb.github.io/blockr.ggplot/reference/new_ggplot_transform_block.md)
   : ggplot transform block constructor
 - [`blockr.ggplot`](https://bristolmyerssquibb.github.io/blockr.ggplot/reference/blockr.ggplot-package.md)
