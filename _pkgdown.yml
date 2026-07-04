@@ -25,8 +25,6 @@ reference:
 - title: Internal Functions
   desc: Internal UI components and helper functions
   contents:
-  - block_container_script
-  - block_responsive_css
   - new_ggplot_transform_block
   - has_keyword("internal")
 
