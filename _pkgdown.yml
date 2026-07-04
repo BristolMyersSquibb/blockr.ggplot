@@ -4,34 +4,21 @@ template:
 
 navbar:
   structure:
-    left: [intro, reference, articles, news]
+    left: [intro, reference, news]
     right: [search, github]
-  components:
-    articles:
-      text: Articles
-      menu:
-      - text: Showcase
-        href: articles/blockr-ggplot-showcase.html
 
 reference:
 - title: Visualization Blocks
   desc: Blocks for creating plots with ggplot2
   contents:
-  - new_ggplot_block
-  - new_facet_block
-  - new_theme_block
-  - new_grid_block
-
+    - new_ggplot_block
+    - new_facet_block
+    - new_theme_block
+    - new_grid_block
 - title: Internal Functions
   desc: Internal UI components and helper functions
   contents:
-  - block_container_script
-  - block_responsive_css
-  - new_ggplot_transform_block
-  - has_keyword("internal")
-
-articles:
-- title: Getting Started
-  navbar: ~
-  contents:
-  - blockr-ggplot-showcase
+    - block_container_script
+    - block_responsive_css
+    - new_ggplot_transform_block
+    - has_keyword("internal")
