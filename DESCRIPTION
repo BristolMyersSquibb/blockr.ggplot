@@ -1,6 +1,6 @@
 Package: blockr.ggplot
 Title: Interactive 'ggplot2' Visualization Blocks
-Version: 0.1.1
+Version: 0.1.1.9000
 Authors@R:
     c(person(given = "Christoph",
              family = "Sax",
