@@ -310,10 +310,7 @@ validate_block_screenshot(
 # =============================================================================
 cat("14/14 - grid block\n")
 validate_block_screenshot(
-  block = new_grid_block(
-    layout = "horizontal",
-    n_plots = 2
-  ),
+  block = new_grid_block(),
   data = mtcars,
   filename = "block-grid.png",
   output_dir = "man/figures",

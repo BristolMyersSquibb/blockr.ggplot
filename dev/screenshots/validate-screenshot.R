@@ -409,11 +409,14 @@ blockr.core::serve(
       if (expand_advanced) {
         tryCatch(
           {
-            # Click all advanced toggles on the page
+            # Click all advanced toggles on the page. The JS-first settings
+            # band (blockr.ggplot >= 0.1.1) opens its advanced options via a
+            # gear button (.blockr-gear-btn); older blocks used
+            # .block-advanced-toggle. Click whichever exists.
             app$run_js(
               "
-              var toggles = document.querySelectorAll('.block-advanced-toggle');
-              toggles.forEach(function(toggle) {
+              var sel = '.blockr-gear-btn, .block-advanced-toggle';
+              document.querySelectorAll(sel).forEach(function(toggle) {
                 toggle.click();
               });
               "
