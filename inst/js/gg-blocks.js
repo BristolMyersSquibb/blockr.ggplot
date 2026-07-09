@@ -259,9 +259,20 @@
 
   /** @type {Record<string, any>} */
   const FACET_ROLES = {
-    facets: { label: 'Facet by', kind: 'columns', placeholder: 'None' },
-    rows:   { label: 'Rows',     kind: 'columns', placeholder: 'None' },
-    cols:   { label: 'Columns',  kind: 'columns', placeholder: 'None' },
+    // Hints are terse noun phrases (the label already says what the field
+    // is), matching blockr.viz's "column to aggregate…" help lines.
+    facets: {
+      label: 'Facet by', kind: 'columns', placeholder: 'None',
+      hint: 'one or more columns'
+    },
+    rows:   {
+      label: 'Rows', kind: 'columns', placeholder: 'None',
+      hint: 'one or more columns'
+    },
+    cols:   {
+      label: 'Columns', kind: 'columns', placeholder: 'None',
+      hint: 'one or more columns'
+    },
     ncol: {
       label: 'Columns', kind: 'select', ph: 'Auto',
       options: [{ value: '', label: 'Auto' }, '1', '2', '3', '4', '5']

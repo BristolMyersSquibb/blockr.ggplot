@@ -72,7 +72,12 @@
     // -- small helpers --------------------------------------------------------
     get _SECONDARY() { return this.h.secondary; }
     /** @param {*} v */
-    _hasVal(v) { return v !== null && v !== undefined && v !== '' && v !== '(none)'; }
+    // An empty multi-column selection ([]) counts as "no value": otherwise a
+    // required `columns` role never gets the amber required-empty cue.
+    _hasVal(v) {
+      if (Array.isArray(v)) return v.length > 0;
+      return v !== null && v !== undefined && v !== '' && v !== '(none)';
+    }
     _cols() { return this.h.columns() || []; }
     _cfg() { return this.h.config(); }
     /** @param {string} key */
@@ -174,7 +179,10 @@
       if (this._hasVal(value)) return '';
       const role = this._role(key);
       if (!role) return '';
-      return (role.hintBy && role.hintBy[this.h.context()]) || role.ph || '';
+      // `hint` is a context-independent help line; `hintBy` keys it by
+      // context; `ph` (the placeholder) is the last-resort fallback.
+      return (role.hintBy && role.hintBy[this.h.context()]) || role.hint ||
+        role.ph || '';
     }
 
     // -- render ---------------------------------------------------------------
@@ -613,7 +621,8 @@
           !this._hasVal(this._cfg()[key]));
       };
       const setHelp = () => {
-        if (role.kind !== 'column' || (reversed && !usesMetric())) {
+        const picker = role.kind === 'column' || role.kind === 'columns';
+        if (!picker || (reversed && !usesMetric())) {
           helpEl.style.display = 'none'; return;
         }
         const txt = this._fieldHelp(key, this._cfg()[key]);

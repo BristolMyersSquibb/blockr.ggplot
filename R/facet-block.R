@@ -446,15 +446,12 @@ new_facet_block <- function(
             current_type <- r_facet_type()
 
             if (current_type == "wrap") {
-              # Calculate number of unique levels for preview
+              # Nothing to preview yet, and nothing to say: the "Facet by"
+              # field carries the amber required-empty cue and the help line
+              # beneath it (engine requiredMap + role hint). No banner, no
+              # duplicated instruction down here.
               if (length(r_facets()) == 0) {
-                # Quiet hint only \u2014 the "Facet by" field itself carries the
-                # amber required-empty cue (engine requiredMap), per the
-                # design-system convention; no warning banner.
-                return(tags$div(
-                  style = "font-size: 0.875rem; color: #6c757d;",
-                  "Select one or more columns to facet by"
-                ))
+                return(NULL)
               }
 
               # Use actual data to count unique levels
@@ -469,12 +466,10 @@ new_facet_block <- function(
                 dir = r_dir()
               )
             } else {
-              # facet_grid
+              # facet_grid: rows and cols are either-or, so neither field is
+              # marked required; their help lines carry the instruction.
               if (length(r_rows()) == 0 && length(r_cols()) == 0) {
-                return(tags$div(
-                  style = "font-size: 0.875rem; color: #6c757d;",
-                  "Select row and/or column variables"
-                ))
+                return(NULL)
               }
 
               # Use actual data to count unique levels
