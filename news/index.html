@@ -37,6 +37,15 @@
     </div>
 
     <div class="section level2">
+<h2 class="pkg-version" data-toc-text="development version" id="blockrggplot-development-version">blockr.ggplot (development version)<a class="anchor" aria-label="anchor" href="#blockrggplot-development-version"></a></h2>
+<div class="section level3">
+<h3 id="improvements-development-version">Improvements<a class="anchor" aria-label="anchor" href="#improvements-development-version"></a></h3>
+<ul><li>Text inputs in the settings band (grid block title, subtitle, caption) now commit on Enter or blur with an “Enter ↵” confirm chip instead of auto-submitting on a 300ms debounce, following the design-system text-commit convention (shared drilldown engine, re-vendored from blockr.viz).</li>
+<li>Design-token fallback fixes: slider accent and preview-status colors now fall back to the canonical design-system values (<code>#2563eb</code> primary, <code>#16a34a</code> success, <code>#b45309</code> warning text, <code>#dc2626</code> danger).</li>
+<li>The facet and grid blocks no longer show a yellow warning banner when unconfigured: the facet “Facet by” field carries the amber required-empty cue instead, and both previews show a quiet muted one-line hint (design-system convention).</li>
+</ul></div>
+</div>
+    <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.1.0" id="blockrggplot-010">blockr.ggplot 0.1.0<a class="anchor" aria-label="anchor" href="#blockrggplot-010"></a></h2><p class="text-muted">CRAN release: 2025-12-18</p>
 <p>Initial CRAN release.</p>
 <div class="section level3">
@@ -92,7 +101,7 @@
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
     </footer></div>
