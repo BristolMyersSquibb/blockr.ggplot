@@ -18,7 +18,8 @@ ggplot_block_deps <- function() {
     blockr_select_dep(),
     htmltools::htmlDependency(
       name = "gg-settings-band",
-      version = utils::packageVersion("blockr.ggplot"),
+      # Bump the suffix on every settings-band.css/js edit (asset cache).
+      version = paste0(utils::packageVersion("blockr.ggplot"), ".1"),
       src = system.file(package = "blockr.ggplot"),
       script = "js/settings-band.js",
       stylesheet = "css/settings-band.css"
