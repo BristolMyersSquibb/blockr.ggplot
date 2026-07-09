@@ -54,6 +54,19 @@
   box-sizing: border-box;
 }
 
+/* Text input + "Enter ↵" commit chip (design-system §5.5 confirm cycle). */
+.dd-text-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+}
+
+.dd-text-wrap .blockr-popover-input {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
 /* Fallback native select (only when Blockr.Select is unavailable). */
 .dd-cfg-select {
   width: 100%;
@@ -218,7 +231,7 @@
 }
 .dd-slider {
   width: 100%;
-  accent-color: var(--blockr-color-primary, #0072B2);
+  accent-color: var(--blockr-color-primary, #2563eb);
   cursor: pointer;
 }
 .dd-slider-value {
@@ -427,13 +440,13 @@
   margin-bottom: 8px;
 }
 .preview-status {
-  font-size: var(--blockr-font-size-sm, 0.875rem);
-  color: var(--blockr-grey-500, #6c757d);
+  font-size: var(--blockr-font-size-sm, 0.8125rem);
+  color: var(--blockr-grey-500, #6b7280);
   text-align: center;
   padding: 6px 8px;
   border-radius: 4px;
-  background-color: var(--blockr-grey-50, #f8f9fa);
+  background-color: var(--blockr-grey-50, #f9fafb);
 }
-.preview-status.valid { color: var(--blockr-color-success, #28a745); }
-.preview-status.warning { color: var(--blockr-color-warning, #ffc107); }
-.preview-status.error { color: var(--blockr-color-danger, #dc3545); }
+.preview-status.valid { color: var(--blockr-color-success, #16a34a); }
+.preview-status.warning { color: var(--blockr-color-warning-text, #b45309); }
+.preview-status.error { color: var(--blockr-color-danger, #dc2626); }

@@ -1,3 +1,16 @@
+# blockr.ggplot (development version)
+
+## Improvements
+
+- Text inputs in the settings band (grid block title, subtitle, caption)
+  now commit on Enter or blur with an "Enter ↵" confirm chip instead of
+  auto-submitting on a 300ms debounce, following the design-system
+  text-commit convention (shared drilldown engine, re-vendored from
+  blockr.viz).
+- Design-token fallback fixes: slider accent and preview-status colors now
+  fall back to the canonical design-system values (`#2563eb` primary,
+  `#16a34a` success, `#b45309` warning text, `#dc2626` danger).
+
 # blockr.ggplot 0.1.0
 
 Initial CRAN release.
