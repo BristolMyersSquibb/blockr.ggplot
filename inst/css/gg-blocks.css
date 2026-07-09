@@ -54,17 +54,27 @@
   box-sizing: border-box;
 }
 
-/* Text input + "Enter ↵" commit chip (design-system §5.5 confirm cycle). */
+/* Text input + "Enter ↵" commit chip (design-system §5.5 confirm cycle).
+   The chip overlays inside the field's right edge, matching the chips in
+   blockr.dplyr's rows and blockr.io's path input. */
 .dd-text-wrap {
+  position: relative;
   display: flex;
   align-items: center;
-  gap: 6px;
   width: 100%;
 }
 
 .dd-text-wrap .blockr-popover-input {
   flex: 1 1 auto;
   min-width: 0;
+  padding-right: 78px;
+}
+
+.dd-text-wrap .blockr-expr-confirm {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
 }
 
 /* Fallback native select (only when Blockr.Select is unavailable). */
