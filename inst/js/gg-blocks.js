@@ -23,8 +23,13 @@
   // Shiny selects, which offered every column; the R expression wraps
   // shape/linetype/discrete-fill in as.factor() where needed).
   const GG_ROLES = {
-    x:        { label: 'X-axis',       kind: 'column', colType: 'any' },
-    y:        { label: 'Y-axis',       kind: 'column', colType: 'any' },
+    // x/y are required, so empty is not a configuration to name: the
+    // placeholder says what to supply. The optional roles below are never
+    // blank — they carry a `(none)` option which displays when unset.
+    x:        { label: 'X-axis',       kind: 'column', colType: 'any',
+                ph: 'Select column…' },
+    y:        { label: 'Y-axis',       kind: 'column', colType: 'any',
+                ph: 'Select column…' },
     color:    { label: 'Color by',     kind: 'column', colType: 'any' },
     fill:     { label: 'Fill by',      kind: 'column', colType: 'any' },
     size:     { label: 'Size by',      kind: 'column', colType: 'any' },
@@ -259,20 +264,12 @@
 
   /** @type {Record<string, any>} */
   const FACET_ROLES = {
-    // Hints are terse noun phrases (the label already says what the field
-    // is), matching blockr.viz's "column to aggregate…" help lines.
-    facets: {
-      label: 'Facet by', kind: 'columns', placeholder: 'None',
-      hint: 'one or more columns'
-    },
-    rows:   {
-      label: 'Rows', kind: 'columns', placeholder: 'None',
-      hint: 'one or more columns'
-    },
-    cols:   {
-      label: 'Columns', kind: 'columns', placeholder: 'None',
-      hint: 'one or more columns'
-    },
+    // No `hint`: the label names the field and the picker lists the columns,
+    // so a help line here would only restate them (design-system ux-principles,
+    // "Help text earns its place").
+    facets: { label: 'Facet by', kind: 'columns', placeholder: 'None' },
+    rows:   { label: 'Rows', kind: 'columns', placeholder: 'None' },
+    cols:   { label: 'Columns', kind: 'columns', placeholder: 'None' },
     ncol: {
       label: 'Columns', kind: 'select', ph: 'Auto',
       options: [{ value: '', label: 'Auto' }, '1', '2', '3', '4', '5']

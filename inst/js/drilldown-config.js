@@ -1,4 +1,7 @@
 /**
+ * CANONICAL SOURCE: blockr.viz/inst/js/drilldown-config.js
+ * Vendored verbatim into blockr.ggplot/inst/js/. Edit here, then copy across.
+ *
  * DrilldownConfig — the shared gear-popover config engine for blockr drilldown
  * blocks (chart, table, …). Host-agnostic: it renders a grouped, role-spec
  * driven popover (Mapping / Presentation + a Drill-down section) and calls
@@ -170,19 +173,22 @@
       return typeof e === 'string' || !e.types || e.types.includes(this.h.currentType());
     }
 
-    /** @param {string} key @param {*} value */
-    _fieldHelp(key, value) {
-      // Filled fields get no help line: the select's value display already
-      // shows `name  label` (labels-everywhere, blockr-select.js
-      // fillOptContent), so echoing `name (label)` here would duplicate it.
-      // The help line only surfaces the role hint while the field is empty.
-      if (this._hasVal(value)) return '';
+    /**
+     * A help line speaks about the field's VALUE, so it renders whatever the
+     * value is, empty or not. It must never restate the placeholder, which
+     * speaks about the empty slot and disappears on fill, nor the label, which
+     * names the field. See blockr.docs design-system/ux-principles.md.
+     *
+     * There is deliberately no `role.ph` fallback: echoing the placeholder
+     * beneath its own control printed the same string twice.
+     *
+     * @param {string} key
+     */
+    _fieldHelp(key) {
       const role = this._role(key);
       if (!role) return '';
-      // `hint` is a context-independent help line; `hintBy` keys it by
-      // context; `ph` (the placeholder) is the last-resort fallback.
-      return (role.hintBy && role.hintBy[this.h.context()]) || role.hint ||
-        role.ph || '';
+      // `hint` is a context-independent help line; `hintBy` keys it by context.
+      return (role.hintBy && role.hintBy[this.h.context()]) || role.hint || '';
     }
 
     // -- render ---------------------------------------------------------------
@@ -625,7 +631,7 @@
         if (!picker || (reversed && !usesMetric())) {
           helpEl.style.display = 'none'; return;
         }
-        const txt = this._fieldHelp(key, this._cfg()[key]);
+        const txt = this._fieldHelp(key);
         helpEl.textContent = txt;
         helpEl.style.display = txt ? '' : 'none';
       };
@@ -1185,9 +1191,11 @@
      */
     _mkSelect(wrap, opts, selected, onSel, key, decorate) {
       if (typeof Blockr !== 'undefined' && Blockr.Select) {
-        // role.ph doubles as the select placeholder so ''-valued options
-        // ("Auto", "None") don't render an empty control.
-        const ph = (this._role(key) || {}).ph;
+        // The placeholder speaks for the empty slot: on an optional field it
+        // names what empty does ("Auto", "None"), on a required one it says
+        // what to supply. `phBy` keys it by context, like colTypeBy.
+        const role = this._role(key) || {};
+        const ph = (role.phBy && role.phBy[this.h.context()]) || role.ph;
         this._selects[key] = Blockr.Select.single(wrap, { options: opts, selected, placeholder: ph, onChange: onSel });
       } else {
         const s = document.createElement('select');

@@ -447,9 +447,8 @@ new_facet_block <- function(
 
             if (current_type == "wrap") {
               # Nothing to preview yet, and nothing to say: the "Facet by"
-              # field carries the amber required-empty cue and the help line
-              # beneath it (engine requiredMap + role hint). No banner, no
-              # duplicated instruction down here.
+              # field carries the amber required-empty cue (engine
+              # requiredMap). No banner, no duplicated instruction down here.
               if (length(r_facets()) == 0) {
                 return(NULL)
               }
