@@ -10,6 +10,10 @@
 - Design-token fallback fixes: slider accent and preview-status colors now
   fall back to the canonical design-system values (`#2563eb` primary,
   `#16a34a` success, `#b45309` warning text, `#dc2626` danger).
+- The facet and grid blocks no longer show a yellow warning banner when
+  unconfigured: the facet "Facet by" field carries the amber
+  required-empty cue instead, and both previews show a quiet muted
+  one-line hint (design-system convention).
 
 # blockr.ggplot 0.1.0
 

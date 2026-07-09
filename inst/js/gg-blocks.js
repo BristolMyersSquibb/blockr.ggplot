@@ -311,8 +311,11 @@
   /** @type {Record<string, { requiredMap: string[], optionalMap: string[], mapping: any[], presentation: any[] }>} */
   const FACET_TYPE_MAIN = {
     wrap: {
-      requiredMap: [], optionalMap: [],
-      mapping: ['facets'],
+      // facets is required-empty: facet_wrap with no variables is a
+      // pass-through, so the field gets the soft amber cue (the R-side
+      // preview keeps a muted one-line hint, no warning banner).
+      requiredMap: ['facets'], optionalMap: [],
+      mapping: [],
       presentation: ['ncol', 'nrow', 'scales']
     },
     grid: {

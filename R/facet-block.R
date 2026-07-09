@@ -448,14 +448,12 @@ new_facet_block <- function(
             if (current_type == "wrap") {
               # Calculate number of unique levels for preview
               if (length(r_facets()) == 0) {
+                # Quiet hint only \u2014 the "Facet by" field itself carries the
+                # amber required-empty cue (engine requiredMap), per the
+                # design-system convention; no warning banner.
                 return(tags$div(
-                  style = paste(
-                    "padding: 10px; background: #fff3cd;",
-                    "border-radius: 4px; margin-bottom: 15px;"
-                  ),
-                  tags$strong("\u26a0\ufe0f Select facet variable(s)"),
-                  tags$br(),
-                  "Choose one or more columns to facet by"
+                  style = "font-size: 0.875rem; color: #6c757d;",
+                  "Select one or more columns to facet by"
                 ))
               }
 
