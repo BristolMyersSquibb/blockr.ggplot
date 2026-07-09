@@ -308,16 +308,12 @@ new_grid_block <- function(
             ncol_val <- r_ncol()
             nrow_val <- r_nrow()
 
-            # Handle case where no plots are connected yet
+            # Handle case where no plots are connected yet \u2014 quiet muted
+            # hint, not a warning banner (design-system convention).
             if (n_plots == 0) {
               return(tags$div(
-                style = paste(
-                  "padding: 10px; background: #fff3cd;",
-                  "border-radius: 4px; margin-bottom: 15px;"
-                ),
-                tags$strong("\u26a0\ufe0f Waiting for input plots"),
-                tags$br(),
-                "Connect 1 or more ggplot blocks to create a grid"
+                style = "font-size: 0.875rem; color: #6c757d;",
+                "Connect one or more ggplot blocks to create a grid"
               ))
             }
 

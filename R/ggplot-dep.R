@@ -18,14 +18,15 @@ ggplot_block_deps <- function() {
     blockr_select_dep(),
     htmltools::htmlDependency(
       name = "gg-settings-band",
-      version = utils::packageVersion("blockr.ggplot"),
+      # Bump the suffix on every settings-band.css/js edit (asset cache).
+      version = paste0(utils::packageVersion("blockr.ggplot"), ".1"),
       src = system.file(package = "blockr.ggplot"),
       script = "js/settings-band.js",
       stylesheet = "css/settings-band.css"
     ),
     htmltools::htmlDependency(
       name = "gg-blocks-js",
-      version = paste0(utils::packageVersion("blockr.ggplot"), ".6"),
+      version = paste0(utils::packageVersion("blockr.ggplot"), ".10"),
       src = system.file("js", package = "blockr.ggplot"),
       # drilldown-config.js (the shared gear/settings-band engine) must load
       # BEFORE gg-blocks.js, which references Blockr.DrilldownConfig.
@@ -33,7 +34,7 @@ ggplot_block_deps <- function() {
     ),
     htmltools::htmlDependency(
       name = "gg-blocks-css",
-      version = paste0(utils::packageVersion("blockr.ggplot"), ".6"),
+      version = paste0(utils::packageVersion("blockr.ggplot"), ".10"),
       src = system.file("css", package = "blockr.ggplot"),
       stylesheet = "gg-blocks.css"
     )

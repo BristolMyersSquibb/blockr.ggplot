@@ -72,7 +72,12 @@
     // -- small helpers --------------------------------------------------------
     get _SECONDARY() { return this.h.secondary; }
     /** @param {*} v */
-    _hasVal(v) { return v !== null && v !== undefined && v !== '' && v !== '(none)'; }
+    // An empty multi-column selection ([]) counts as "no value": otherwise a
+    // required `columns` role never gets the amber required-empty cue.
+    _hasVal(v) {
+      if (Array.isArray(v)) return v.length > 0;
+      return v !== null && v !== undefined && v !== '' && v !== '(none)';
+    }
     _cols() { return this.h.columns() || []; }
     _cfg() { return this.h.config(); }
     /** @param {string} key */
@@ -174,7 +179,10 @@
       if (this._hasVal(value)) return '';
       const role = this._role(key);
       if (!role) return '';
-      return (role.hintBy && role.hintBy[this.h.context()]) || role.ph || '';
+      // `hint` is a context-independent help line; `hintBy` keys it by
+      // context; `ph` (the placeholder) is the last-resort fallback.
+      return (role.hintBy && role.hintBy[this.h.context()]) || role.hint ||
+        role.ph || '';
     }
 
     // -- render ---------------------------------------------------------------
@@ -613,7 +621,8 @@
           !this._hasVal(this._cfg()[key]));
       };
       const setHelp = () => {
-        if (role.kind !== 'column' || (reversed && !usesMetric())) {
+        const picker = role.kind === 'column' || role.kind === 'columns';
+        if (!picker || (reversed && !usesMetric())) {
           helpEl.style.display = 'none'; return;
         }
         const txt = this._fieldHelp(key, this._cfg()[key]);
@@ -1068,19 +1077,61 @@
         // Canonical popover text input (blockr.dplyr blockr-blocks.css). Note:
         // no .dd-picker-wrap here — that wrapper carries its own border for the
         // borderless Blockr.Select; a bordered input inside it double-borders.
+        // Commit model (design-system §5.5): typing never mutates cfg — the
+        // value commits on Enter, blur or the "Enter ↵" chip, which then fades
+        // to ✓; Escape reverts to the last committed value.
         const inp = document.createElement('input');
         inp.type = 'text';
         inp.className = 'blockr-popover-input';
         inp.value = (cfg[key] == null) ? '' : String(cfg[key]);
         if (role.ph) inp.placeholder = role.ph;
-        /** @type {ReturnType<typeof setTimeout> | undefined} */
-        let deb;
-        inp.addEventListener('input', () => {
+        const wrap = document.createElement('div');
+        wrap.className = 'dd-text-wrap';
+        const chip = document.createElement('button');
+        chip.type = 'button';
+        chip.className = 'blockr-expr-confirm dd-text-commit';
+        chip.title = 'Apply (Enter)';
+        chip.setAttribute('aria-label', 'Apply (Enter)');
+        chip.style.display = 'none';
+        let committed = inp.value;
+        let everCommitted = false;
+        const confirmIcon = () =>
+          (typeof Blockr !== 'undefined' && Blockr.icons && Blockr.icons.confirm) ?
+            Blockr.icons.confirm : '✓';
+        const syncChip = () => {
+          if (inp.value !== committed) {
+            chip.style.display = '';
+            chip.classList.remove('confirmed');
+            chip.innerHTML = 'Enter <span class="blockr-kbd">↵</span>';
+          } else if (everCommitted) {
+            chip.style.display = '';
+            chip.classList.add('confirmed');
+            chip.innerHTML = confirmIcon();
+          } else {
+            chip.style.display = 'none';
+          }
+        };
+        const commit = () => {
+          if (inp.value === committed) return;
+          committed = inp.value;
+          everCommitted = true;
           cfg[key] = inp.value;
-          clearTimeout(deb);
-          deb = setTimeout(() => { cb(); this.h.onChange(key); }, 300);
+          cb();
+          this.h.onChange(key);
+          syncChip();
+        };
+        inp.addEventListener('input', syncChip);
+        inp.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') { e.preventDefault(); commit(); }
+          else if (e.key === 'Escape') { inp.value = committed; syncChip(); }
         });
-        parent.appendChild(inp);
+        inp.addEventListener('blur', commit);
+        // Keep focus on the input so the chip click doesn't race blur-commit.
+        chip.addEventListener('mousedown', (e) => e.preventDefault());
+        chip.addEventListener('click', commit);
+        wrap.appendChild(inp);
+        wrap.appendChild(chip);
+        parent.appendChild(wrap);
       } else if (role.kind === 'slider') {
         this._buildSlider(parent, key);
       } else if (role.kind === 'color') {
