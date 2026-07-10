@@ -26,7 +26,7 @@ ggplot_block_deps <- function() {
     ),
     htmltools::htmlDependency(
       name = "gg-blocks-js",
-      version = paste0(utils::packageVersion("blockr.ggplot"), ".10"),
+      version = paste0(utils::packageVersion("blockr.ggplot"), ".11"),
       src = system.file("js", package = "blockr.ggplot"),
       # drilldown-config.js (the shared gear/settings-band engine) must load
       # BEFORE gg-blocks.js, which references Blockr.DrilldownConfig.
