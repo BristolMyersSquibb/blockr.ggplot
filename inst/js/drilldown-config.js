@@ -1,3 +1,4 @@
+// @ts-check
 /**
  * CANONICAL SOURCE: blockr.viz/inst/js/drilldown-config.js
  * Vendored verbatim into blockr.ggplot/inst/js/. Edit here, then copy across.
@@ -786,7 +787,7 @@
             ? 'All numeric columns' : 'column(s)…';
           if (S && S.multi) {
             S.multi(colsWrap, {
-              options: opts, selected: (m.cols || []).slice(), reorderable: false,
+              options: opts, selected: (m.cols || []).slice(),
               placeholder: ph,
               onChange: (/** @type {string[]} */ vals) => { m.cols = vals; commit(); }
             });
@@ -875,7 +876,7 @@
         if (S && S.multi) {
           S.multi(colsWrap, {
             options: this._colOptsByType('num'),
-            selected: (s.cols || []).slice(), reorderable: false,
+            selected: (s.cols || []).slice(),
             placeholder: 'All numeric columns',
             onChange: (/** @type {string[]} */ vals) => { s.cols = vals; commit(); }
           });
@@ -1026,6 +1027,10 @@
         // Multi-column scope picker. Wires the existing Blockr.Select.multi
         // primitive; empty selection is meaningful (= "all", per the host's
         // placeholder), so there is no '(none)' option. Value is an array.
+        // Pick order is semantic for every consumer of this role -- the
+        // table's group keys nest and lead the output columns, the chart's
+        // tooltip fields print in order, ggplot's facet vars order the
+        // panels -- so the chips stay drag-reorderable (the default).
         const opts = this._colOptionsFor(key, { required: true });
         const sel = Array.isArray(cfg[key]) ? cfg[key].slice() : [];
         const wrap = document.createElement('div');
@@ -1040,7 +1045,7 @@
         };
         if (typeof Blockr !== 'undefined' && Blockr.Select && Blockr.Select.multi) {
           this._selects[key] = Blockr.Select.multi(wrap, {
-            options: opts, selected: sel, reorderable: false,
+            options: opts, selected: sel,
             placeholder: role.placeholder || 'All', onChange: onSel
           });
         } else {
