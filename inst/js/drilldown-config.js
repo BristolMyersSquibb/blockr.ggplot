@@ -1,3 +1,4 @@
+// @ts-check
 /**
  * CANONICAL SOURCE: blockr.viz/inst/js/drilldown-config.js
  * Vendored verbatim into blockr.ggplot/inst/js/. Edit here, then copy across.
