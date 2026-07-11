@@ -12,7 +12,7 @@
 #'
 #' @importFrom blockr.dplyr blockr_blocks_css_dep blockr_select_dep
 #' @noRd
-ggplot_block_deps <- function() {
+ggplot_block_deps <- memoise0(function() {
   htmltools::tagList(
     blockr_blocks_css_dep(),
     blockr_select_dep(),
@@ -39,4 +39,4 @@ ggplot_block_deps <- function() {
       stylesheet = "gg-blocks.css"
     )
   )
-}
+})
