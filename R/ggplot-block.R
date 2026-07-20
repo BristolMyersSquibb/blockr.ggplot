@@ -425,7 +425,11 @@ new_ggplot_block <- function(
               }
 
               text <- glue::glue(
-                "ggplot2::ggplot(data, ggplot2::aes({aes_text})) + ",
+                # `.(data)` (not a bare `data`) so blockr.core's bquoted
+                # export substitutes the upstream block's name in place:
+                # `ggplot2::ggplot(sub, ...)` rather than wrapping the whole
+                # call in `with(list(data = sub), ...)`. See expr_type below.
+                "ggplot2::ggplot(.(data), ggplot2::aes({aes_text})) + ",
                 "{geom_call}"
               )
 
@@ -433,25 +437,25 @@ new_ggplot_block <- function(
               if (current_type == "pie") {
                 # Pie charts: add polar coordinates and theme
                 text <- glue::glue(
-                  "({text}) + ggplot2::coord_polar('y', start = 0) + ",
+                  "{text} + ggplot2::coord_polar('y', start = 0) + ",
                   "ggplot2::theme_minimal()"
                 )
 
                 # Add donut hole if requested
                 if (r_donut()) {
-                  text <- glue::glue("({text}) + ggplot2::xlim(c(0.2, 2.5))")
+                  text <- glue::glue("{text} + ggplot2::xlim(c(0.2, 2.5))")
                 }
 
                 # For better pie chart appearance, remove axis elements
                 text <- glue::glue(
-                  "({text}) + ggplot2::theme(",
+                  "{text} + ggplot2::theme(",
                   "axis.title = ggplot2::element_blank(), ",
                   "axis.text = ggplot2::element_blank(), ",
                   "axis.ticks = ggplot2::element_blank())"
                 )
               } else {
                 # Regular charts: apply theme_minimal()
-                text <- glue::glue("({text}) + ggplot2::theme_minimal()")
+                text <- glue::glue("{text} + ggplot2::theme_minimal()")
               }
 
               # Board scale map (blockr.theme via Suggests): inject manual
@@ -471,7 +475,7 @@ new_ggplot_block <- function(
                   gg_scale_map_text(session, data(), r_color(), "colour")
                 }
               )) {
-                text <- glue::glue("({text}) + {sm}")
+                text <- glue::glue("{text} + {sm}")
               }
 
               parse(text = text)[[1]]
@@ -512,6 +516,7 @@ new_ggplot_block <- function(
       )
     },
     class = "ggplot_block",
+    expr_type = "bquoted",
     external_ctrl = TRUE,
     allow_empty_state = c(
       "y",
