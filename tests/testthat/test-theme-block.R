@@ -42,30 +42,30 @@ test_that("build_theme_choices only includes ggpubr when available", {
   expect_equal(has_ggpubr, has_ggpubr_section)
 })
 
-test_that("get_theme_function returns empty string for auto", {
-  result <- get_theme_function("auto")
-  expect_equal(result, "")
+# get_theme_call() returns language objects (or NULL in auto mode), not
+# strings. Compare on deparse so the expectations stay readable.
+dep1 <- function(x) paste(deparse(x), collapse = " ")
+
+test_that("get_theme_call returns NULL for auto", {
+  expect_null(get_theme_call("auto"))
 })
 
-test_that("get_theme_function returns correct ggplot2 themes", {
-  expect_equal(get_theme_function("minimal"), "ggplot2::theme_minimal()")
-  expect_equal(get_theme_function("classic"), "ggplot2::theme_classic()")
-  expect_equal(get_theme_function("gray"), "ggplot2::theme_gray()")
-  expect_equal(get_theme_function("bw"), "ggplot2::theme_bw()")
+test_that("get_theme_call returns correct ggplot2 theme calls", {
+  expect_equal(dep1(get_theme_call("minimal")), "ggplot2::theme_minimal()")
+  expect_equal(dep1(get_theme_call("classic")), "ggplot2::theme_classic()")
+  expect_equal(dep1(get_theme_call("gray")), "ggplot2::theme_gray()")
+  expect_equal(dep1(get_theme_call("bw")), "ggplot2::theme_bw()")
 })
 
-test_that("get_theme_function returns fallback for unavailable packages", {
-  # Test with a theme that requires an unavailable package
-  # We can't guarantee any specific package is unavailable, but we can
-  # test that the function returns a valid theme string
-
-  result <- get_theme_function("unknown_theme")
-  expect_equal(result, "ggplot2::theme_minimal()")
+test_that("get_theme_call returns fallback for unknown themes", {
+  # Unknown theme names fall back to a valid theme call
+  result <- get_theme_call("unknown_theme")
+  expect_equal(dep1(result), "ggplot2::theme_minimal()")
 })
 
-test_that("get_theme_function handles cowplot themes appropriately", {
+test_that("get_theme_call handles cowplot themes appropriately", {
   has_cowplot <- requireNamespace("cowplot", quietly = TRUE)
-  result <- get_theme_function("cowplot")
+  result <- dep1(get_theme_call("cowplot"))
 
   if (has_cowplot) {
     expect_equal(result, "cowplot::theme_cowplot()")
@@ -75,9 +75,9 @@ test_that("get_theme_function handles cowplot themes appropriately", {
   }
 })
 
-test_that("get_theme_function handles ggthemes appropriately", {
+test_that("get_theme_call handles ggthemes appropriately", {
   has_ggthemes <- requireNamespace("ggthemes", quietly = TRUE)
-  result <- get_theme_function("economist")
+  result <- dep1(get_theme_call("economist"))
 
   if (has_ggthemes) {
     expect_equal(result, "ggthemes::theme_economist()")
@@ -87,9 +87,9 @@ test_that("get_theme_function handles ggthemes appropriately", {
   }
 })
 
-test_that("get_theme_function handles ggpubr themes appropriately", {
+test_that("get_theme_call handles ggpubr themes appropriately", {
   has_ggpubr <- requireNamespace("ggpubr", quietly = TRUE)
-  result <- get_theme_function("pubr")
+  result <- dep1(get_theme_call("pubr"))
 
   if (has_ggpubr) {
     expect_equal(result, "ggpubr::theme_pubr()")

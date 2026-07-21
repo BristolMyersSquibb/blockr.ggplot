@@ -48,29 +48,34 @@ build_theme_choices <- function() {
   choices
 }
 
-#' Get theme function call for a given theme name
+#' Get the base theme call for a given theme name
 #'
-#' Maps theme names to their corresponding ggplot2 function calls.
-#' Returns a fallback theme if the requested theme's package is not available.
+#' Maps theme names to their corresponding ggplot2 (or add-on package)
+#' function calls, returned as language objects. Falls back to
+#' `ggplot2::theme_minimal()` when the requested theme's package is not
+#' available.
 #'
 #' @param theme_name Character string naming the theme
-#' @return Character string with the theme function call
+#' @return A language object (the theme function call), or NULL in "auto"
+#'   mode (keep the upstream theme).
 #' @keywords internal
-get_theme_function <- function(theme_name) {
-  # Handle auto mode
+get_theme_call <- function(theme_name) {
+  # Handle auto mode (keep upstream theme)
   if (theme_name == "auto") {
-    return("")
+    return(NULL)
   }
 
+  minimal <- quote(ggplot2::theme_minimal())
+
   # Built-in ggplot2 themes (always available)
-  builtin_themes <- c(
-    minimal = "ggplot2::theme_minimal()",
-    classic = "ggplot2::theme_classic()",
-    gray = "ggplot2::theme_gray()",
-    bw = "ggplot2::theme_bw()",
-    light = "ggplot2::theme_light()",
-    dark = "ggplot2::theme_dark()",
-    void = "ggplot2::theme_void()"
+  builtin_themes <- list(
+    minimal = minimal,
+    classic = quote(ggplot2::theme_classic()),
+    gray = quote(ggplot2::theme_gray()),
+    bw = quote(ggplot2::theme_bw()),
+    light = quote(ggplot2::theme_light()),
+    dark = quote(ggplot2::theme_dark()),
+    void = quote(ggplot2::theme_void())
   )
 
   if (theme_name %in% names(builtin_themes)) {
@@ -78,11 +83,11 @@ get_theme_function <- function(theme_name) {
   }
 
   # cowplot themes (check availability)
-  cowplot_themes <- c(
-    cowplot = "cowplot::theme_cowplot()",
-    minimal_grid = "cowplot::theme_minimal_grid()",
-    minimal_hgrid = "cowplot::theme_minimal_hgrid()",
-    minimal_vgrid = "cowplot::theme_minimal_vgrid()"
+  cowplot_themes <- list(
+    cowplot = quote(cowplot::theme_cowplot()),
+    minimal_grid = quote(cowplot::theme_minimal_grid()),
+    minimal_hgrid = quote(cowplot::theme_minimal_hgrid()),
+    minimal_vgrid = quote(cowplot::theme_minimal_vgrid())
   )
 
   if (theme_name %in% names(cowplot_themes)) {
@@ -90,16 +95,16 @@ get_theme_function <- function(theme_name) {
       return(cowplot_themes[[theme_name]])
     } else {
       # Fallback to minimal if cowplot not available
-      return("ggplot2::theme_minimal()")
+      return(minimal)
     }
   }
 
   # ggthemes (check availability)
-  ggthemes_themes <- c(
-    economist = "ggthemes::theme_economist()",
-    fivethirtyeight = "ggthemes::theme_fivethirtyeight()",
-    tufte = "ggthemes::theme_tufte()",
-    wsj = "ggthemes::theme_wsj()"
+  ggthemes_themes <- list(
+    economist = quote(ggthemes::theme_economist()),
+    fivethirtyeight = quote(ggthemes::theme_fivethirtyeight()),
+    tufte = quote(ggthemes::theme_tufte()),
+    wsj = quote(ggthemes::theme_wsj())
   )
 
   if (theme_name %in% names(ggthemes_themes)) {
@@ -107,14 +112,14 @@ get_theme_function <- function(theme_name) {
       return(ggthemes_themes[[theme_name]])
     } else {
       # Fallback to minimal if ggthemes not available
-      return("ggplot2::theme_minimal()")
+      return(minimal)
     }
   }
 
   # ggpubr themes (check availability)
-  ggpubr_themes <- c(
-    pubr = "ggpubr::theme_pubr()",
-    pubclean = "ggpubr::theme_pubclean()"
+  ggpubr_themes <- list(
+    pubr = quote(ggpubr::theme_pubr()),
+    pubclean = quote(ggpubr::theme_pubclean())
   )
 
   if (theme_name %in% names(ggpubr_themes)) {
@@ -122,12 +127,57 @@ get_theme_function <- function(theme_name) {
       return(ggpubr_themes[[theme_name]])
     } else {
       # Fallback to minimal if ggpubr not available
-      return("ggplot2::theme_minimal()")
+      return(minimal)
     }
   }
 
   # Default fallback for unknown themes
-  "ggplot2::theme_minimal()"
+  minimal
+}
+
+#' Build a color-palette scale call for the theme block
+#'
+#' @param value Palette selector: "auto" (no scale, returns NULL), "ggplot2"
+#'   (reset to the default discrete scale), or a viridis option with a type
+#'   suffix such as "viridis_d" / "magma_c".
+#' @param aesthetic Either "fill" or "colour".
+#' @return A language object (the scale call), or NULL when `value` is "auto".
+#' @keywords internal
+palette_scale_call <- function(value, aesthetic) {
+  if (value == "auto") {
+    return(NULL)
+  }
+
+  gg <- function(fun) {
+    as.call(list(call("::", quote(ggplot2), as.name(fun))))
+  }
+
+  if (value == "ggplot2") {
+    # Reset to ggplot2 default
+    fun <- if (aesthetic == "fill") {
+      "scale_fill_discrete"
+    } else {
+      "scale_colour_discrete"
+    }
+    return(gg(fun))
+  }
+
+  # Parse option name and type (viridis_d -> viridis, d)
+  parts <- strsplit(value, "_")[[1]]
+  option_name <- parts[1]
+  scale_type <- parts[2]
+
+  base <- if (aesthetic == "fill") {
+    "scale_fill_viridis"
+  } else {
+    "scale_colour_viridis"
+  }
+  fun <- paste0(base, if (scale_type == "c") "_c" else "_d")
+
+  as.call(list(
+    call("::", quote(ggplot2), as.name(fun)),
+    option = option_name
+  ))
 }
 
 #' Theme customization block for ggplot2 plots
@@ -317,142 +367,92 @@ new_theme_block <- function(
 
           list(
             expr = reactive({
-              # Build theme customization code
-              theme_parts <- c()
+              # Build theme customization as a named list of language objects.
+              # Names carry the ggplot2 theme element (e.g. panel.background);
+              # each value is a call like ggplot2::element_rect(fill = "...").
+              theme_args <- list()
+
+              # Small builders for the element_*() values.
+              element_rect_fill <- function(color) {
+                bquote(ggplot2::element_rect(fill = .(color)))
+              }
+              element_line_colour <- function(color) {
+                bquote(ggplot2::element_line(colour = .(color)))
+              }
 
               # Panel background (only if explicitly set by user)
               if (r_panel_bg() != "") {
-                theme_parts <- c(
-                  theme_parts,
-                  glue::glue(
-                    "panel.background = ",
-                    'ggplot2::element_rect(fill = "{r_panel_bg()}")'
-                  )
+                theme_args[["panel.background"]] <- element_rect_fill(
+                  r_panel_bg()
                 )
               }
 
               # Plot background
               if (r_plot_bg() != "") {
                 # User explicitly set a color
-                theme_parts <- c(
-                  theme_parts,
-                  glue::glue(
-                    "plot.background = ",
-                    'ggplot2::element_rect(fill = "{r_plot_bg()}")'
-                  )
+                theme_args[["plot.background"]] <- element_rect_fill(
+                  r_plot_bg()
                 )
               } else if (r_base_theme() == "gray") {
                 # Gray theme: set plot background to match panel
                 # (gray theme doesn't set this itself)
-                theme_parts <- c(
-                  theme_parts,
-                  'plot.background = ggplot2::element_rect(fill = "#EBEBEB")'
-                )
+                theme_args[["plot.background"]] <- element_rect_fill("#EBEBEB")
               }
 
-              # Build text element modifications
-              text_parts <- c()
-
-              # Base text size (only if explicitly set)
+              # Build combined text element (base size and/or family)
+              text_args <- list()
               if (r_base_size() != "auto") {
-                text_parts <- c(
-                  text_parts,
-                  glue::glue("size = {r_base_size()}")
-                )
+                text_args$size <- as.numeric(r_base_size())
               }
-
-              # Base font family (only if explicitly set)
               if (r_base_family() != "" && r_base_family() != "auto") {
-                text_parts <- c(
-                  text_parts,
-                  glue::glue('family = "{r_base_family()}"')
-                )
+                text_args$family <- r_base_family()
               }
-
-              # Add combined text element if any parts were specified
-              if (length(text_parts) > 0) {
-                theme_parts <- c(
-                  theme_parts,
-                  glue::glue(
-                    "text = ggplot2::element_text(",
-                    "{paste(text_parts, collapse = \", \")})"
-                  )
-                )
+              if (length(text_args) > 0) {
+                theme_args$text <- as.call(c(
+                  list(quote(ggplot2::element_text)),
+                  text_args
+                ))
               }
 
               # Grid lines
               if (r_show_major_grid() == "hide") {
                 # Force hide major grid
-                theme_parts <- c(
-                  theme_parts,
-                  "panel.grid.major = ggplot2::element_blank()"
-                )
+                theme_args[["panel.grid.major"]] <-
+                  quote(ggplot2::element_blank())
               } else if (r_show_major_grid() == "show") {
                 # Force show major grid
-                if (r_grid_color() != "") {
-                  # With custom color
-                  theme_parts <- c(
-                    theme_parts,
-                    glue::glue(
-                      "panel.grid.major = ggplot2::element_line(",
-                      'colour = "{r_grid_color()}")'
-                    )
-                  )
+                theme_args[["panel.grid.major"]] <- if (r_grid_color() != "") {
+                  element_line_colour(r_grid_color())
                 } else {
-                  # With theme default color
-                  theme_parts <- c(
-                    theme_parts,
-                    "panel.grid.major = ggplot2::element_line()"
-                  )
+                  quote(ggplot2::element_line())
                 }
               } else if (
                 r_show_major_grid() == "auto" && r_grid_color() != ""
               ) {
                 # Auto mode but custom color specified - apply the color
-                theme_parts <- c(
-                  theme_parts,
-                  glue::glue(
-                    "panel.grid.major = ggplot2::element_line(",
-                    'colour = "{r_grid_color()}")'
-                  )
+                theme_args[["panel.grid.major"]] <- element_line_colour(
+                  r_grid_color()
                 )
               }
               # auto with no color: don't add anything, use base theme default
 
               if (r_show_minor_grid() == "hide") {
                 # Force hide minor grid
-                theme_parts <- c(
-                  theme_parts,
-                  "panel.grid.minor = ggplot2::element_blank()"
-                )
+                theme_args[["panel.grid.minor"]] <-
+                  quote(ggplot2::element_blank())
               } else if (r_show_minor_grid() == "show") {
                 # Force show minor grid
-                if (r_grid_color() != "") {
-                  # With custom color
-                  theme_parts <- c(
-                    theme_parts,
-                    glue::glue(
-                      "panel.grid.minor = ggplot2::element_line(",
-                      'colour = "{r_grid_color()}")'
-                    )
-                  )
+                theme_args[["panel.grid.minor"]] <- if (r_grid_color() != "") {
+                  element_line_colour(r_grid_color())
                 } else {
-                  # With theme default color
-                  theme_parts <- c(
-                    theme_parts,
-                    "panel.grid.minor = ggplot2::element_line()"
-                  )
+                  quote(ggplot2::element_line())
                 }
               } else if (
                 r_show_minor_grid() == "auto" && r_grid_color() != ""
               ) {
                 # Auto mode but custom color specified - apply the color
-                theme_parts <- c(
-                  theme_parts,
-                  glue::glue(
-                    "panel.grid.minor = ggplot2::element_line(",
-                    'colour = "{r_grid_color()}")'
-                  )
+                theme_args[["panel.grid.minor"]] <- element_line_colour(
+                  r_grid_color()
                 )
               }
               # auto with no color: don't add anything, use base theme default
@@ -460,102 +460,49 @@ new_theme_block <- function(
               # Panel border
               if (r_show_panel_border() == "show") {
                 # Force show panel border
-                theme_parts <- c(
-                  theme_parts,
-                  paste0(
-                    "panel.border = ggplot2::element_rect(",
-                    "colour = \"grey50\", fill = NA)"
-                  )
+                theme_args[["panel.border"]] <- quote(
+                  ggplot2::element_rect(colour = "grey50", fill = NA)
                 )
               } else if (r_show_panel_border() == "hide") {
                 # Force hide panel border
-                theme_parts <- c(
-                  theme_parts,
-                  "panel.border = ggplot2::element_blank()"
-                )
+                theme_args[["panel.border"]] <-
+                  quote(ggplot2::element_blank())
               }
               # auto: don't add anything, use base theme default
 
               # Legend position (only if explicitly set)
               if (r_legend_position() != "" && r_legend_position() != "auto") {
-                theme_parts <- c(
-                  theme_parts,
-                  glue::glue('legend.position = "{r_legend_position()}"')
+                theme_args[["legend.position"]] <- r_legend_position()
+              }
+
+              # Assemble `.(data) + <base theme> + theme(...) + <palettes>` as a
+              # left-associative `+` chain. `.(data)` (not a bare `data`) so
+              # blockr.core's bquoted export names the upstream block in place.
+              terms <- list(call(".", quote(data)))
+
+              # Base theme (NULL in auto mode - keep upstream)
+              base_theme_call <- get_theme_call(r_base_theme())
+              if (!is.null(base_theme_call)) {
+                terms <- c(terms, list(base_theme_call))
+              }
+
+              # Custom theme tweaks, if any
+              if (length(theme_args) > 0) {
+                terms <- c(
+                  terms,
+                  list(as.call(c(list(quote(ggplot2::theme)), theme_args)))
                 )
               }
 
-              # Build the complete expression
-              # Start with base theme (unless "auto" - keep upstream)
-              base_theme_func <- get_theme_function(r_base_theme())
+              # Color palette overrides (values like "viridis_d", "magma_c",
+              # or "ggplot2" to reset to the default scale)
+              terms <- c(
+                terms,
+                palette_scale_call(r_palette_fill(), "fill"),
+                palette_scale_call(r_palette_colour(), "colour")
+              )
 
-              # Start with data, optionally add base theme
-              if (base_theme_func == "") {
-                # Auto mode: don't apply base theme, just pass data through
-                text <- "(data)"
-              } else {
-                # Apply selected base theme
-                text <- glue::glue("data + {base_theme_func}")
-              }
-
-              # Add custom theme tweaks if any
-              if (length(theme_parts) > 0) {
-                theme_call <- paste(theme_parts, collapse = ", ")
-                text <- glue::glue("({text}) + ggplot2::theme({theme_call})")
-              }
-
-              # Add color palette overrides
-              # Values are like "viridis_d", "viridis_c", "magma_d", etc.
-              if (r_palette_fill() != "auto") {
-                if (r_palette_fill() == "ggplot2") {
-                  # Reset to ggplot2 default
-                  text <- glue::glue(
-                    "({text}) + ggplot2::scale_fill_discrete()"
-                  )
-                } else {
-                  # Parse option name and type (viridis_d -> viridis, d)
-                  parts <- strsplit(r_palette_fill(), "_")[[1]]
-                  option_name <- parts[1]
-                  scale_type <- parts[2]
-                  if (scale_type == "c") {
-                    text <- glue::glue(
-                      "({text}) + ggplot2::scale_fill_viridis_c(",
-                      "option = \"{option_name}\")"
-                    )
-                  } else {
-                    text <- glue::glue(
-                      "({text}) + ggplot2::scale_fill_viridis_d(",
-                      "option = \"{option_name}\")"
-                    )
-                  }
-                }
-              }
-
-              if (r_palette_colour() != "auto") {
-                if (r_palette_colour() == "ggplot2") {
-                  # Reset to ggplot2 default
-                  text <- glue::glue(
-                    "({text}) + ggplot2::scale_colour_discrete()"
-                  )
-                } else {
-                  # Parse option name and type (viridis_d -> viridis, d)
-                  parts <- strsplit(r_palette_colour(), "_")[[1]]
-                  option_name <- parts[1]
-                  scale_type <- parts[2]
-                  if (scale_type == "c") {
-                    text <- glue::glue(
-                      "({text}) + ggplot2::scale_colour_viridis_c(",
-                      "option = \"{option_name}\")"
-                    )
-                  } else {
-                    text <- glue::glue(
-                      "({text}) + ggplot2::scale_colour_viridis_d(",
-                      "option = \"{option_name}\")"
-                    )
-                  }
-                }
-              }
-
-              parse(text = text)[[1]]
+              gg_add(terms)
             }),
             state = list(
               panel_bg = r_panel_bg,
@@ -589,6 +536,9 @@ new_theme_block <- function(
       )
     },
     class = "theme_block",
+    # See facet-block.R: `.(data)` + "bquoted" keeps the exported code as a
+    # plain `plot + ggplot2::theme_minimal()` chain.
+    expr_type = "bquoted",
     external_ctrl = TRUE,
     allow_empty_state = c(
       "panel_bg",

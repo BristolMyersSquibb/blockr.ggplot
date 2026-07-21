@@ -508,142 +508,81 @@ new_facet_block <- function(
             expr = reactive({
               current_type <- r_facet_type()
 
+              # One side of a facet formula as a language object. as.name()
+              # reproduces non-syntactic column names without backticking;
+              # `.` (the base R placeholder) stands in for an empty side.
+              formula_side <- function(vars) {
+                if (length(vars) == 0) {
+                  quote(.)
+                } else if (length(vars) == 1) {
+                  as.name(vars[1])
+                } else {
+                  Reduce(function(a, b) call("+", a, b), lapply(vars, as.name))
+                }
+              }
+
               if (current_type == "wrap") {
                 # Build facet_wrap call
                 facet_vars <- r_facets()
                 if (length(facet_vars) == 0) {
-                  # No faceting - return data as-is
-                  # (wrapped in parens to make it a call)
-                  return(parse(text = "(data)")[[1]])
+                  # No faceting - pass data through (`.(data)` marker)
+                  return(quote(.(data)))
                 }
 
-                # Build facets formula (use backticks for non-syntactic names)
-                if (length(facet_vars) == 1) {
-                  facets_formula <- glue::glue(
-                    "~{backtick_if_needed(facet_vars[1])}"
-                  )
-                } else {
-                  facets_formula <- glue::glue(
-                    "~{paste(backtick_if_needed(facet_vars), collapse = ' + ')}"
-                  )
-                }
+                # One-sided formula: ~a or ~a + b
+                facets_formula <- call("~", formula_side(facet_vars))
 
-                # Build function call arguments
-                args <- list()
+                # Named arguments, in the order a user would write them
+                named <- list()
                 if (r_ncol() != "") {
-                  args$ncol <- as.numeric(r_ncol())
+                  named$ncol <- as.numeric(r_ncol())
                 }
                 if (r_nrow() != "") {
-                  args$nrow <- as.numeric(r_nrow())
+                  named$nrow <- as.numeric(r_nrow())
                 }
-                args$scales <- r_scales()
-                args$labeller <- r_labeller()
+                named$scales <- r_scales()
+                named$labeller <- r_labeller()
                 if (r_dir() != "h") {
-                  args$dir <- r_dir()
+                  named$dir <- r_dir()
                 }
 
-                # Build the call
-                facet_call <- glue::glue(
-                  "ggplot2::facet_wrap({facets_formula}",
-                  if (length(args) > 0) {
-                    paste0(
-                      ", ",
-                      paste(
-                        mapply(
-                          function(name, value) {
-                            if (is.numeric(value)) {
-                              glue::glue("{name} = {value}")
-                            } else {
-                              glue::glue("{name} = '{value}'")
-                            }
-                          },
-                          names(args),
-                          args,
-                          SIMPLIFY = TRUE
-                        ),
-                        collapse = ", "
-                      )
-                    )
-                  } else {
-                    ""
-                  },
-                  ")"
-                )
-
-                text <- glue::glue("data + {facet_call}")
-                parse(text = text)[[1]]
+                facet_call <- as.call(c(
+                  list(quote(ggplot2::facet_wrap), facets_formula),
+                  named
+                ))
               } else {
                 # Build facet_grid call
                 row_vars <- r_rows()
                 col_vars <- r_cols()
 
                 if (length(row_vars) == 0 && length(col_vars) == 0) {
-                  # No faceting - return data as-is
-                  # (wrapped in parens to make it a call)
-                  return(parse(text = "(data)")[[1]])
+                  # No faceting - pass data through (`.(data)` marker)
+                  return(quote(.(data)))
                 }
 
-                # Build rows formula (use backticks for non-syntactic names)
-                if (length(row_vars) == 0) {
-                  rows_part <- "."
-                } else if (length(row_vars) == 1) {
-                  rows_part <- backtick_if_needed(row_vars[1])
-                } else {
-                  rows_part <- paste(
-                    backtick_if_needed(row_vars),
-                    collapse = " + "
-                  )
-                }
-
-                # Build cols formula (use backticks for non-syntactic names)
-                if (length(col_vars) == 0) {
-                  cols_part <- "."
-                } else if (length(col_vars) == 1) {
-                  cols_part <- backtick_if_needed(col_vars[1])
-                } else {
-                  cols_part <- paste(
-                    backtick_if_needed(col_vars),
-                    collapse = " + "
-                  )
-                }
-
-                grid_formula <- glue::glue("{rows_part} ~ {cols_part}")
-
-                # Build function call arguments
-                args <- list()
-                args$scales <- r_scales()
-                args$labeller <- r_labeller()
-                if (r_space() != "fixed") {
-                  args$space <- r_space()
-                }
-
-                # Build the call
-                facet_call <- glue::glue(
-                  "ggplot2::facet_grid({grid_formula}",
-                  if (length(args) > 0) {
-                    paste0(
-                      ", ",
-                      paste(
-                        mapply(
-                          function(name, value) {
-                            glue::glue("{name} = '{value}'")
-                          },
-                          names(args),
-                          args,
-                          SIMPLIFY = TRUE
-                        ),
-                        collapse = ", "
-                      )
-                    )
-                  } else {
-                    ""
-                  },
-                  ")"
+                # Two-sided formula: rows ~ cols (either side may be `.`)
+                grid_formula <- call(
+                  "~",
+                  formula_side(row_vars),
+                  formula_side(col_vars)
                 )
 
-                text <- glue::glue("data + {facet_call}")
-                parse(text = text)[[1]]
+                named <- list()
+                named$scales <- r_scales()
+                named$labeller <- r_labeller()
+                if (r_space() != "fixed") {
+                  named$space <- r_space()
+                }
+
+                facet_call <- as.call(c(
+                  list(quote(ggplot2::facet_grid), grid_formula),
+                  named
+                ))
               }
+
+              # `.(data)` (not a bare `data`) so blockr.core's bquoted export
+              # names the upstream block in place of the marker.
+              gg_add(list(call(".", quote(data)), facet_call))
             }),
             state = list(
               facet_type = r_facet_type,
@@ -685,6 +624,11 @@ new_facet_block <- function(
     },
     allow_empty_state = c("facets", "rows", "cols", "ncol", "nrow"),
     class = "facet_block",
+    # `.(data)` markers above (rather than a bare `data`) let blockr.core
+    # substitute the upstream block's name in place on export, giving
+    # `plot + ggplot2::facet_wrap(~g)` instead of the `with(list(data =
+    # plot), ...)` wrapper the default "quoted" type produces.
+    expr_type = "bquoted",
     external_ctrl = TRUE,
     ...
   )
