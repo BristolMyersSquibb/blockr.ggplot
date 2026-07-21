@@ -43,7 +43,8 @@
 </blockquote>
 <div class="section level2">
 <h2 id="must-follow">Must Follow<a class="anchor" aria-label="anchor" href="#must-follow"></a></h2>
-<ol style="list-style-type: decimal"><li>Use <code>parse(text = glue::glue())</code> for expressions</li>
+<ol style="list-style-type: decimal"><li>Build expressions as language objects with <code><a href="https://rdrr.io/r/base/bquote.html" class="external-link">bquote()</a></code> / <code><a href="https://rdrr.io/r/base/substitute.html" class="external-link">quote()</a></code> / <code><a href="https://rdrr.io/r/base/call.html" class="external-link">call()</a></code> / <code><a href="https://rdrr.io/r/base/call.html" class="external-link">as.call()</a></code> — never <code>parse(text = glue::glue())</code> or any string assembly. <code>as.name(col)</code> reproduces non-syntactic column names (no manual backticking); <code>gg_add()</code> folds a list of layers into a <code>a + b + c</code> chain. See <code>ggplot-block.R</code>, <code>facet-block.R</code>, <code>theme-block.R</code>, <code>grid-block.R</code>. <code>test-expr-golden.R</code> locks the exact emitted code for every branch — update it if you change output.</li>
+<li>Expressions must set <code>expr_type = "bquoted"</code> and refer to the input as <code>.(data)</code> (i.e. <code>call(".", quote(data))</code>), never a bare <code>data</code>. Otherwise the generated code comes out as <code>with(list(data = plot), (data))</code> instead of <code>plot</code>. A passthrough is <code>quote(.(data))</code>.</li>
 <li>Add optional fields to <code>allow_empty_state = c("color", "fill", ...)</code>
 </li>
 <li>Include ALL constructor params in state list</li>

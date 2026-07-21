@@ -4,6 +4,15 @@
 
 ### Improvements
 
+- The ggplot, facet and theme blocks now build their expressions as
+  language objects
+  ([`bquote()`](https://rdrr.io/r/base/bquote.html)/[`call()`](https://rdrr.io/r/base/call.html)/[`as.call()`](https://rdrr.io/r/base/call.html))
+  instead of assembling and re-parsing strings, and refer to their input
+  as `.(data)`. Generated code names the upstream block directly
+  (`plot + ggplot2::theme_bw()`) rather than wrapping it in
+  `with(list(data = plot), ...)`, and non-syntactic column names are
+  handled by [`as.name()`](https://rdrr.io/r/base/name.html) rather than
+  manual backticking. This drops the `glue` dependency.
 - Text inputs in the settings band (grid block title, subtitle, caption)
   now commit on Enter or blur with an “Enter ↵” confirm chip instead of
   auto-submitting on a 300ms debounce, following the design-system

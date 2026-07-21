@@ -113,8 +113,10 @@ Internal UI components and helper functions
   : blockr.ggplot: Interactive 'ggplot2' Visualization Blocks
 - [`build_theme_choices()`](https://bristolmyerssquibb.github.io/blockr.ggplot/reference/build_theme_choices.md)
   : Build theme choices list based on available packages
-- [`get_theme_function()`](https://bristolmyerssquibb.github.io/blockr.ggplot/reference/get_theme_function.md)
-  : Get theme function call for a given theme name
+- [`get_theme_call()`](https://bristolmyerssquibb.github.io/blockr.ggplot/reference/get_theme_call.md)
+  : Get the base theme call for a given theme name
+- [`palette_scale_call()`](https://bristolmyerssquibb.github.io/blockr.ggplot/reference/palette_scale_call.md)
+  : Build a color-palette scale call for the theme block
 
 # Articles
 
