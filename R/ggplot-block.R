@@ -246,26 +246,22 @@ new_ggplot_block <- function(
                 return(quote(ggplot2::ggplot() + ggplot2::geom_blank()))
               }
 
-              # Build aesthetics (use backticks for non-syntactic column names)
-              aes_parts <- c(glue::glue("x = {backtick_if_needed(r_x())}"))
+              # Build aesthetics as language objects. as.name() reproduces
+              # non-syntactic column names (e.g. `2025 Sales`) without any
+              # manual backticking.
+              aes_args <- list(x = as.name(r_x()))
 
               # Add y if not "(none)" and valid for this chart
               if (
                 r_y() != "(none)" &&
                   "y" %in% c(chart_config$required, chart_config$optional)
               ) {
-                aes_parts <- c(
-                  aes_parts,
-                  glue::glue("y = {backtick_if_needed(r_y())}")
-                )
+                aes_args$y <- as.name(r_y())
               }
 
               # Add optional aesthetics if valid and not "(none)"
               if (r_color() != "(none)" && "color" %in% chart_config$optional) {
-                aes_parts <- c(
-                  aes_parts,
-                  glue::glue("colour = {backtick_if_needed(r_color())}")
-                )
+                aes_args$colour <- as.name(r_color())
               }
               if (r_fill() != "(none)" && "fill" %in% chart_config$optional) {
                 # For histograms, bars, pie, etc., convert to factor
@@ -273,66 +269,37 @@ new_ggplot_block <- function(
                 stat_types <- c(
                   "histogram", "bar", "boxplot", "violin", "density", "pie"
                 )
-                if (current_type %in% stat_types) {
-                  aes_parts <- c(
-                    aes_parts,
-                    glue::glue(
-                      "fill = as.factor({backtick_if_needed(r_fill())})"
-                    )
-                  )
+                aes_args$fill <- if (current_type %in% stat_types) {
+                  call("as.factor", as.name(r_fill()))
                 } else {
-                  aes_parts <- c(
-                    aes_parts,
-                    glue::glue("fill = {backtick_if_needed(r_fill())}")
-                  )
+                  as.name(r_fill())
                 }
               }
               if (r_size() != "(none)" && "size" %in% chart_config$optional) {
-                aes_parts <- c(
-                  aes_parts,
-                  glue::glue("size = {backtick_if_needed(r_size())}")
-                )
+                aes_args$size <- as.name(r_size())
               }
               if (r_shape() != "(none)" && "shape" %in% chart_config$optional) {
                 # Shape requires discrete/factor variables
-                aes_parts <- c(
-                  aes_parts,
-                  glue::glue(
-                    "shape = as.factor({backtick_if_needed(r_shape())})"
-                  )
-                )
+                aes_args$shape <- call("as.factor", as.name(r_shape()))
               }
               if (
                 r_linetype() != "(none)" &&
                   "linetype" %in% chart_config$optional
               ) {
                 # Linetype requires discrete/factor variables
-                aes_parts <- c(
-                  aes_parts,
-                  glue::glue(
-                    "linetype = as.factor({backtick_if_needed(r_linetype())})"
-                  )
-                )
+                aes_args$linetype <- call("as.factor", as.name(r_linetype()))
               }
               # For density plots, always set group to match fill
               # This ensures proper grouping for statistical transformation
               if (current_type == "density") {
                 if (r_fill() != "(none)") {
-                  aes_parts <- c(
-                    aes_parts,
-                    glue::glue(
-                      "group = as.factor({backtick_if_needed(r_fill())})"
-                    )
-                  )
+                  aes_args$group <- call("as.factor", as.name(r_fill()))
                 }
               } else if (
                 r_group() != "(none)" && "group" %in% chart_config$optional
               ) {
                 # For non-density plots, use user-specified group if provided
-                aes_parts <- c(
-                  aes_parts,
-                  glue::glue("group = {backtick_if_needed(r_group())}")
-                )
+                aes_args$group <- as.name(r_group())
               }
               # Alpha: for density plots, use fixed alpha parameter,
               # not aesthetic mapping
@@ -341,117 +308,107 @@ new_ggplot_block <- function(
                   r_alpha() != "(none)" &&
                   "alpha" %in% chart_config$optional
               ) {
-                aes_parts <- c(
-                  aes_parts,
-                  glue::glue("alpha = {backtick_if_needed(r_alpha())}")
-                )
+                aes_args$alpha <- as.name(r_alpha())
               }
 
-              aes_text <- paste(aes_parts, collapse = ", ")
-
-              # Build chart-specific call
+              # Build chart-specific geom (a language object)
               if (current_type == "bar") {
                 if (r_y() == "(none)") {
-                  geom_call <- glue::glue(
-                    "ggplot2::geom_bar(position = '{r_position()}')"
+                  geom_call <- bquote(
+                    ggplot2::geom_bar(position = .(r_position()))
                   )
                 } else {
-                  geom_call <- glue::glue(
-                    "ggplot2::geom_col(position = '{r_position()}')"
+                  geom_call <- bquote(
+                    ggplot2::geom_col(position = .(r_position()))
                   )
                 }
               } else if (current_type == "histogram") {
-                geom_call <- glue::glue(
-                  "ggplot2::geom_histogram(bins = {r_bins()}, ",
-                  "position = '{r_position()}')"
+                geom_call <- bquote(
+                  ggplot2::geom_histogram(
+                    bins = .(r_bins()),
+                    position = .(r_position())
+                  )
                 )
               } else if (current_type == "point") {
-                geom_call <- "ggplot2::geom_point()"
+                geom_call <- quote(ggplot2::geom_point())
               } else if (current_type == "line") {
-                geom_call <- "ggplot2::geom_line()"
+                geom_call <- quote(ggplot2::geom_line())
               } else if (current_type == "boxplot") {
-                geom_call <- "ggplot2::geom_boxplot()"
+                geom_call <- quote(ggplot2::geom_boxplot())
               } else if (current_type == "violin") {
-                geom_call <- "ggplot2::geom_violin()"
+                geom_call <- quote(ggplot2::geom_violin())
               } else if (current_type == "density") {
                 # Use fixed alpha value for density plots
-                geom_call <- glue::glue(
-                  "ggplot2::geom_density(alpha = {r_density_alpha()})"
+                geom_call <- bquote(
+                  ggplot2::geom_density(alpha = .(r_density_alpha()))
                 )
               } else if (current_type == "area") {
-                geom_call <- "ggplot2::geom_area()"
+                geom_call <- quote(ggplot2::geom_area())
               } else if (current_type == "pie") {
                 # PIE CHART: Special handling required
 
                 # Override x aesthetic: empty string for pie, numeric for donut
-                if (r_donut()) {
-                  # Numeric for donut (allows xlim)
-                  aes_parts[1] <- "x = 2"
-                } else {
-                  # Empty string for regular pie
-                  aes_parts[1] <- 'x = ""'
-                }
+                aes_args$x <- if (r_donut()) 2 else ""
 
-                # Ensure fill aesthetic uses the category column
-                # (from x or fill)
-                fill_added <- FALSE
-                for (i in seq_along(aes_parts)) {
-                  if (grepl("^fill = ", aes_parts[i])) {
-                    fill_added <- TRUE
-                    break
-                  }
+                # Ensure fill aesthetic uses the category column (from x
+                # when no fill aesthetic was specified). Wrap in as.factor()
+                # so stat_count knows it's grouping.
+                if (is.null(aes_args$fill)) {
+                  aes_args$fill <- call("as.factor", as.name(r_x()))
                 }
-                if (!fill_added) {
-                  # Use x column for fill if no fill aesthetic specified
-                  # Wrap in as.factor() so stat_count knows it's grouping
-                  aes_parts <- c(
-                    aes_parts,
-                    glue::glue("fill = as.factor({backtick_if_needed(r_x())})")
-                  )
-                }
-
-                # Rebuild aes_text with modified parts
-                aes_text <- paste(aes_parts, collapse = ", ")
 
                 # Choose geom based on y
                 if (r_y() != "(none)") {
-                  geom_call <- "ggplot2::geom_col(width = 1)"
+                  geom_call <- quote(ggplot2::geom_col(width = 1))
                 } else {
-                  geom_call <- "ggplot2::geom_bar(width = 1)"
+                  geom_call <- quote(ggplot2::geom_bar(width = 1))
                 }
               } else {
                 # Fallback
-                geom_call <- "ggplot2::geom_point()"
+                geom_call <- quote(ggplot2::geom_point())
               }
 
-              text <- glue::glue(
-                "ggplot2::ggplot(data, ggplot2::aes({aes_text})) + ",
-                "{geom_call}"
-              )
+              # `.(data)` (not a bare `data`) so blockr.core's bquoted export
+              # substitutes the upstream block's name in place:
+              # `ggplot2::ggplot(sub, ...)` rather than wrapping the whole call
+              # in `with(list(data = sub), ...)`. See expr_type below.
+              aes_expr <- as.call(c(list(quote(ggplot2::aes)), aes_args))
+              ggplot_expr <- as.call(list(
+                quote(ggplot2::ggplot),
+                call(".", quote(data)),
+                aes_expr
+              ))
 
-              # Add theme_minimal() as default for all charts
+              # Assemble the `ggplot() + geom + ...` layer chain as a
+              # left-associative `+` tree (gg_add), matching what a user would
+              # write by hand.
+              terms <- list(ggplot_expr, geom_call)
+
               if (current_type == "pie") {
-                # Pie charts: add polar coordinates and theme
-                text <- glue::glue(
-                  "({text}) + ggplot2::coord_polar('y', start = 0) + ",
-                  "ggplot2::theme_minimal()"
+                # Pie charts: polar coordinates, theme, and no axis clutter
+                terms <- c(
+                  terms,
+                  list(
+                    quote(ggplot2::coord_polar("y", start = 0)),
+                    quote(ggplot2::theme_minimal())
+                  )
                 )
-
                 # Add donut hole if requested
                 if (r_donut()) {
-                  text <- glue::glue("({text}) + ggplot2::xlim(c(0.2, 2.5))")
+                  terms <- c(terms, list(quote(ggplot2::xlim(c(0.2, 2.5)))))
                 }
-
                 # For better pie chart appearance, remove axis elements
-                text <- glue::glue(
-                  "({text}) + ggplot2::theme(",
-                  "axis.title = ggplot2::element_blank(), ",
-                  "axis.text = ggplot2::element_blank(), ",
-                  "axis.ticks = ggplot2::element_blank())"
+                terms <- c(
+                  terms,
+                  list(quote(ggplot2::theme(
+                    axis.title = ggplot2::element_blank(),
+                    axis.text = ggplot2::element_blank(),
+                    axis.ticks = ggplot2::element_blank()
+                  )))
                 )
               } else {
                 # Regular charts: apply theme_minimal()
-                text <- glue::glue("({text}) + ggplot2::theme_minimal()")
+                terms <- c(terms, list(quote(ggplot2::theme_minimal())))
               }
 
               # Board scale map (blockr.theme via Suggests): inject manual
@@ -465,16 +422,15 @@ new_ggplot_block <- function(
               } else if (current_type == "pie") {
                 r_x()
               }
-              for (sm in c(
-                gg_scale_map_text(session, data(), fill_var, "fill"),
+              terms <- c(
+                terms,
+                gg_scale_map_call(session, data(), fill_var, "fill"),
                 if (r_color() != "(none)") {
-                  gg_scale_map_text(session, data(), r_color(), "colour")
+                  gg_scale_map_call(session, data(), r_color(), "colour")
                 }
-              )) {
-                text <- glue::glue("({text}) + {sm}")
-              }
+              )
 
-              parse(text = text)[[1]]
+              gg_add(terms)
             }),
             state = list(
               type = r_type,
@@ -512,6 +468,7 @@ new_ggplot_block <- function(
       )
     },
     class = "ggplot_block",
+    expr_type = "bquoted",
     external_ctrl = TRUE,
     allow_empty_state = c(
       "y",

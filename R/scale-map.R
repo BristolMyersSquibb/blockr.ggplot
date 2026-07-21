@@ -5,12 +5,13 @@
 # ggplot `fill` consumes the `color` channel of a binding (channels are
 # semantic; there is no separate fill binding).
 
-# Build a "ggplot2::scale_*_manual(values = ...)" text fragment for `var`,
-# or NULL when nothing applies. Resolved values are injected as literals so
-# the block's expr stays a self-contained reproduction of what was shown.
-# scale_*_manual() errors on missing levels, so only a complete assignment
-# (every level resolved, e.g. pins + pool/board palette) is injected.
-gg_scale_map_text <- function(session, data, var, aesthetic) {
+# Build a `ggplot2::scale_*_manual(values = ...)` call for `var`, or NULL
+# when nothing applies. Resolved values are injected as a literal named
+# vector so the block's expr stays a self-contained reproduction of what was
+# shown. scale_*_manual() errors on missing levels, so only a complete
+# assignment (every level resolved, e.g. pins + pool/board palette) is
+# injected.
+gg_scale_map_call <- function(session, data, var, aesthetic) {
   if (is.null(var) || identical(var, "(none)") || !nzchar(var)) {
     return(NULL)
   }
@@ -54,9 +55,9 @@ gg_scale_map_text <- function(session, data, var, aesthetic) {
     fill = "scale_fill_manual",
     colour = "scale_colour_manual"
   )
-  pairs <- paste(
-    sprintf('"%s" = "%s"', names(vals), unname(vals)),
-    collapse = ", "
-  )
-  glue::glue("ggplot2::{fun}(values = c({pairs}))")
+  # ggplot2::scale_*_manual(values = c(<level> = <colour>, ...))
+  as.call(list(
+    call("::", quote(ggplot2), as.name(fun)),
+    values = vals
+  ))
 }
