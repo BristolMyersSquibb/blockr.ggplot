@@ -95,6 +95,15 @@ test_that("gg_scale_map_call builds a scale_*_manual call from resolved values",
     get_board_option_or_null = function(opt, ...) if (identical(opt, "scale_map")) list(TRT = "stub"),
     .package = "blockr.core"
   )
+  # gg_scale_map_call prefers the provenance-aware resolve_scales_col()
+  # when the installed blockr.theme exports it, else resolve_scales();
+  # mock whichever is in use so the test pins only the call BUILDING.
+  if ("resolve_scales_col" %in% getNamespaceExports("blockr.theme")) {
+    local_mocked_bindings(
+      resolve_scales_col = function(...) list(color = vals),
+      .package = "blockr.theme"
+    )
+  }
   local_mocked_bindings(
     resolve_scales = function(...) list(color = vals),
     .package = "blockr.theme"
