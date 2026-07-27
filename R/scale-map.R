@@ -22,10 +22,7 @@ gg_scale_map_call <- function(session, data, var, aesthetic) {
     return(NULL)
   }
 
-  map <- tryCatch(
-    blockr.core::get_board_option_or_null("scale_map", session),
-    error = function(e) NULL
-  )
+  map <- blockr.core::get_board_option_or_null("scale_map", session)
   if (is.null(map) || !length(map)) {
     return(NULL)
   }
@@ -41,22 +38,13 @@ gg_scale_map_call <- function(session, data, var, aesthetic) {
     return(NULL)
   }
 
-  # Resolve via the canonical column-aware resolver when available: it
-  # follows the column's `blockr_source` provenance (stamped by
-  # column-copying blocks like blockr.viz's picker), so a copy of a bound
-  # variable keeps its source's colors. Older blockr.theme installs fall
-  # back to the plain name lookup (pre-provenance behavior).
-  res <- if ("resolve_scales_col" %in% getNamespaceExports("blockr.theme")) {
-    tryCatch(
-      blockr.theme::resolve_scales_col(map, var, col),
-      error = function(e) NULL
-    )
-  } else {
-    tryCatch(
-      blockr.theme::resolve_scales(map, var, levels = lvls),
-      error = function(e) NULL
-    )
-  }
+  # Resolve via the canonical column-aware resolver: it follows the column's
+  # `blockr_source` provenance (stamped by column-copying blocks like
+  # blockr.viz's picker), so a copy of a bound variable keeps its source's
+  # colors. Not error-guarded: the resolver answers NULL for anything it
+  # cannot bind, and throws only on a MALFORMED map -- a board-configuration
+  # bug that must surface, not degrade into quietly wrong colors.
+  res <- blockr.theme::resolve_scales_col(map, var, col)
   vals <- res$color
   if (is.null(vals) || !all(lvls %in% names(vals))) {
     return(NULL)

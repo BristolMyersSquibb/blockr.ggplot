@@ -20,7 +20,7 @@ test_that("ggplot block expr injects scale_fill_manual from the board map", {
     .package = "blockr.core"
   )
   local_mocked_bindings(
-    resolve_scales = function(...) {
+    resolve_scales_col = function(...) {
       list(color = c(A = "#111111", B = "#222222"))
     },
     .package = "blockr.theme"
@@ -67,7 +67,7 @@ test_that("incomplete binding (unpinned level, no pool) is not injected", {
   )
   # Only level A resolves; B is missing, so the assignment is incomplete.
   local_mocked_bindings(
-    resolve_scales = function(...) list(color = c(A = "#111111")),
+    resolve_scales_col = function(...) list(color = c(A = "#111111")),
     .package = "blockr.theme"
   )
 
@@ -95,17 +95,9 @@ test_that("gg_scale_map_call builds a scale_*_manual call from resolved values",
     get_board_option_or_null = function(opt, ...) if (identical(opt, "scale_map")) list(TRT = "stub"),
     .package = "blockr.core"
   )
-  # gg_scale_map_call prefers the provenance-aware resolve_scales_col()
-  # when the installed blockr.theme exports it, else resolve_scales();
-  # mock whichever is in use so the test pins only the call BUILDING.
-  if ("resolve_scales_col" %in% getNamespaceExports("blockr.theme")) {
-    local_mocked_bindings(
-      resolve_scales_col = function(...) list(color = vals),
-      .package = "blockr.theme"
-    )
-  }
+  # The resolver is mocked so the test pins only the call BUILDING.
   local_mocked_bindings(
-    resolve_scales = function(...) list(color = vals),
+    resolve_scales_col = function(...) list(color = vals),
     .package = "blockr.theme"
   )
 
