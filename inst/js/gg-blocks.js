@@ -54,8 +54,65 @@
         { value: 'on', label: 'Donut chart style' },
         { value: 'off', label: 'Off' }
       ]
-    }
+    },
+    // Trend line. The values are ggplot2's `method` argument verbatim, so
+    // the emitted geom_smooth() call reads the way it would if it had been
+    // typed. The band toggle stays visible with the smoother off (this
+    // engine has no conditional rows), where it simply does nothing.
+    // The option LABEL is a description, not a restatement: this select
+    // widget shows the value and its label side by side (like a column
+    // picker showing name + variable label), so "loess / Loess" would say
+    // one thing twice.
+    smoother: {
+      label: 'Trend line', kind: 'select',
+      options: [
+        { value: 'none', label: 'No trend line' },
+        { value: 'lm', label: 'Straight line fit' },
+        { value: 'loess', label: 'Local regression' }
+      ]
+    },
+    smoother_se: {
+      label: 'Band', kind: 'segmented',
+      options: [
+        { value: 'on', label: 'Confidence band' },
+        { value: 'off', label: 'Off' }
+      ]
+    },
+    // Axis transform. "Linear" is the identity scale, i.e. no scale_y_* call
+    // at all — named rather than left blank because an axis always has a
+    // scale, and "none" would read as "no axis".
+    y_trans: {
+      label: 'Y scale', kind: 'select',
+      options: [
+        { value: 'identity', label: 'Untransformed' },
+        { value: 'log10', label: 'Logarithm, base 10' },
+        { value: 'sqrt', label: 'Square root' }
+      ]
+    },
+    y_zero: {
+      label: 'Y zero', kind: 'segmented',
+      options: [
+        { value: 'on', label: 'Include zero' },
+        { value: 'off', label: 'Off' }
+      ]
+    },
+    // Text. The placeholders say what an empty field yields, which for the
+    // axis names is ggplot2's default (the column name) and above the panel
+    // is nothing at all.
+    title:    { label: 'Title',    kind: 'text', ph: 'None' },
+    subtitle: { label: 'Subtitle', kind: 'text', ph: 'None' },
+    caption:  { label: 'Caption',  kind: 'text', ph: 'None' },
+    xlab:     { label: 'X label',  kind: 'text', ph: 'Column name' },
+    ylab:     { label: 'Y label',  kind: 'text', ph: 'Column name' }
   };
+
+  // Presentation groups shared by the chart types, spread into the per-type
+  // lists below. TREND is point/line only (the other types carry their own
+  // stat, or have no cloud to fit); AXIS and the axis names skip pie, which
+  // has no cartesian axes.
+  const TREND = ['smoother', 'smoother_se'];
+  const AXIS = ['y_trans', 'y_zero'];
+  const LABS = ['title', 'subtitle', 'caption', 'xlab', 'ylab'];
 
   // Per-chart-type sections — a direct translation of `chart_aesthetics`
   // (R/ggplot-block.R), with the old show/hide special cases baked in:
@@ -64,15 +121,15 @@
   // pie the donut toggle.
   /** @type {Record<string, { requiredMap: string[], optionalMap: string[], mapping: any[], presentation: any[] }>} */
   const GG_TYPE_ROLES = {
-    point:     { requiredMap: ['x', 'y'], optionalMap: ['color', 'shape', 'size', 'alpha', 'fill'], mapping: [], presentation: [] },
-    bar:       { requiredMap: ['x'],      optionalMap: ['y', 'fill', 'color', 'alpha'],             mapping: [], presentation: ['position'] },
-    line:      { requiredMap: ['x', 'y'], optionalMap: ['color', 'linetype', 'alpha', 'group'],     mapping: [], presentation: [] },
-    boxplot:   { requiredMap: ['x', 'y'], optionalMap: ['fill', 'color', 'alpha'],                  mapping: [], presentation: [] },
-    violin:    { requiredMap: ['x', 'y'], optionalMap: ['fill', 'color', 'alpha'],                  mapping: [], presentation: [] },
-    density:   { requiredMap: ['x'],      optionalMap: ['fill'],                                    mapping: [], presentation: ['density_alpha'] },
-    area:      { requiredMap: ['x', 'y'], optionalMap: ['fill', 'alpha'],                           mapping: [], presentation: [] },
-    histogram: { requiredMap: ['x'],      optionalMap: ['fill', 'color', 'alpha'],                  mapping: [], presentation: ['bins', 'position'] },
-    pie:       { requiredMap: ['x'],      optionalMap: ['y', 'fill', 'alpha'],                      mapping: [], presentation: ['donut'] }
+    point:     { requiredMap: ['x', 'y'], optionalMap: ['color', 'shape', 'size', 'alpha', 'fill'], mapping: [], presentation: [...TREND, ...AXIS, ...LABS] },
+    bar:       { requiredMap: ['x'],      optionalMap: ['y', 'fill', 'color', 'alpha'],             mapping: [], presentation: ['position', ...AXIS, ...LABS] },
+    line:      { requiredMap: ['x', 'y'], optionalMap: ['color', 'linetype', 'alpha', 'group'],     mapping: [], presentation: [...TREND, ...AXIS, ...LABS] },
+    boxplot:   { requiredMap: ['x', 'y'], optionalMap: ['fill', 'color', 'alpha'],                  mapping: [], presentation: [...AXIS, ...LABS] },
+    violin:    { requiredMap: ['x', 'y'], optionalMap: ['fill', 'color', 'alpha'],                  mapping: [], presentation: [...AXIS, ...LABS] },
+    density:   { requiredMap: ['x'],      optionalMap: ['fill'],                                    mapping: [], presentation: ['density_alpha', ...AXIS, ...LABS] },
+    area:      { requiredMap: ['x', 'y'], optionalMap: ['fill', 'alpha'],                           mapping: [], presentation: [...AXIS, ...LABS] },
+    histogram: { requiredMap: ['x'],      optionalMap: ['fill', 'color', 'alpha'],                  mapping: [], presentation: ['bins', 'position', ...AXIS, ...LABS] },
+    pie:       { requiredMap: ['x'],      optionalMap: ['y', 'fill', 'alpha'],                      mapping: [], presentation: ['donut', 'title', 'subtitle', 'caption'] }
   };
 
   // Same order as the old icon strip.
@@ -414,7 +471,9 @@
       // blockr.viz chart). Must match the config list the R server pushes.
       configKeys: [
         'type', 'x', 'y', 'color', 'fill', 'size', 'shape', 'linetype',
-        'group', 'alpha', 'density_alpha', 'position', 'bins', 'donut'
+        'group', 'alpha', 'density_alpha', 'position', 'bins', 'donut',
+        'smoother', 'smoother_se', 'y_trans', 'y_zero',
+        'title', 'subtitle', 'caption', 'xlab', 'ylab'
       ]
     },
     theme: {
@@ -686,6 +745,17 @@
       if (el._pendingData) {
         el._block.setData(el._pendingData);
         delete el._pendingData;
+      } else if (window.Shiny && Shiny.setInputValue) {
+        // Nothing waiting for us. `_pendingData` only catches a message that
+        // arrived while THIS SCRIPT was already loaded, and the poll below
+        // gives up after five seconds; Shiny drops a custom message with no
+        // registered handler at all. On a board whose opening view carries no
+        // ggplot block -- or carries one while a SECOND one sits on a view
+        // nobody has opened yet -- that block's startup payload is dropped,
+        // and the band renders with no columns and no config: an empty box
+        // where the mapping controls belong. Announce, and let R re-send its
+        // last payload. (Same handshake as blockr.viz's chart block.)
+        Shiny.setInputValue(el.id + '_ready', Date.now(), { priority: 'event' });
       }
     }
   });

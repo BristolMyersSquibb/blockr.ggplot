@@ -19,6 +19,15 @@ new_ggplot_block(
   position = "stack",
   bins = 30,
   donut = FALSE,
+  smoother = "none",
+  smoother_se = TRUE,
+  y_trans = "identity",
+  y_zero = FALSE,
+  title = character(),
+  subtitle = character(),
+  caption = character(),
+  xlab = character(),
+  ylab = character(),
   ...
 )
 }
@@ -51,6 +60,29 @@ new_ggplot_block(
 \item{bins}{Number of bins for histogram}
 
 \item{donut}{Whether to create donut chart when type is "pie" (default FALSE)}
+
+\item{smoother}{Trend line drawn over the data: "none" (default), "lm"
+(straight least-squares fit) or "loess". Point and line charts only.}
+
+\item{smoother_se}{Draw the smoother's confidence band (default TRUE,
+ggplot2's own default). Ignored when \code{smoother} is "none".}
+
+\item{y_trans}{Y-axis transform: "identity" (default), "log10" or "sqrt".
+The transform is applied BEFORE the stat, so a smoother or a boxplot
+summarises on the transformed scale.}
+
+\item{y_zero}{Extend the y axis to include zero (default FALSE). Ignored
+under a log10 transform, which has no zero.}
+
+\item{title}{Plot title ("" = none)}
+
+\item{subtitle}{Plot subtitle ("" = none)}
+
+\item{caption}{Plot caption ("" = none)}
+
+\item{xlab}{X-axis label ("" = the column name, ggplot2's default)}
+
+\item{ylab}{Y-axis label ("" = the column name, ggplot2's default)}
 
 \item{...}{Forwarded to \code{\link[blockr.core]{new_plot_block}}}
 }
