@@ -745,6 +745,17 @@
       if (el._pendingData) {
         el._block.setData(el._pendingData);
         delete el._pendingData;
+      } else if (window.Shiny && Shiny.setInputValue) {
+        // Nothing waiting for us. `_pendingData` only catches a message that
+        // arrived while THIS SCRIPT was already loaded, and the poll below
+        // gives up after five seconds; Shiny drops a custom message with no
+        // registered handler at all. On a board whose opening view carries no
+        // ggplot block -- or carries one while a SECOND one sits on a view
+        // nobody has opened yet -- that block's startup payload is dropped,
+        // and the band renders with no columns and no config: an empty box
+        // where the mapping controls belong. Announce, and let R re-send its
+        // last payload. (Same handshake as blockr.viz's chart block.)
+        Shiny.setInputValue(el.id + '_ready', Date.now(), { priority: 'event' });
       }
     }
   });

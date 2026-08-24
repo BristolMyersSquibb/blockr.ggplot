@@ -264,8 +264,19 @@ new_grid_block <- function(
 
           # Push config to JS (single observe; see ggplot-block.R). The grid
           # block combines upstream plots, so no column metadata is sent.
+
+          # The client announces itself when it binds with nothing
+          # buffered for it. Shiny DROPS a custom message that has no
+          # registered handler, and a dock panel on a view nobody has
+          # opened yet has no element to receive one -- so this push
+          # can be lost outright, and the band then renders empty, with
+          # no columns and no config where the controls belong. Keep the
+          # last payload and re-send it when the client says it is here.
+          last_push <- new.env(parent = emptyenv())
+          last_push$msg <- NULL
+
           observe({
-            session$sendCustomMessage("gg-block-data", list(
+            last_push$msg <- list(
               id = session$ns("gg_block"),
               block = "grid",
               columns = list(),
@@ -278,7 +289,14 @@ new_grid_block <- function(
                 caption = r_caption(),
                 tag_levels = r_tag_levels()
               )
-            ))
+            )
+            session$sendCustomMessage("gg-block-data", last_push$msg)
+          })
+
+          observeEvent(input$gg_block_ready, {
+            if (!is.null(last_push$msg)) {
+              session$sendCustomMessage("gg-block-data", last_push$msg)
+            }
           })
 
           # JS -> R: full-config echo through one action input, with the
