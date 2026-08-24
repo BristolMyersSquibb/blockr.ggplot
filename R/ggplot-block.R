@@ -18,6 +18,20 @@
 #' @param position Position adjustment for certain geoms
 #' @param bins Number of bins for histogram
 #' @param donut Whether to create donut chart when type is "pie" (default FALSE)
+#' @param smoother Trend line drawn over the data: "none" (default), "lm"
+#'   (straight least-squares fit) or "loess". Point and line charts only.
+#' @param smoother_se Draw the smoother's confidence band (default TRUE,
+#'   ggplot2's own default). Ignored when `smoother` is "none".
+#' @param y_trans Y-axis transform: "identity" (default), "log10" or "sqrt".
+#'   The transform is applied BEFORE the stat, so a smoother or a boxplot
+#'   summarises on the transformed scale.
+#' @param y_zero Extend the y axis to include zero (default FALSE). Ignored
+#'   under a log10 transform, which has no zero.
+#' @param title Plot title ("" = none)
+#' @param subtitle Plot subtitle ("" = none)
+#' @param caption Plot caption ("" = none)
+#' @param xlab X-axis label ("" = the column name, ggplot2's default)
+#' @param ylab Y-axis label ("" = the column name, ggplot2's default)
 #' @param ... Forwarded to \code{\link[blockr.core]{new_plot_block}}
 #'
 #' @return A plot block object of class `ggplot_block`.
@@ -50,6 +64,15 @@ new_ggplot_block <- function(
   position = "stack",
   bins = 30,
   donut = FALSE,
+  smoother = "none",
+  smoother_se = TRUE,
+  y_trans = "identity",
+  y_zero = FALSE,
+  title = character(),
+  subtitle = character(),
+  caption = character(),
+  xlab = character(),
+  ylab = character(),
   ...
 ) {
 
@@ -135,6 +158,19 @@ new_ggplot_block <- function(
           r_position <- reactiveVal(position)
           r_bins <- reactiveVal(bins)
           r_donut <- reactiveVal(donut)
+          # Character() constructor defaults normalize to "" so the expr
+          # reactive's nzchar() checks are length-safe before the first
+          # config echo (same helper as the grid block).
+          chr1 <- function(v) if (length(v)) v else ""
+          r_smoother <- reactiveVal(smoother)
+          r_smoother_se <- reactiveVal(smoother_se)
+          r_y_trans <- reactiveVal(y_trans)
+          r_y_zero <- reactiveVal(y_zero)
+          r_title <- reactiveVal(chr1(title))
+          r_subtitle <- reactiveVal(chr1(subtitle))
+          r_caption <- reactiveVal(chr1(caption))
+          r_xlab <- reactiveVal(chr1(xlab))
+          r_ylab <- reactiveVal(chr1(ylab))
 
           # Column metadata for the JS settings band (same
           # name/type/n_unique/label/levels shape as blockr.viz's chart
@@ -186,7 +222,16 @@ new_ggplot_block <- function(
                 density_alpha = r_density_alpha(),
                 position = r_position(),
                 bins = r_bins(),
-                donut = if (isTRUE(r_donut())) "on" else "off"
+                donut = if (isTRUE(r_donut())) "on" else "off",
+                smoother = r_smoother(),
+                smoother_se = if (isTRUE(r_smoother_se())) "on" else "off",
+                y_trans = r_y_trans(),
+                y_zero = if (isTRUE(r_y_zero())) "on" else "off",
+                title = r_title(),
+                subtitle = r_subtitle(),
+                caption = r_caption(),
+                xlab = r_xlab(),
+                ylab = r_ylab()
               )
             ))
           })
@@ -225,6 +270,19 @@ new_ggplot_block <- function(
             if (!is.null(msg$position)) upd(r_position, msg$position)
             if (!is.null(msg$bins)) upd(r_bins, as.numeric(msg$bins))
             if (!is.null(msg$donut)) upd(r_donut, identical(msg$donut, "on"))
+            if (!is.null(msg$smoother)) upd(r_smoother, msg$smoother)
+            if (!is.null(msg$smoother_se)) {
+              upd(r_smoother_se, identical(msg$smoother_se, "on"))
+            }
+            if (!is.null(msg$y_trans)) upd(r_y_trans, msg$y_trans)
+            if (!is.null(msg$y_zero)) {
+              upd(r_y_zero, identical(msg$y_zero, "on"))
+            }
+            if (!is.null(msg$title)) upd(r_title, msg$title)
+            if (!is.null(msg$subtitle)) upd(r_subtitle, msg$subtitle)
+            if (!is.null(msg$caption)) upd(r_caption, msg$caption)
+            if (!is.null(msg$xlab)) upd(r_xlab, msg$xlab)
+            if (!is.null(msg$ylab)) upd(r_ylab, msg$ylab)
           })
 
           list(
@@ -384,6 +442,25 @@ new_ggplot_block <- function(
               # write by hand.
               terms <- list(ggplot_expr, geom_call)
 
+              # Trend line. A stat layer, so it sits directly after the geom
+              # it annotates. `formula` is spelled out because ggplot2
+              # otherwise prints "using formula = 'y ~ x'" on every draw --
+              # noise in the app log, and a stray line in the report chunk.
+              # Offered for point and line only; the other types either carry
+              # their own stat (boxplot, density) or have no x/y cloud to fit.
+              if (
+                r_smoother() != "none" &&
+                  current_type %in% c("point", "line")
+              ) {
+                terms <- c(terms, list(bquote(
+                  ggplot2::geom_smooth(
+                    method = .(r_smoother()),
+                    formula = y ~ x,
+                    se = .(isTRUE(r_smoother_se()))
+                  )
+                )))
+              }
+
               if (current_type == "pie") {
                 # Pie charts: polar coordinates, theme, and no axis clutter
                 terms <- c(
@@ -409,6 +486,47 @@ new_ggplot_block <- function(
               } else {
                 # Regular charts: apply theme_minimal()
                 terms <- c(terms, list(quote(ggplot2::theme_minimal())))
+              }
+
+              # Y-axis transform. ggplot2 transforms BEFORE the stat, so a
+              # smoother is fitted, and a boxplot summarised, on the
+              # transformed scale -- which is what a transformed axis means,
+              # and why this is a scale rather than a mutate upstream. The
+              # axis then reads in the data's own units.
+              #
+              # Pie has no value axis to transform (the value is an angle),
+              # so the control is not offered there and the guard mirrors it.
+              if (current_type != "pie") {
+                if (r_y_trans() == "log10") {
+                  terms <- c(terms, list(quote(ggplot2::scale_y_log10())))
+                } else if (r_y_trans() == "sqrt") {
+                  terms <- c(terms, list(quote(ggplot2::scale_y_sqrt())))
+                }
+                # Zero on the axis whether or not the data reaches it. Not
+                # under log10, where zero is at minus infinity: the plot
+                # would drop to a warning and an empty panel.
+                if (isTRUE(r_y_zero()) && r_y_trans() != "log10") {
+                  terms <- c(terms, list(quote(ggplot2::expand_limits(y = 0))))
+                }
+              }
+
+              # Text. Every field is empty by default, and an empty field
+              # means "keep ggplot2's default" (the column name on an axis,
+              # nothing above the panel), so labs() carries only what was
+              # actually typed. Pie draws no axes, so it offers no axis names.
+              lab_args <- list()
+              if (nzchar(r_title())) lab_args$title <- r_title()
+              if (nzchar(r_subtitle())) lab_args$subtitle <- r_subtitle()
+              if (nzchar(r_caption())) lab_args$caption <- r_caption()
+              if (current_type != "pie") {
+                if (nzchar(r_xlab())) lab_args$x <- r_xlab()
+                if (nzchar(r_ylab())) lab_args$y <- r_ylab()
+              }
+              if (length(lab_args)) {
+                terms <- c(
+                  terms,
+                  list(as.call(c(list(quote(ggplot2::labs)), lab_args)))
+                )
               }
 
               # Board scale map (blockr.theme via Suggests): inject manual
@@ -446,7 +564,16 @@ new_ggplot_block <- function(
               density_alpha = r_density_alpha,
               position = r_position,
               bins = r_bins,
-              donut = r_donut
+              donut = r_donut,
+              smoother = r_smoother,
+              smoother_se = r_smoother_se,
+              y_trans = r_y_trans,
+              y_zero = r_y_zero,
+              title = r_title,
+              subtitle = r_subtitle,
+              caption = r_caption,
+              xlab = r_xlab,
+              ylab = r_ylab
             )
           )
         }
@@ -478,7 +605,12 @@ new_ggplot_block <- function(
       "shape",
       "linetype",
       "group",
-      "alpha"
+      "alpha",
+      "title",
+      "subtitle",
+      "caption",
+      "xlab",
+      "ylab"
     ),
     ...
   )
