@@ -19,13 +19,13 @@ Source:
 [`DESCRIPTION`](https://github.com/BristolMyersSquibb/blockr.ggplot/blob/main/DESCRIPTION)
 
 Sax C, Bennett N, Granjon D, Page M (2026). *blockr.ggplot: Interactive
-'ggplot2' Visualization Blocks*. R package version 0.1.1.9001,
+'ggplot2' Visualization Blocks*. R package version 0.1.1.9003,
 <https://bristolmyerssquibb.github.io/blockr.ggplot/>.
 
     @Manual{,
       title = {blockr.ggplot: Interactive 'ggplot2' Visualization Blocks},
       author = {Christoph Sax and Nicolas Bennett and David Granjon and Mike Page},
       year = {2026},
-      note = {R package version 0.1.1.9001},
+      note = {R package version 0.1.1.9003},
       url = {https://bristolmyerssquibb.github.io/blockr.ggplot/},
     }

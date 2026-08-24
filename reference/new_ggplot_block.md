@@ -22,6 +22,15 @@ new_ggplot_block(
   position = "stack",
   bins = 30,
   donut = FALSE,
+  smoother = "none",
+  smoother_se = TRUE,
+  y_trans = "identity",
+  y_zero = FALSE,
+  title = character(),
+  subtitle = character(),
+  caption = character(),
+  xlab = character(),
+  ylab = character(),
   ...
 )
 ```
@@ -85,6 +94,47 @@ new_ggplot_block(
 
   Whether to create donut chart when type is "pie" (default FALSE)
 
+- smoother:
+
+  Trend line drawn over the data: "none" (default), "lm" (straight
+  least-squares fit) or "loess". Point and line charts only.
+
+- smoother_se:
+
+  Draw the smoother's confidence band (default TRUE, ggplot2's own
+  default). Ignored when `smoother` is "none".
+
+- y_trans:
+
+  Y-axis transform: "identity" (default), "log10" or "sqrt". The
+  transform is applied BEFORE the stat, so a smoother or a boxplot
+  summarises on the transformed scale.
+
+- y_zero:
+
+  Extend the y axis to include zero (default FALSE). Ignored under a
+  log10 transform, which has no zero.
+
+- title:
+
+  Plot title ("" = none)
+
+- subtitle:
+
+  Plot subtitle ("" = none)
+
+- caption:
+
+  Plot caption ("" = none)
+
+- xlab:
+
+  X-axis label ("" = the column name, ggplot2's default)
+
+- ylab:
+
+  Y-axis label ("" = the column name, ggplot2's default)
+
 - ...:
 
   Forwarded to
@@ -117,6 +167,15 @@ new_ggplot_block(type = "point", x = "mpg", y = "hp")
 #>  $ position     : chr "stack"
 #>  $ bins         : num 30
 #>  $ donut        : logi FALSE
+#>  $ smoother     : chr "none"
+#>  $ smoother_se  : logi TRUE
+#>  $ y_trans      : chr "identity"
+#>  $ y_zero       : logi FALSE
+#>  $ title        : chr(0)
+#>  $ subtitle     : chr(0)
+#>  $ caption      : chr(0)
+#>  $ xlab         : chr(0)
+#>  $ ylab         : chr(0)
 #> Constructor: blockr.ggplot::new_ggplot_block()
 
 # Create a bar chart block
@@ -139,6 +198,15 @@ new_ggplot_block(type = "bar", x = "cyl")
 #>  $ position     : chr "stack"
 #>  $ bins         : num 30
 #>  $ donut        : logi FALSE
+#>  $ smoother     : chr "none"
+#>  $ smoother_se  : logi TRUE
+#>  $ y_trans      : chr "identity"
+#>  $ y_zero       : logi FALSE
+#>  $ title        : chr(0)
+#>  $ subtitle     : chr(0)
+#>  $ caption      : chr(0)
+#>  $ xlab         : chr(0)
+#>  $ ylab         : chr(0)
 #> Constructor: blockr.ggplot::new_ggplot_block()
 
 if (interactive()) {
