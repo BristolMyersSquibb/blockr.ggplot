@@ -10,7 +10,10 @@
  *
  * A host provides (see DrilldownChart for the chart implementation):
  *   popoverEl()      -> the <body>-portaled popover element
- *   roles            -> the ROLES dict (key -> {label,kind,colType,...})
+ *   roles            -> the ROLES dict (key -> {label,kind,colType,...};
+ *                       an optional `when(cfg)` hides the row while the rest
+ *                       of the config makes it inert, e.g. facet_scales
+ *                       without a facet)
  *   config()         -> the mutable config object (mutated in place)
  *   columns()        -> column metadata array [{name,type,n_unique,label?}]
  *   context()        -> string key for colTypeBy/optionsBy/hintBy (chart=family)
@@ -38,6 +41,14 @@
  *   afterTypeChange()-> e.g. update family CSS classes (optional)
  *   isOpen()         -> is the popover open
  *   reopen()         -> reopen the popover (keep it open across a re-render)
+ *   bandEl()         -> the on-block mapping band element, or null (optional).
+ *                       With it, mapping roles gain a pin in their row head
+ *                       and the Mapping header an "on block" checkbox; the
+ *                       pinned ones are rendered into the band by renderBand()
+ *                       -- the SAME _renderRole() the popover uses, so the two
+ *                       surfaces cannot drift
+ *   exposed()        -> array of role keys currently on the band (optional)
+ *   onExpose(keys)   -> the exposed set changed (host stores + sends it)
  *
  * Exposed as Blockr.DrilldownConfig (and window.DrilldownConfig).
  */
@@ -80,6 +91,11 @@
     // required `columns` role never gets the amber required-empty cue.
     _hasVal(v) {
       if (Array.isArray(v)) return v.length > 0;
+      // A plain object is never a value. State copied through the DAG
+      // clipboard turns NULL into `{}` (blockr.dag#144); without this the
+      // empty object counts as set, the optional row renders, and the picker
+      // stringifies it as "[object Object]".
+      if (v !== null && typeof v === 'object') return false;
       return v !== null && v !== undefined && v !== '' && v !== '(none)';
     }
     _cols() { return this.h.columns() || []; }
@@ -114,6 +130,131 @@
       return true;
     }
 
+    // Column kinds (mark_column_kinds()): what a column is FOR, as a fact
+    // about the column rather than a decision about a chart. A role declares
+    // which kinds it accepts (ROLES[key].kinds) and is narrowed to them.
+    //
+    // Two rules keep this from ever losing someone a column:
+    //
+    //  * NOTHING marked in the frame -> no filtering at all. An unmarked board
+    //    behaves exactly as it did, so marking is additive, and a chart whose
+    //    data arrives from an unmarked chain is never crippled.
+    //  * the role's CURRENT value always survives the filter. A saved board
+    //    that maps a column the marks disagree with still shows its own pick
+    //    in its own picker, instead of silently reading as empty.
+    /** @param {string} key @param {Array<any>} cols */
+    _filterByKind(key, cols) {
+      const role = this._role(key);
+      const want = role && role.kinds;
+      if (!want || !want.length) return cols;
+      if (!this._cols().some(c => c.kind)) return cols;
+      const cur = this._cfg()[key];
+      return cols.filter(c =>
+        (c.kind && want.includes(c.kind)) ||
+        (typeof cur === 'string' ? c.name === cur
+          : Array.isArray(cur) && cur.includes(c.name)));
+    }
+
+    // -- the on-block band ----------------------------------------------------
+
+    /** @returns {Array<string>} */
+    _exposed() {
+      return (this.h.exposed && this.h.exposed()) || [];
+    }
+
+    /** @returns {boolean} */
+    _bandSupported() { return typeof this.h.bandEl === 'function'; }
+
+    /** @param {string} key */
+    _isExposed(key) { return this._exposed().includes(key); }
+
+    // Toggling one role. The order the band shows is the order roles were
+    // pinned, which is stable across a re-render and is what a builder means
+    // by putting a control "next to" another one.
+    /** @param {string} key @param {boolean} on */
+    _setExposed(key, on) {
+      const cur = this._exposed().filter(k => k !== key);
+      if (on) cur.push(key);
+      if (this.h.onExpose) this.h.onExpose(cur);
+      this.render();
+      this.renderBand();
+    }
+
+    // The Mapping header checkbox: every mapping role this block currently
+    // offers, or none. Roles pinned out individually come back when it is
+    // switched off and on again, which is the only reading of "all" that does
+    // not need a third state.
+    /** @param {Array<string>} keys @param {boolean} on */
+    _setExposedAll(keys, on) {
+      if (this.h.onExpose) this.h.onExpose(on ? keys.slice() : []);
+      this.render();
+      this.renderBand();
+    }
+
+    // Render the exposed roles into the band. Same _renderRole() as the
+    // popover: one renderer, two boxes, so a control cannot behave one way in
+    // the gear and another on the face. The band hides itself when empty
+    // rather than sitting there as a 12px strip.
+    renderBand() {
+      if (!this._bandSupported()) return;
+      const el = this.h.bandEl();
+      if (!el) return;
+      const spec = this.h.sections() || {};
+      const keys = this._exposed().filter(k => this._mappingKeys(spec).includes(k));
+      el.innerHTML = '';
+      el.style.display = keys.length ? '' : 'none';
+      if (!keys.length) return;
+      // Required means "cannot be emptied", and for the chart's value that is
+      // a question about the AGGREGATION, not about the section it sits in:
+      // "Max of (none)" is not a state, while a bare row count ignores the
+      // column entirely. The host answers it through entryRequired(), which
+      // the popover already consults -- the band has to ask the same
+      // question, or an optional-looking "(none)" appears in front of a
+      // column the chart cannot do without.
+      const req = new Set(spec.requiredMap || []);
+      const required = {
+        has: (/** @type {string} */ k) => req.has(k) ||
+          !!(this.h.entryRequired && this.h.entryRequired(k))
+      };
+      // The band keeps its OWN select registry. `_selects` is keyed by role
+      // and render() destroys everything in it, so sharing it would mean the
+      // band's control clobbering the popover's entry for the same role --
+      // one of the two instances then never destroyed, and the popover's
+      // rebuild silently killing a control that is still on screen.
+      for (const inst of Object.values(this._bandSelects || {})) {
+        if (inst && typeof inst.destroy === 'function') inst.destroy();
+      }
+      this._bandSelects = {};
+      const outer = this._selects;
+      this._selects = this._bandSelects;
+      try {
+        for (const key of keys) {
+          this._renderRole(el, key, { required: required.has(key), band: true });
+        }
+      } finally {
+        this._bandSelects = this._selects;
+        this._selects = outer;
+      }
+    }
+
+    // Every mapping role the block currently offers, in section order:
+    // required rows, the always-on mapping extras (the chart's value), then
+    // the optional ones. Type-conditional entries are resolved first, so a
+    // role the current chart type does not offer is neither pinnable nor
+    // rendered on the band -- switching a bar to a pie cannot leave an
+    // orphaned control behind.
+    /** @param {any} spec @returns {Array<string>} */
+    _mappingKeys(spec) {
+      const extra = this._filterEntries(spec.mapping || [])
+        .map((/** @type {any} */ e) => e.role)
+        .filter((/** @type {string} */ k) => !this.h.secondary || !this.h.secondary.has(k));
+      return [].concat(
+        spec.requiredMap || [],
+        extra,
+        this._filterEntries(spec.optionalMap || []).map((/** @type {any} */ e) => e.role)
+      );
+    }
+
     // A "segmented" role whose two values are literally on/off is a plain
     // boolean data option — per the design-system rule (values -> pill, data
     // options -> checkbox) it renders as a .blockr-checkbox, not a pill.
@@ -143,6 +284,7 @@
       else if (ct === 'num') cols = cols.filter(c => c.type === 'numeric');
       else if (ct === 'cat') cols = cols.filter(c => c.type === 'categorical' || (c.n_unique != null && c.n_unique <= 50));
       if (role.maxUnique) cols = cols.filter(c => c.n_unique != null && c.n_unique <= role.maxUnique);
+      cols = this._filterByKind(key, cols);
       const opts = cols.map(c => c.label ? { value: c.name, label: c.label } : c.name);
       if (this._roleAllowCount(role)) opts.unshift('.count');
       else if (!required) opts.unshift('(none)');
@@ -171,6 +313,7 @@
       const all = [...(spec.mapping || []), ...spec.presentation];
       const e = all.find(x => (typeof x === 'string' ? x : x.role) === key);
       if (!e) return false;
+      if (!this._roleWhen(key)) return false;
       return typeof e === 'string' || !e.types || e.types.includes(this.h.currentType());
     }
 
@@ -206,6 +349,19 @@
         if (s && typeof s.destroy === 'function') s.destroy();
       }
       this._selects = {};
+
+      // The band renders IN-FLOW inside the block panel, so emptying it
+      // shrinks the panel's content for the duration of the rebuild and the
+      // scroll container clamps scrollTop to 0. Every gear edit round-trips
+      // through R (config echo -> setData -> render), so without a restore
+      // each edit jumped the scrolled block back to its top. Capture the
+      // nearest scrolled ancestor now, put its position back once the DOM
+      // has its full height again (end of this method).
+      let scroller = null;
+      let scrollPos = 0;
+      for (let el = pop.parentElement; el; el = el.parentElement) {
+        if (el.scrollTop > 0) { scroller = el; scrollPos = el.scrollTop; break; }
+      }
 
       pop.innerHTML = '';
 
@@ -302,6 +458,15 @@
         pop.appendChild(chip);
       }
 
+      // Host-owned custom sections (e.g. the lane chart's summarize-table
+      // column list): the engine provides the section chrome, the host
+      // renders the body. Rendered ABOVE Mapping — the summaries ARE the
+      // block's substance; grouping follows them.
+      for (const cs of (spec.customSections || [])) {
+        const sec = this._sectionEl(cs.title);
+        cs.render(sec);
+      }
+
       // Mapping: required rows, then any always-on mapping controls (the
       // chart's value + aggregation), shown-optional rows, add menu. Skipped
       // whole if the block has no mapping roles at all (e.g. the table).
@@ -309,7 +474,13 @@
       // latter offers the role only for those chart types (e.g. the chart's
       // color is inert on pie/treemap, so it is not offered there).
       const optKeys = this._filterEntries(spec.optionalMap || []).map(e => e.role);
-      const shownOpt = optKeys.filter((/** @type {string} */ k) => this._hasVal(cfg[k]) || this._added.has(k));
+      // An optional role shows a row once it holds a value, once it has been
+      // added from the menu this session -- or once it is ON THE BLOCK. That
+      // last one matters: an exposed-but-empty role (a Facet offered to the
+      // reader, currently "(none)") would otherwise have a control on the
+      // face and no row in the gear, so nothing to unpin it with.
+      const shownOpt = optKeys.filter((/** @type {string} */ k) =>
+        this._hasVal(cfg[k]) || this._added.has(k) || this._isExposed(k));
       const remaining = optKeys.filter((/** @type {string} */ k) => !shownOpt.includes(k));
       const mapExtra = this._filterEntries(spec.mapping || []);
 
@@ -324,7 +495,9 @@
       const mapNeeded = spec.requiredMap.length || shownOpt.length ||
         remaining.length || (!spec.aggregatable && mapExtra.length);
       if (mapNeeded) {
-        const mapSec = this._sectionEl(this._mappingTitle('Mapping'));
+        const mapKeys = this._bandSupported() ? this._mappingKeys(spec) : [];
+        const mapSec = this._sectionEl(this._mappingTitle('Mapping'),
+          mapKeys.length ? { action: this._exposeAllControl(mapKeys) } : {});
         for (const key of spec.requiredMap) this._renderRole(mapSec, key, { required: true });
         if (!spec.aggTitle && !spec.aggregatable) this._renderEntries(mapSec, mapExtra);
         // Repeatable aggregation list under Mapping only for non-aggregatable
@@ -353,6 +526,13 @@
       // block's gear reads the same top-to-bottom: what it shows, how it
       // looks, what it can do.
       this._renderSection('Presentation', spec.presentation);
+
+      // Titles — chart/table text (title, subtitle, caption). Its own titled
+      // section so the free-text rows don't read as layout options; hosts
+      // opt in via spec.titles.
+      if (spec.titles && spec.titles.length) {
+        this._renderSection('Titles', spec.titles);
+      }
 
       // Aggregation as a checkbox capability (Variant A). Activation is
       // DECOUPLED from the group: checking seeds a default value (a count) so
@@ -390,16 +570,20 @@
 
       // Drill-down as a checkbox capability (Variant A). spec.drillToggle names
       // the config key the picker writes (the table's 'drill'). Checked reveals
-      // the filter-column picker; unchecking clears it.
+      // the filter-column picker; unchecking clears it. The external-control
+      // send (spec.ctrlSection) nests INSIDE the open section: it rides on the
+      // drill's clicks, so without drill there is nothing to send.
       if (spec.drillToggle) {
         this._renderToggleColumnSection('Drill-down', 'drill', spec.drillToggle,
-          spec.drillDefault);
+          spec.drillDefault,
+          spec.ctrlSection ? (sec) => this._renderCtrlRows(sec) : null);
       }
 
       // Chart / tile drill-down. The chart opts in via drillAutoLabel (the
       // Auto + column picker); the tile via drillHint (picker-less — its
       // target is structurally determined). Same slot as drillToggle so all
       // drill styles land in the same position of the capability cluster.
+      // The external-control send nests inside here too (see above).
       if (this.h.drillAutoLabel || this.h.drillHint) this._renderDrillSection();
 
       // COLOR — a PLAIN section (deliberately NOT a checkbox capability:
@@ -420,6 +604,10 @@
       }
 
       if (this.h.afterTypeChange) this.h.afterTypeChange();
+
+      // Rebuild done, content height is back — restore the scroll position
+      // captured before the wipe (see above).
+      if (scroller) scroller.scrollTop = scrollPos;
     }
 
     /**
@@ -461,9 +649,71 @@
       } else {
         h.textContent = titleText;
       }
+      // A trailing control in the header row, right-aligned: the Mapping
+      // section's "on block" checkbox. Appended rather than folded into
+      // `opts.toggle`, which turns the whole header INTO a checkbox -- here
+      // the header still names the section and the control sits beside it.
+      if (opts.action) {
+        h.classList.add('dd-section-title--action');
+        h.appendChild(opts.action);
+      }
       sec.appendChild(h);
       this.h.popoverEl().appendChild(sec);
       return sec;
+    }
+
+    // The Mapping header's "on block" checkbox. Off when nothing is pinned,
+    // on when everything the block offers is; a partial pin shows as
+    // indeterminate, so the header never claims a state that is not true.
+    /** @param {Array<string>} keys */
+    _exposeAllControl(keys) {
+      const on = this._exposed();
+      const all = keys.length > 0 && keys.every(k => on.includes(k));
+      const some = !all && keys.some(k => on.includes(k));
+      const wrap = document.createElement('span');
+      wrap.className = 'dd-expose-all';
+      const box = document.createElement('span');
+      box.className = 'dd-section-checkbox' +
+        (all ? ' dd-on' : some ? ' dd-partial' : '');
+      box.setAttribute('role', 'checkbox');
+      box.setAttribute('tabindex', '0');
+      box.setAttribute('aria-checked', all ? 'true' : some ? 'mixed' : 'false');
+      const lbl = document.createElement('span');
+      lbl.className = 'dd-expose-all-label';
+      lbl.textContent = 'On block';
+      wrap.appendChild(box);
+      wrap.appendChild(lbl);
+      const flip = (/** @type {Event} */ e) => {
+        e.stopPropagation();
+        this._setExposedAll(keys, !all);
+      };
+      wrap.addEventListener('click', flip);
+      box.addEventListener('keydown', (/** @type {KeyboardEvent} */ e) => {
+        if (e.key !== ' ' && e.key !== 'Enter') return;
+        e.preventDefault();
+        flip(e);
+      });
+      return wrap;
+    }
+
+    // The per-role pin, in a mapping row's head next to the remove button.
+    // Up-arrow, because that is the direction the control travels: out of the
+    // gear and onto the block's face.
+    /** @param {string} key @param {string} roleLabel */
+    _exposePin(key, roleLabel) {
+      const on = this._isExposed(key);
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'dd-role-pin' + (on ? ' dd-on' : '');
+      btn.title = on ? 'Remove ' + roleLabel + ' from the block'
+        : 'Show ' + roleLabel + ' on the block';
+      btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+      btn.innerHTML = '\u2191';
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this._setExposed(key, !on);
+      });
+      return btn;
     }
 
     // Per-section open state for the Variant A toggle sections (aggregation,
@@ -503,8 +753,11 @@
      *   (e.g. the table's rowname/stub for drill), so the capability works in
      *   one click; the picker stays for re-aiming. Empty/absent = the picker
      *   opens required-empty as before.
+     * @param {((sec: HTMLElement) => void) | null} [extras] rendered into the
+     *   OPEN section after the picker — capabilities that ride on this one
+     *   (the drill's external-control send).
      */
-    _renderToggleColumnSection(title, secKey, cfgKey, seed) {
+    _renderToggleColumnSection(title, secKey, cfgKey, seed, extras) {
       const cfg = this._cfg();
       const open = this._secOpen(secKey,
         () => this._hasVal(cfg[cfgKey]) && cfg[cfgKey] !== '(none)');
@@ -524,7 +777,10 @@
               }
             }) }
       });
-      if (open) this._renderRole(sec, cfgKey, { required: true });
+      if (open) {
+        this._renderRole(sec, cfgKey, { required: true });
+        if (extras) extras(sec);
+      }
     }
 
     // Resolve the mapping-section header title. A host may supply a plain string
@@ -546,7 +802,19 @@
       return entries
         .map(e => (typeof e === 'string' ? { role: e } : e))
         .filter(e => !e.types || e.types.includes(ct))
+        .filter(e => this._roleWhen(e.role))
         .filter(e => !this._SECONDARY.has(e.role));
+    }
+
+    // A role may gate itself on the rest of the config (`when(cfg) -> bool`):
+    // an option that cannot do anything yet is noise, not a discoverable
+    // feature. Type-conditional rows use `types` on the section entry; this is
+    // for the cases a type cannot express (facet_scales needs a facet MAPPED,
+    // whatever the chart type).
+    /** @param {string} key */
+    _roleWhen(key) {
+      const role = this.h.roles[key];
+      return !role || !role.when || !!role.when(this.h.config());
     }
 
     /** @param {HTMLElement} container @param {any[]} list */
@@ -577,8 +845,15 @@
         return !!a && a !== 'count';
       };
       const row = document.createElement('div');
+      // An unset column role reads "(none)", which is a real option value and
+      // therefore renders as ordinary text -- but it is the ABSENCE of a
+      // mapping, not a column called none. Flagged here so the control can
+      // mute it, the way an unset field reads everywhere else.
+      const unset = (role.kind === 'column' || role.kind === 'columns') &&
+        !this._hasVal(this._cfg()[key]);
       row.className = 'blockr-popover-row dd-form-row dd-role-' + key +
-        (paired ? ' dd-role-paired' : '');
+        (paired ? ' dd-role-paired' : '') + (opts.band ? ' dd-band-row' : '') +
+        (unset ? ' dd-role-unset' : '');
 
       // Boolean option -> a single self-describing checkbox row: the checkbox
       // label carries the affirmative meaning (the on-option label), so the
@@ -604,9 +879,22 @@
       // value reads "Value" on a boxplot, "Aggregate" when it feeds an
       // aggregation), so resolve it before use.
       const roleLabel = (typeof role.label === 'function') ? role.label(this._cfg()) : role.label;
-      lbl.textContent = roleLabel + (reqMark ? ' *' : '');
+      // The asterisk is gear vocabulary: it warns a builder that a slot must
+      // be filled. On the block's face the control no longer offers to break
+      // that rule (a required role has no "(none)" entry), so the marker
+      // explains a constraint nothing can violate -- and the code block's
+      // params carry no such marks either.
+      lbl.textContent = roleLabel + (reqMark && !opts.band ? ' *' : '');
       head.appendChild(lbl);
-      if (opts.removable) {
+      // The pin, on mapping rows in the popover only: the band's own copy of
+      // a row is not the place to take itself off the band, and a
+      // presentation row has nowhere to go. Before the remove button, so the
+      // destructive one stays the outermost of the two.
+      if (!opts.band && this._bandSupported() &&
+          this._mappingKeys(this.h.sections() || {}).includes(key)) {
+        head.appendChild(this._exposePin(key, roleLabel));
+      }
+      if (opts.removable && !opts.band) {
         const rm = document.createElement('button');
         rm.type = 'button';
         rm.className = 'dd-role-remove';
@@ -639,7 +927,26 @@
 
       if (reversed) {
         // "[agg ▾] of [value ▾]" — aggregation leads; value only when used.
-        this._buildControl(controls, role.pairedWith, { onChange: () => {} });
+        //
+        // On the block's face the aggregation is a WORD, not a control,
+        // unless it was exposed in its own right. It is an analysis decision
+        // rather than a display one: across the whole CEDX workflow `func` is
+        // authored once per exhibit and never varies (28 counts, 18 means,
+        // one max, one min), and flipping the lab waterfall's max to min
+        // silently turns "worst value per patient" into "best" with nothing
+        // in the chart saying so. The column beside it is a real choice --
+        // the board's own picker offers AVAL / CHG / PCHG.
+        if (opts.band && !this._isExposed(role.pairedWith)) {
+          const word = document.createElement('span');
+          word.className = 'dd-pair-fixed';
+          const DAgg = (typeof Blockr !== 'undefined' && Blockr.DrilldownAgg) ||
+            window.DrilldownAgg;
+          const fn = this._cfg()[role.pairedWith];
+          word.textContent = (DAgg && DAgg.AGG_WORDS[fn]) || fn || '';
+          controls.appendChild(word);
+        } else {
+          this._buildControl(controls, role.pairedWith, { onChange: () => {} });
+        }
         if (usesMetric()) {
           const of = document.createElement('span');
           of.className = 'dd-pair-connector';
@@ -663,6 +970,10 @@
     _rerender() {
       const wasOpen = this.h.isOpen();
       this.render();
+      // The band shows the same roles the popover does, so it goes stale for
+      // exactly the same reasons -- a pick that changes another role's
+      // options, a type switch that drops a role.
+      this.renderBand();
       if (wasOpen) setTimeout(() => this.h.reopen(), 0);
     }
 
@@ -941,6 +1252,8 @@
         p.className = 'dd-form-help dd-drill-hint';
         p.textContent = hint;
         sec.appendChild(p);
+        this._renderDrillSourceRow(sec, cfg);
+        if (this.h.sections().ctrlSection) this._renderCtrlRows(sec);
         return;
       }
 
@@ -982,7 +1295,187 @@
         controls.appendChild(wrap);
         row.appendChild(controls);
         sec.appendChild(row);
+        if (this.h.sections().ctrlSection) this._renderCtrlRows(sec);
       }
+    }
+
+    // "Hand over the source records" — only where the drill takes a MODE
+    // rather than a column (structured / aggregated tables; the host says so
+    // via spec.drillSourceOption). Off, a click hands downstream the clicked
+    // subset of the DISPLAYED table ('auto'); on, the records behind it
+    // ('source'), resolved from the claim against the frame the producer
+    // stamped as the input's source_data attribute. What the table SHOWS is
+    // identical either way -- only the downstream shape changes.
+    /** @param {HTMLElement} sec @param {Record<string, any>} cfg */
+    _renderDrillSourceRow(sec, cfg) {
+      const spec = this.h.sections();
+      if (!spec || !spec.drillSourceOption) return;
+      const on = cfg.drill === 'source';
+      const onToggle = (/** @type {boolean} */ enabled) => {
+        cfg.drill = enabled ? 'source' : 'auto';
+        this._rerender();
+        this.h.onChange('drill');
+        this.h.onClearFilter();
+      };
+      const row = document.createElement('div');
+      row.className = 'blockr-popover-row dd-form-row';
+      if (typeof Blockr !== 'undefined' && typeof Blockr.checkbox === 'function') {
+        // Returns a WRAPPER, not a node -- append its .el (same as the
+        // "Send to filter" row below). Passing the wrapper to appendChild
+        // throws, and this runs inside engine.render(), which the host calls
+        // BEFORE it inserts the gear header: the whole gear goes missing.
+        const box = Blockr.checkbox('Hand over source records', on, onToggle);
+        row.appendChild(box.el);
+      } else {
+        const lab = document.createElement('label');
+        lab.className = 'dd-cfg-check';
+        const box = document.createElement('input');
+        box.type = 'checkbox';
+        box.checked = on;
+        box.addEventListener('change', () => onToggle(box.checked));
+        lab.appendChild(box);
+        lab.appendChild(document.createTextNode(' Hand over source records'));
+        row.appendChild(lab);
+      }
+      const help = document.createElement('div');
+      help.className = 'dd-form-help';
+      help.textContent = 'Downstream gets the records behind the click ' +
+        'instead of the clicked row. Needs the input to carry its source ' +
+        'data.';
+      row.appendChild(help);
+      sec.appendChild(row);
+    }
+
+    // "Send to filter (beta)" — the external-control tail of the drill: the
+    // value a click drills to is ALSO pushed into a value filter block
+    // elsewhere on the board (cfg.ctrl_target), over the board's control
+    // channel. Rendered INSIDE the open Drill-down section (it rides on the
+    // drill's clicks — without drill there is nothing to send), as a checkbox
+    // revealing the target rows. The host supplies the candidate targets in
+    // cfg.ctrl_choices ([{value: blockId, label: blockName}], stamped by R
+    // off the board); cfg.ctrl_table names the dm table the pushed conditions
+    // apply to (empty for a value filter fed a plain data frame). The claim
+    // column is NOT configurable on purpose: the block knows what it drills on.
+    /** @param {HTMLElement} sec */
+    _renderCtrlRows(sec) {
+      const cfg = this._cfg();
+      const on = this._secOpen('ctrlsend', () => this._hasVal(cfg.ctrl_target));
+      const onToggle = (/** @type {boolean} */ enabled) => {
+        this._setSecOpen('ctrlsend', enabled);
+        // Unchecking un-targets the sender; the R side clears its claim on
+        // the old target (ownership-scoped), so downstream does not stay
+        // filtered on a sender that no longer exists.
+        if (!enabled && this._hasVal(cfg.ctrl_target)) {
+          cfg.ctrl_target = '';
+          this.h.onChange('ctrl_target');
+        }
+        this._rerender();
+      };
+      const boxRow = document.createElement('div');
+      boxRow.className = 'blockr-popover-row dd-form-row dd-ctrl-toggle';
+      if (typeof Blockr !== 'undefined' && typeof Blockr.checkbox === 'function') {
+        const box = Blockr.checkbox('Send to filter (beta)', on, onToggle);
+        boxRow.appendChild(box.el);
+      } else {
+        const lab = document.createElement('label');
+        const inp = document.createElement('input');
+        inp.type = 'checkbox';
+        inp.checked = on;
+        inp.addEventListener('change', () => onToggle(inp.checked));
+        lab.appendChild(inp);
+        lab.appendChild(document.createTextNode(' Send to filter (beta)'));
+        boxRow.appendChild(lab);
+      }
+      sec.appendChild(boxRow);
+      if (!on) return;
+
+      const choices = Array.isArray(cfg.ctrl_choices) ? cfg.ctrl_choices : [];
+      const cur = cfg.ctrl_target || '';
+      /** @type {Array<{value: string, label: string}>} */
+      const opts = [{ value: '', label: 'Not set' }];
+      // A configured target no longer on the board stays visible as its own
+      // option rather than being silently dropped (deleted block, or a board
+      // restored before its blocks registered).
+      if (this._hasVal(cur) && !choices.some((/** @type {any} */ c) => c.value === cur)) {
+        opts.push({ value: cur, label: cur + ' (missing)' });
+      }
+      for (const c of choices) opts.push(c);
+
+      const row = document.createElement('div');
+      row.className = 'blockr-popover-row dd-form-row';
+      const head = document.createElement('div');
+      head.className = 'dd-row-head';
+      const lbl = document.createElement('span');
+      lbl.className = 'blockr-popover-label';
+      lbl.textContent = 'Target filter';
+      head.appendChild(lbl);
+      row.appendChild(head);
+      const controls = document.createElement('div');
+      controls.className = 'dd-row-controls';
+      const wrap = document.createElement('div');
+      wrap.className = 'blockr-popover-select-wrap dd-picker-wrap';
+      const onSel = (/** @type {string} */ val) => {
+        cfg.ctrl_target = val;
+        this.h.onChange('ctrl_target');
+      };
+      if (typeof Blockr !== 'undefined' && Blockr.Select) {
+        this._selects['ctrl_target'] = Blockr.Select.single(wrap,
+          { options: opts, selected: cur, onChange: onSel });
+      } else {
+        const s = document.createElement('select');
+        s.className = 'dd-cfg-select';
+        for (const o of opts) {
+          const op = document.createElement('option');
+          op.value = o.value; op.textContent = o.label;
+          if (o.value === cur) op.selected = true;
+          s.appendChild(op);
+        }
+        s.addEventListener('change', () => onSel(s.value));
+        wrap.appendChild(s);
+      }
+      controls.appendChild(wrap);
+      row.appendChild(controls);
+      const help = document.createElement('span');
+      help.className = 'dd-form-help';
+      help.textContent = choices.length
+        ? 'Drilling also filters the chosen block.'
+        : 'No value filter block found on this board (is the control bridge installed?).';
+      row.appendChild(help);
+      sec.appendChild(row);
+
+      // The dm table the pushed conditions apply to. Free text committed on
+      // change (blur / Enter), NOT on keystroke: every commit re-sends the
+      // claim, and half-typed table names would push junk conditions.
+      const trow = document.createElement('div');
+      trow.className = 'blockr-popover-row dd-form-row';
+      const thead = document.createElement('div');
+      thead.className = 'dd-row-head';
+      const tlbl = document.createElement('span');
+      tlbl.className = 'blockr-popover-label';
+      tlbl.textContent = 'Table';
+      thead.appendChild(tlbl);
+      trow.appendChild(thead);
+      const tcontrols = document.createElement('div');
+      tcontrols.className = 'dd-row-controls';
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.className = 'blockr-popover-input';
+      input.value = cfg.ctrl_table || '';
+      input.placeholder = 'dm only — e.g. adsl';
+      input.addEventListener('change', () => {
+        cfg.ctrl_table = input.value.trim();
+        this.h.onChange('ctrl_table');
+      });
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') { e.preventDefault(); input.blur(); }
+      });
+      tcontrols.appendChild(input);
+      trow.appendChild(tcontrols);
+      const thelp = document.createElement('span');
+      thelp.className = 'dd-form-help';
+      thelp.textContent = 'Only when the target filters a dm; leave empty for plain data.';
+      trow.appendChild(thelp);
+      sec.appendChild(trow);
     }
 
     /** @param {HTMLElement} parent @param {string} key @param {{ required?: boolean, onChange?: () => void }} [param2] */
@@ -994,7 +1487,7 @@
         const opts = this._colOptionsFor(key, { required });
         const wrap = document.createElement('div');
         wrap.className = 'blockr-popover-select-wrap dd-picker-wrap';
-        const sel = (cfg[key] && cfg[key] !== '(none)') ? cfg[key] : (required ? '' : '(none)');
+        const sel = this._hasVal(cfg[key]) ? cfg[key] : (required ? '' : '(none)');
         const onSel = (/** @type {string} */ val) => {
           cfg[key] = (val === '(none)') ? '' : val;
           this._rememberRole(key, cfg[key]);
@@ -1094,7 +1587,14 @@
         const inp = document.createElement('input');
         inp.type = 'text';
         inp.className = 'blockr-popover-input';
-        inp.value = (cfg[key] == null) ? '' : String(cfg[key]);
+        // `autoValue` (optional role hook): when the stored value is null, a
+        // host-computed inherited value shows as the input's CONTENT, not its
+        // placeholder — so the user can see it and delete it, which commits ""
+        // (explicitly off). Used by the chart's auto title (data-label tier).
+        // Untouched, nothing commits and null (auto) survives.
+        const autoVal = (cfg[key] == null && typeof role.autoValue === 'function')
+          ? String(role.autoValue(cfg) || '') : '';
+        inp.value = (cfg[key] == null) ? autoVal : String(cfg[key]);
         if (role.ph) inp.placeholder = role.ph;
         const wrap = document.createElement('div');
         wrap.className = 'dd-text-wrap';
@@ -1416,4 +1916,36 @@
       : (window.Blockr = window.Blockr || /** @type {BlockrNamespace} */ ({})));
   ns.DrilldownConfig = DrilldownConfig;
   window.DrilldownConfig = DrilldownConfig;
+})();
+
+// The download menu closes when a format is picked -------------------------
+//
+// The menu is a <details>, which is what buys the open/close, the keyboard
+// handling and the focus order for free. What <details> does NOT do is close
+// when something inside it is activated, and a download link navigates
+// nowhere: the file arrives and the menu is still hanging open over the
+// table, hiding the rows the reader just exported.
+//
+// One delegated listener for every download menu on the page (the table, the
+// summarize table and the chart all wear the same control), registered once
+// per document rather than per block -- a dock page holds many blocks, and
+// per-block listeners would each fire on every click.
+//
+// `click` rather than the anchor's own handler: Shiny's download link starts
+// the download from its own click handler, and closing the parent <details>
+// afterwards does not interrupt it.
+(function () {
+  if (typeof document === 'undefined') return;
+  if (document.documentElement.dataset.blockrDlMenuBound === '1') return;
+  document.documentElement.dataset.blockrDlMenuBound = '1';
+
+  document.addEventListener('click', function (e) {
+    const t = /** @type {Element} */ (e.target);
+    if (!t || typeof t.closest !== 'function') return;
+    const item = t.closest('.blockr-dl-menu-list a');
+    if (!item) return;
+    const menu = /** @type {HTMLDetailsElement | null} */ (
+      item.closest('details.blockr-dl-menu'));
+    if (menu) menu.open = false;
+  });
 })();
