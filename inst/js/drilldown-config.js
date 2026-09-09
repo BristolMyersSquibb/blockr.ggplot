@@ -41,14 +41,13 @@
  *   afterTypeChange()-> e.g. update family CSS classes (optional)
  *   isOpen()         -> is the popover open
  *   reopen()         -> reopen the popover (keep it open across a re-render)
- *   bandEl()         -> the on-block mapping band element, or null (optional).
- *                       With it, mapping roles gain a pin in their row head
- *                       and the Mapping header an "on block" checkbox; the
- *                       pinned ones are rendered into the band by renderBand()
- *                       -- the SAME _renderRole() the popover uses, so the two
- *                       surfaces cannot drift
- *   exposed()        -> array of role keys currently on the band (optional)
- *   onExpose(keys)   -> the exposed set changed (host stores + sends it)
+ *   bandEl()         -> the strip above the output for the prepare script's
+ *                       declared controls, or null (optional). Filled by
+ *                       renderBand() with the SAME _renderRole() the popover
+ *                       uses, so the two surfaces cannot drift. Mapping does
+ *                       NOT go here: a mapping a reader may change is a word
+ *                       in the block's sentence (blockr.docs
+ *                       design-system/pinned-controls.md)
  *
  * Exposed as Blockr.DrilldownConfig (and window.DrilldownConfig).
  */
@@ -101,7 +100,27 @@
     _cols() { return this.h.columns() || []; }
     _cfg() { return this.h.config(); }
     /** @param {string} key */
-    _role(key) { return this.h.roles[key]; }
+    _role(key) { return this.h.roles[key] || this._scriptRoles()[key]; }
+
+    // Controls declared by the prepare script. R has already worked out what
+    // each declaration means (R/prepare-apply.R: dd_script_roles) and ships
+    // the answer in the engine's own role vocabulary, so a script knob is an
+    // ordinary role from here on: same _buildControl(), same band renderer,
+    // same config channel. Rebuilt per call rather than cached -- the list
+    // changes whenever the script does, and it is a handful of entries.
+    /** @returns {Record<string, any>} */
+    _scriptRoles() {
+      /** @type {Record<string, any>} */
+      const out = {};
+      for (const spec of (this._cfg().script_inputs || [])) {
+        if (!spec || !spec.key || spec.kind === 'error') continue;
+        out[spec.key] = spec;
+      }
+      return out;
+    }
+
+    /** @returns {Array<any>} */
+    _scriptSpecs() { return this._cfg().script_inputs || []; }
     /** @param {string} name */
     _colExists(name) { return this._cols().some(c => c.name === name); }
 
@@ -155,68 +174,35 @@
           : Array.isArray(cur) && cur.includes(c.name)));
     }
 
-    // -- the on-block band ----------------------------------------------------
-
-    /** @returns {Array<string>} */
-    _exposed() {
-      return (this.h.exposed && this.h.exposed()) || [];
-    }
+    // -- the prepare script's control strip -----------------------------------
 
     /** @returns {boolean} */
     _bandSupported() { return typeof this.h.bandEl === 'function'; }
 
-    /** @param {string} key */
-    _isExposed(key) { return this._exposed().includes(key); }
-
-    // Toggling one role. The order the band shows is the order roles were
-    // pinned, which is stable across a re-render and is what a builder means
-    // by putting a control "next to" another one.
-    /** @param {string} key @param {boolean} on */
-    _setExposed(key, on) {
-      const cur = this._exposed().filter(k => k !== key);
-      if (on) cur.push(key);
-      if (this.h.onExpose) this.h.onExpose(cur);
-      this.render();
-      this.renderBand();
-    }
-
-    // The Mapping header checkbox: every mapping role this block currently
-    // offers, or none. Roles pinned out individually come back when it is
-    // switched off and on again, which is the only reading of "all" that does
-    // not need a third state.
-    /** @param {Array<string>} keys @param {boolean} on */
-    _setExposedAll(keys, on) {
-      if (this.h.onExpose) this.h.onExpose(on ? keys.slice() : []);
-      this.render();
-      this.renderBand();
-    }
-
-    // Render the exposed roles into the band. Same _renderRole() as the
-    // popover: one renderer, two boxes, so a control cannot behave one way in
-    // the gear and another on the face. The band hides itself when empty
-    // rather than sitting there as a 12px strip.
+    /* Render the prepare script's declared controls into the strip above the
+     * chart. Same _renderRole() as the popover: one renderer, two boxes, so a
+     * control cannot behave one way in the gear and another on the face. The
+     * strip hides itself when empty rather than sitting there as a 12px band.
+     *
+     * It used to hold promoted MAPPING rows as well (`expose`, retired 2026-
+     * 09-09). A mapping a reader may change is named in the block's own
+     * sentence now -- one channel, and it costs no height. See blockr.docs
+     * design-system/pinned-controls.md.
+     */
     renderBand() {
       if (!this._bandSupported()) return;
       const el = this.h.bandEl();
       if (!el) return;
-      const spec = this.h.sections() || {};
-      const keys = this._exposed().filter(k => this._mappingKeys(spec).includes(k));
+      // Controls the prepare script declares. Always here, with no pin in the
+      // gear: writing the declaration IS asking for the knob, and a knob
+      // nothing can reach is not worth the line.
+      const specs = this._scriptSpecs();
+      const err = this._cfg().script_error;
       el.innerHTML = '';
-      el.style.display = keys.length ? '' : 'none';
-      if (!keys.length) return;
-      // Required means "cannot be emptied", and for the chart's value that is
-      // a question about the AGGREGATION, not about the section it sits in:
-      // "Max of (none)" is not a state, while a bare row count ignores the
-      // column entirely. The host answers it through entryRequired(), which
-      // the popover already consults -- the band has to ask the same
-      // question, or an optional-looking "(none)" appears in front of a
-      // column the chart cannot do without.
-      const req = new Set(spec.requiredMap || []);
-      const required = {
-        has: (/** @type {string} */ k) => req.has(k) ||
-          !!(this.h.entryRequired && this.h.entryRequired(k))
-      };
-      // The band keeps its OWN select registry. `_selects` is keyed by role
+      const any = specs.length || err;
+      el.style.display = any ? '' : 'none';
+      if (!any) return;
+      // The strip keeps its OWN select registry. `_selects` is keyed by role
       // and render() destroys everything in it, so sharing it would mean the
       // band's control clobbering the popover's entry for the same role --
       // one of the two instances then never destroyed, and the popover's
@@ -228,13 +214,44 @@
       const outer = this._selects;
       this._selects = this._bandSelects;
       try {
-        for (const key of keys) {
-          this._renderRole(el, key, { required: required.has(key), band: true });
+        for (const sp of specs) {
+          if (sp.kind === 'error') this._renderScriptError(el, sp);
+          else this._renderRole(el, sp.key, { band: true });
         }
       } finally {
         this._bandSelects = this._selects;
         this._selects = outer;
       }
+      // A script that threw. Shown here rather than swallowed into an empty
+      // chart, because an empty chart with no reason reads as one that is
+      // still loading.
+      if (err) {
+        const row = document.createElement('div');
+        row.className = 'dd-form-row dd-band-row dd-script-failed';
+        row.textContent = 'Script failed: ' + err;
+        el.appendChild(row);
+      }
+    }
+
+    // A declaration that could not become a control (a mistyped column name in
+    // a factor's levels is the usual one). Named, with its reason, because a
+    // knob that quietly fails to appear is the hardest kind to debug.
+    /** @param {HTMLElement} el @param {any} sp */
+    _renderScriptError(el, sp) {
+      const row = document.createElement('div');
+      row.className = 'dd-form-row dd-band-row dd-script-input-error';
+      const head = document.createElement('div');
+      head.className = 'dd-row-head';
+      const lbl = document.createElement('span');
+      lbl.className = 'blockr-popover-label';
+      lbl.textContent = sp.label;
+      head.appendChild(lbl);
+      row.appendChild(head);
+      const msg = document.createElement('span');
+      msg.className = 'dd-form-help';
+      msg.textContent = sp.error || 'no control';
+      row.appendChild(msg);
+      el.appendChild(row);
     }
 
     // Every mapping role the block currently offers, in section order:
@@ -474,13 +491,10 @@
       // latter offers the role only for those chart types (e.g. the chart's
       // color is inert on pie/treemap, so it is not offered there).
       const optKeys = this._filterEntries(spec.optionalMap || []).map(e => e.role);
-      // An optional role shows a row once it holds a value, once it has been
-      // added from the menu this session -- or once it is ON THE BLOCK. That
-      // last one matters: an exposed-but-empty role (a Facet offered to the
-      // reader, currently "(none)") would otherwise have a control on the
-      // face and no row in the gear, so nothing to unpin it with.
+      // An optional role shows a row once it holds a value or once it has
+      // been added from the menu this session.
       const shownOpt = optKeys.filter((/** @type {string} */ k) =>
-        this._hasVal(cfg[k]) || this._added.has(k) || this._isExposed(k));
+        this._hasVal(cfg[k]) || this._added.has(k));
       const remaining = optKeys.filter((/** @type {string} */ k) => !shownOpt.includes(k));
       const mapExtra = this._filterEntries(spec.mapping || []);
 
@@ -495,9 +509,7 @@
       const mapNeeded = spec.requiredMap.length || shownOpt.length ||
         remaining.length || (!spec.aggregatable && mapExtra.length);
       if (mapNeeded) {
-        const mapKeys = this._bandSupported() ? this._mappingKeys(spec) : [];
-        const mapSec = this._sectionEl(this._mappingTitle('Mapping'),
-          mapKeys.length ? { action: this._exposeAllControl(mapKeys) } : {});
+        const mapSec = this._sectionEl(this._mappingTitle('Mapping'), {});
         for (const key of spec.requiredMap) this._renderRole(mapSec, key, { required: true });
         if (!spec.aggTitle && !spec.aggregatable) this._renderEntries(mapSec, mapExtra);
         // Repeatable aggregation list under Mapping only for non-aggregatable
@@ -603,11 +615,97 @@
         }
       }
 
+      this._renderScriptSection();
+
       if (this.h.afterTypeChange) this.h.afterTypeChange();
 
       // Rebuild done, content height is back — restore the scroll position
       // captured before the wipe (see above).
       if (scroller) scroller.scrollTop = scrollPos;
+    }
+
+    // The prepare script, last in the gear because it is the one thing here a
+    // reader never touches: the board builder writes it once, and what the
+    // reader gets is the controls it puts on the band.
+    //
+    // A checkbox capability, not an always-open box. Nineteen chart blocks in
+    // twenty carry no script, and a permanently visible code editor in all of
+    // them is a bigger tax than one header line.
+    //
+    // No-ops entirely where the host does not support it (the copy of this
+    // engine vendored into blockr.ggplot), because `script` is then absent
+    // from the config rather than empty.
+    _renderScriptSection() {
+      const cfg = this._cfg();
+      if (cfg.script === undefined) return;
+      const has = !!(cfg.script && String(cfg.script).trim());
+      const open = this._secOpen('script', () => has);
+      const sec = this._sectionEl('Prepare script', {
+        toggle: { checked: open, onToggle: (on) =>
+          this._toggleSection('script', on, () => {
+            cfg.script = '';
+            this.h.onChange('script');
+          }) }
+      });
+      if (!open) return;
+
+      const row = document.createElement('div');
+      row.className = 'dd-form-row dd-script-row';
+      const ta = document.createElement('textarea');
+      ta.className = 'blockr-popover-input dd-script-editor';
+      ta.rows = 6;
+      ta.spellcheck = false;
+      ta.placeholder = 'data |> dplyr::filter(...)';
+      ta.value = cfg.script == null ? '' : String(cfg.script);
+      // Commit on blur or the Apply chip, never per keystroke: every commit
+      // re-runs the script server-side and re-serializes the whole frame for
+      // the browser. Escape reverts to the last committed text. Enter inserts
+      // a newline, because this is a script and not a one-line field.
+      let committed = ta.value;
+      const chip = document.createElement('button');
+      chip.type = 'button';
+      chip.className = 'blockr-expr-confirm dd-text-commit';
+      chip.textContent = 'Apply';
+      chip.style.display = 'none';
+      const sync = () => { chip.style.display = ta.value === committed ? 'none' : ''; };
+      const commit = () => {
+        if (ta.value === committed) return;
+        committed = ta.value;
+        cfg.script = ta.value;
+        this.h.onChange('script');
+        sync();
+      };
+      ta.addEventListener('input', sync);
+      ta.addEventListener('blur', commit);
+      ta.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') { ta.value = committed; sync(); }
+      });
+      chip.addEventListener('mousedown', (e) => e.preventDefault());
+      chip.addEventListener('click', commit);
+      const wrap = document.createElement('div');
+      wrap.className = 'dd-text-wrap dd-script-wrap';
+      wrap.appendChild(ta);
+      wrap.appendChild(chip);
+      row.appendChild(wrap);
+
+      // What the script declared, read back. The band is the real feedback
+      // (write the line, apply, the knob appears), but a line that did NOT
+      // become a control says so here rather than being invisible.
+      const specs = this._scriptSpecs();
+      const help = document.createElement('span');
+      help.className = 'dd-form-help';
+      if (cfg.script_error) {
+        help.textContent = 'Script failed: ' + cfg.script_error;
+        help.classList.add('dd-script-failed');
+      } else if (specs.length) {
+        help.textContent = specs.map(sp => sp.kind === 'error' ?
+          (sp.name + ' (' + (sp.error || 'no control') + ')') :
+          (sp.name + ' (' + sp.kind + ')')).join(', ');
+      } else {
+        help.textContent = 'No controls declared.';
+      }
+      row.appendChild(help);
+      sec.appendChild(row);
     }
 
     /**
@@ -663,59 +761,6 @@
     }
 
     // The Mapping header's "on block" checkbox. Off when nothing is pinned,
-    // on when everything the block offers is; a partial pin shows as
-    // indeterminate, so the header never claims a state that is not true.
-    /** @param {Array<string>} keys */
-    _exposeAllControl(keys) {
-      const on = this._exposed();
-      const all = keys.length > 0 && keys.every(k => on.includes(k));
-      const some = !all && keys.some(k => on.includes(k));
-      const wrap = document.createElement('span');
-      wrap.className = 'dd-expose-all';
-      const box = document.createElement('span');
-      box.className = 'dd-section-checkbox' +
-        (all ? ' dd-on' : some ? ' dd-partial' : '');
-      box.setAttribute('role', 'checkbox');
-      box.setAttribute('tabindex', '0');
-      box.setAttribute('aria-checked', all ? 'true' : some ? 'mixed' : 'false');
-      const lbl = document.createElement('span');
-      lbl.className = 'dd-expose-all-label';
-      lbl.textContent = 'On block';
-      wrap.appendChild(box);
-      wrap.appendChild(lbl);
-      const flip = (/** @type {Event} */ e) => {
-        e.stopPropagation();
-        this._setExposedAll(keys, !all);
-      };
-      wrap.addEventListener('click', flip);
-      box.addEventListener('keydown', (/** @type {KeyboardEvent} */ e) => {
-        if (e.key !== ' ' && e.key !== 'Enter') return;
-        e.preventDefault();
-        flip(e);
-      });
-      return wrap;
-    }
-
-    // The per-role pin, in a mapping row's head next to the remove button.
-    // Up-arrow, because that is the direction the control travels: out of the
-    // gear and onto the block's face.
-    /** @param {string} key @param {string} roleLabel */
-    _exposePin(key, roleLabel) {
-      const on = this._isExposed(key);
-      const btn = document.createElement('button');
-      btn.type = 'button';
-      btn.className = 'dd-role-pin' + (on ? ' dd-on' : '');
-      btn.title = on ? 'Remove ' + roleLabel + ' from the block'
-        : 'Show ' + roleLabel + ' on the block';
-      btn.setAttribute('aria-pressed', on ? 'true' : 'false');
-      btn.innerHTML = '\u2191';
-      btn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        this._setExposed(key, !on);
-      });
-      return btn;
-    }
-
     // Per-section open state for the Variant A toggle sections (aggregation,
     // drill-down). Persists across re-renders (it is an instance field), seeded
     // from the config the first time a section is seen.
@@ -886,14 +931,6 @@
       // params carry no such marks either.
       lbl.textContent = roleLabel + (reqMark && !opts.band ? ' *' : '');
       head.appendChild(lbl);
-      // The pin, on mapping rows in the popover only: the band's own copy of
-      // a row is not the place to take itself off the band, and a
-      // presentation row has nowhere to go. Before the remove button, so the
-      // destructive one stays the outermost of the two.
-      if (!opts.band && this._bandSupported() &&
-          this._mappingKeys(this.h.sections() || {}).includes(key)) {
-        head.appendChild(this._exposePin(key, roleLabel));
-      }
       if (opts.removable && !opts.band) {
         const rm = document.createElement('button');
         rm.type = 'button';
@@ -936,7 +973,7 @@
         // silently turns "worst value per patient" into "best" with nothing
         // in the chart saying so. The column beside it is a real choice --
         // the board's own picker offers AVAL / CHG / PCHG.
-        if (opts.band && !this._isExposed(role.pairedWith)) {
+        if (opts.band) {
           const word = document.createElement('span');
           word.className = 'dd-pair-fixed';
           const DAgg = (typeof Blockr !== 'undefined' && Blockr.DrilldownAgg) ||
@@ -1643,6 +1680,68 @@
         wrap.appendChild(inp);
         wrap.appendChild(chip);
         parent.appendChild(wrap);
+      } else if (role.kind === 'multi') {
+        // Multi-select over a fixed option list (a prepare script's
+        // `factor(c("a","b"), lv)`). The column multi-picker above is the same
+        // primitive fed from the data; this one takes the role's own options,
+        // which is the only difference between them.
+        const sel = Array.isArray(cfg[key]) ? cfg[key].slice() :
+          (this._hasVal(cfg[key]) ? [String(cfg[key])] : []);
+        const wrap = document.createElement('div');
+        wrap.className = 'blockr-popover-select-wrap dd-picker-wrap';
+        const onSel = (/** @type {string[]} */ vals) => {
+          cfg[key] = vals; cb(); this.h.onChange(key);
+        };
+        if (typeof Blockr !== 'undefined' && Blockr.Select && Blockr.Select.multi) {
+          this._selects[key] = Blockr.Select.multi(wrap, {
+            options: role.options || [], selected: sel,
+            placeholder: role.placeholder || 'None', onChange: onSel
+          });
+        } else {
+          const sl = document.createElement('select');
+          sl.className = 'dd-cfg-select'; sl.multiple = true;
+          for (const o of (role.options || [])) {
+            const val = (typeof o === 'object' && o) ? o.value : o;
+            const op = document.createElement('option');
+            op.value = val;
+            op.textContent = (typeof o === 'object' && o && o.label) ? o.label : val;
+            if (sel.indexOf(val) >= 0) op.selected = true;
+            sl.appendChild(op);
+          }
+          sl.addEventListener('change', () => onSel(
+            Array.prototype.slice.call(sl.selectedOptions).map(o => o.value)));
+          wrap.appendChild(sl);
+        }
+        parent.appendChild(wrap);
+      } else if (role.kind === 'number' || role.kind === 'date') {
+        // Commits on change and on blur, not per keystroke: every commit
+        // re-runs the prepare script and re-serializes the frame for the
+        // browser, so a half-typed "1" on the way to "12" must not travel.
+        const inp = document.createElement('input');
+        inp.type = role.kind === 'date' ? 'date' : 'number';
+        inp.className = 'blockr-popover-input';
+        if (role.min != null) inp.min = String(role.min);
+        if (role.max != null) inp.max = String(role.max);
+        if (role.step != null) inp.step = String(role.step);
+        if (role.placeholder) inp.placeholder = String(role.placeholder);
+        inp.value = (cfg[key] == null) ? '' : String(cfg[key]);
+        let committed = inp.value;
+        const commit = () => {
+          if (inp.value === committed) return;
+          committed = inp.value;
+          cfg[key] = (role.kind === 'number') ? Number(inp.value) : inp.value;
+          cb();
+          this.h.onChange(key);
+        };
+        inp.addEventListener('change', commit);
+        inp.addEventListener('blur', commit);
+        inp.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') { e.preventDefault(); commit(); }
+        });
+        const wrap = document.createElement('div');
+        wrap.className = 'dd-text-wrap';
+        wrap.appendChild(inp);
+        parent.appendChild(wrap);
       } else if (role.kind === 'slider') {
         this._buildSlider(parent, key);
       } else if (role.kind === 'color') {
@@ -1686,6 +1785,71 @@
         wrap.appendChild(/** @type {any} */ (box).el);
       }
       parent.appendChild(wrap);
+    }
+
+    /* The options behind a word in the block's sentence.
+     *
+     * Same lists the gear's rows get, so a slot can never offer a column the
+     * gear would refuse. Returns null for the kinds a menu cannot carry (a
+     * multi-column scope, a slider, free text) -- those stay in the gear.
+     *
+     * @param {string} key
+     */
+    _slotOptionsFor(key) {
+      const role = this._role(key);
+      if (!role) return null;
+      const cfg = this._cfg();
+      // Two sources, both of them: the section spec's requiredMap (a line
+      // chart's x and y) and the host's own question (the chart's `value`,
+      // required only when it is being aggregated). Asking one of them offers
+      // "(none)" on a role the chart cannot do without.
+      const spec = this.h.sections() || {};
+      const required = (spec.requiredMap || []).indexOf(key) >= 0 ||
+        !!(this.h.entryRequired && this.h.entryRequired(key));
+      if (role.kind === 'column') {
+        return {
+          options: this._colOptionsFor(key, { required }),
+          selected: this._hasVal(cfg[key]) ? cfg[key] : (required ? '' : '(none)')
+        };
+      }
+      if (role.kind === 'select') {
+        const options = this._selectOptionsFor(key);
+        const first = (typeof options[0] === 'object' && options[0])
+          ? options[0].value : options[0];
+        return {
+          options: options,
+          selected: this._hasVal(cfg[key]) ? cfg[key] : first
+        };
+      }
+      return null;
+    }
+
+    /* Write a role from outside the gear's own rows.
+     *
+     * The one place that knows what a pick means: '(none)' is stored as '',
+     * a column pick is remembered for the role, a select that gates other
+     * rows re-renders the gear. A slot calls this instead of re-implementing
+     * it, or the two paths drift.
+     *
+     * @param {string} key @param {string} val
+     */
+    _setRoleValue(key, val) {
+      const role = this._role(key);
+      if (!role) return;
+      const cfg = this._cfg();
+      if (role.kind === 'column') {
+        cfg[key] = (val === '(none)') ? '' : val;
+        this._rememberRole(key, cfg[key]);
+        this.h.onChange(key);
+        this.h.onClearFilter();
+      } else {
+        cfg[key] = val;
+        this.h.onChange(key);
+      }
+      // The gear may be open on the same role: its row shows a stale value
+      // until it is rebuilt.
+      if (this.h.isOpen && this.h.isOpen()) this.render();
+      this.renderBand();
     }
 
     // Build a Blockr.Select (or native fallback). `decorate` shows
