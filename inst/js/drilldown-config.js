@@ -100,7 +100,26 @@
     _cols() { return this.h.columns() || []; }
     _cfg() { return this.h.config(); }
     /** @param {string} key */
-    _role(key) { return this.h.roles[key] || this._scriptRoles()[key]; }
+    _role(key) {
+      return this.h.roles[key] || this._scriptRoles()[key] ||
+        this._scriptRoles()[this._slotCfgKey(key)];
+    }
+
+    /* The config key behind a word in the sentence.
+     *
+     * A template names a script value by the variable the script declares
+     * (`{@param}`), while the control channel keys it `sv_param`
+     * (R/prepare-apply.R: dd_script_key). Without the translation a slot
+     * resolved no role, so clicking the word opened nothing and a flag word
+     * wrote a config entry no one reads.
+     *
+     * @param {string} key @returns {string}
+     */
+    _slotCfgKey(key) {
+      if (this.h.roles[key]) return key;
+      const sp = this._scriptSpecs().find(x => x && x.name === key && x.key);
+      return sp ? sp.key : key;
+    }
 
     // Controls declared by the prepare script. R has already worked out what
     // each declaration means (R/prepare-apply.R: dd_script_roles) and ships
@@ -193,10 +212,13 @@
       if (!this._bandSupported()) return;
       const el = this.h.bandEl();
       if (!el) return;
-      // Controls the prepare script declares. Always here, with no pin in the
-      // gear: writing the declaration IS asking for the knob, and a knob
-      // nothing can reach is not worth the line.
-      const specs = this._scriptSpecs();
+      // Controls the prepare script declares. Here by default, with no pin in
+      // the gear: writing the declaration IS asking for the knob, and a knob
+      // nothing can reach is not worth the line. A value the block's own text
+      // names is dropped: the word IS its control, and two live copies of one
+      // setting on one face is a state nobody can explain.
+      const named = new Set(this._cfg().sentence_args || []);
+      const specs = this._scriptSpecs().filter(sp => sp && !named.has(sp.name));
       const err = this._cfg().script_error;
       el.innerHTML = '';
       const any = specs.length || err;
@@ -1796,6 +1818,7 @@
      * @param {string} key
      */
     _slotOptionsFor(key) {
+      key = this._slotCfgKey(key);
       const role = this._role(key);
       if (!role) return null;
       const cfg = this._cfg();
@@ -1824,6 +1847,15 @@
       return null;
     }
 
+    /* Is this word a flag? A flag toggles in place: a menu of two words is a
+     * menu too many (blockr.docs design-system/pinned-controls.md).
+     * @param {string} key
+     */
+    _slotFlag(key) {
+      const sp = this._scriptSpecs().find(x => x && x.name === key);
+      return (sp && sp.kind === 'segmented') ? sp : null;
+    }
+
     /* Write a role from outside the gear's own rows.
      *
      * The one place that knows what a pick means: '(none)' is stored as '',
@@ -1834,6 +1866,7 @@
      * @param {string} key @param {string} val
      */
     _setRoleValue(key, val) {
+      key = this._slotCfgKey(key);
       const role = this._role(key);
       if (!role) return;
       const cfg = this._cfg();
