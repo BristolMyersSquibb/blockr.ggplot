@@ -6,6 +6,8 @@
 #' tray from them; gg-blocks.css lays out what is ggplot's own (chart-type
 #' tiles, layout preview, colour field), scoped under `.gg-`.
 #'
+#' @importFrom blockr.ui controls_dep
+#' @importFrom htmltools htmlDependency
 #' @noRd
 ggplot_block_deps <- memoise0(function() {
   htmltools::tagList(
