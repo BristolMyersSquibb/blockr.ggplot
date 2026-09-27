@@ -266,7 +266,7 @@ new_theme_block <- function(
           r_palette_fill <- reactiveVal(palette_fill)
           r_palette_colour <- reactiveVal(palette_colour)
 
-          # Flattened base_theme options for the JS settings band: the
+          # Flattened base_theme options for the JS controls: the
           # grouped build_theme_choices() list is runtime-dependent
           # (installed theme packages), so it travels with the push
           # message as {value, label} pairs.
@@ -299,8 +299,8 @@ new_theme_block <- function(
           # buffered for it. Shiny DROPS a custom message that has no
           # registered handler, and a dock panel on a view nobody has
           # opened yet has no element to receive one -- so this push
-          # can be lost outright, and the band then renders empty, with
-          # no columns and no config where the controls belong. Keep the
+          # can be lost outright, and the controls then render empty, with
+          # no columns and no config. Keep the
           # last payload and re-send it when the client says it is here.
           last_push <- new.env(parent = emptyenv())
           last_push$msg <- NULL
@@ -541,9 +541,9 @@ new_theme_block <- function(
       )
     },
     function(id) {
-      # JS-first UI (settings-band pattern, see ggplot-block.R): only the
-      # html dependencies plus an empty container; inst/js/gg-blocks.js
-      # builds the gear header and settings band (spec "theme").
+      # JS-first UI: the html dependencies and an empty container;
+      # gg-blocks.js builds the face (base theme, legend, palettes) and the
+      # gear tray (spec "theme").
       tagList(
         ggplot_block_deps(),
         div(

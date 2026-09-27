@@ -83,8 +83,8 @@ new_ggplot_block <- function(
   }
 
   # Define which aesthetics are valid for each chart type.
-  # NB: this list is mirrored by GG_TYPE_ROLES in inst/js/gg-blocks.js (the
-  # settings-band UI) — keep both in sync.
+  # NB: this list is mirrored by GG_TYPES in inst/js/gg-blocks.js. Keep
+  # both in sync.
   chart_aesthetics <- list(
     point = list(
       required = c("x", "y"),
@@ -172,7 +172,7 @@ new_ggplot_block <- function(
           r_xlab <- reactiveVal(chr1(xlab))
           r_ylab <- reactiveVal(chr1(ylab))
 
-          # Column metadata for the JS settings band (same
+          # Column metadata for the JS controls (same
           # name/type/n_unique/label/levels shape as blockr.viz's chart
           # block; factor level order travels as data).
           r_col_meta <- reactive({
@@ -180,13 +180,15 @@ new_ggplot_block <- function(
             req(is.data.frame(d))
             lapply(names(d), function(col) {
               vals <- d[[col]]
-              lbl <- attr(vals, "label")
+              lbl <- attr(vals, "label", exact = TRUE)
               res <- list(
                 name = col,
                 type = if (is.numeric(vals)) "numeric" else "categorical",
                 n_unique = length(unique(vals))
               )
-              if (!is.null(lbl) && nzchar(lbl)) res$label <- lbl
+              if (is.character(lbl) && length(lbl) == 1L && nzchar(lbl)) {
+                res$label <- lbl
+              }
               if (is.factor(vals)) res$levels <- as.list(levels(vals))
               res
             })
@@ -208,8 +210,8 @@ new_ggplot_block <- function(
           # buffered for it. Shiny DROPS a custom message that has no
           # registered handler, and a dock panel on a view nobody has
           # opened yet has no element to receive one -- so this push
-          # can be lost outright, and the band then renders empty, with
-          # no columns and no config where the controls belong. Keep the
+          # can be lost outright, and the controls then render empty, with
+          # no columns and no config. Keep the
           # last payload and re-send it when the client says it is here.
           last_push <- new.env(parent = emptyenv())
           last_push$msg <- NULL
@@ -254,13 +256,13 @@ new_ggplot_block <- function(
             }
           })
 
-          # JS -> R: the band echoes the FULL config on every change. Only
+          # JS -> R: the controls echo the FULL config on every change. Only
           # write when a value actually changed — a blind reactiveVal set
           # invalidates the push observe above, which re-sends to JS, which
           # echoes back: an R->JS->R loop. Same identical() guard as
           # blockr.viz's chart block. This also gives external control for
           # free: an externally set state reactiveVal re-runs the push
-          # observe and the band re-renders.
+          # observe and the controls follow.
           upd <- function(rv, v) {
             if (!identical(isolate(rv()), v)) rv(v)
           }
@@ -598,11 +600,10 @@ new_ggplot_block <- function(
       )
     },
     function(id) {
-      # JS-first UI (settings-band pattern from blockr.viz): the expr slot
-      # renders only the html dependencies plus an empty container; the gear
-      # header and in-flow settings band are built by inst/js/gg-blocks.js.
-      # The plot itself stays block_ui's plotOutput below this container, so
-      # opening the band pushes it down and the result remains visible.
+      # JS-first UI: the html dependencies and an empty container;
+      # gg-blocks.js builds the gear, its tray and the face (chart type,
+      # mapping). The plot is block_ui's plotOutput below the container, so
+      # opening the tray pushes it down and it stays in view.
       tagList(
         ggplot_block_deps(),
         div(

@@ -1,474 +1,339 @@
 // @ts-check
 /**
- * gg-blocks.js — JS-first settings UI for blockr.ggplot blocks.
+ * gg-blocks.js: the face and the gear tray of the blockr.ggplot blocks
+ * (ggplot, facet, grid, theme), built from blockr.ui's controls
+ * (Blockr.Select, Blockr.segmented, Blockr.checkbox, Blockr.textCommit,
+ * Blockr.gearTray, Blockr.menu, Blockr.tooltip).
  *
- * Pattern follows blockr.viz/inst/js/chart.js (the settings-band pilot): a
- * Shiny.InputBinding binds the block's expr-UI container, builds the gear
- * header + in-flow settings band, and hands rendering of the band to the
- * shared Blockr.DrilldownConfig engine. Unlike blockr.viz (client-side
- * ECharts), the plot itself renders server-side via Shiny's plotOutput — the
- * JS side owns ONLY the configuration UI and echoes config changes back to R
- * through a single `<id>_action` input.
+ * A Shiny input binding binds each block's container. R pushes the columns
+ * and the config ('gg-block-data'); every change echoes the full config back
+ * through one '<id>_action' input. The plot renders server-side in the
+ * block's plotOutput, below the container.
  *
- * The GG_ROLES / GG_TYPE_ROLES specs mirror the `chart_aesthetics` list in
- * R/ggplot-block.R (the authority for expression generation) — keep in sync.
+ * GG_TYPES mirrors `chart_aesthetics` in R/ggplot-block.R, which decides the
+ * expression. Keep both in sync.
  */
 (() => {
   'use strict';
 
-  // -- ggplot block spec ------------------------------------------------------
+  // -- ggplot block --------------------------------------------------------
 
-  // Role catalog: every config key the ggplot block exposes. Aesthetic
-  // mappings are column pickers open to any column type (parity with the old
-  // Shiny selects, which offered every column; the R expression wraps
-  // shape/linetype/discrete-fill in as.factor() where needed).
-  const GG_ROLES = {
-    // x/y are required, so empty is not a configuration to name: the
-    // placeholder says what to supply. The optional roles below are never
-    // blank — they carry a `(none)` option which displays when unset.
-    x:        { label: 'X-axis',       kind: 'column', colType: 'any',
-                ph: 'Select column…' },
-    y:        { label: 'Y-axis',       kind: 'column', colType: 'any',
-                ph: 'Select column…' },
-    color:    { label: 'Color by',     kind: 'column', colType: 'any' },
-    fill:     { label: 'Fill by',      kind: 'column', colType: 'any' },
-    size:     { label: 'Size by',      kind: 'column', colType: 'any' },
-    shape:    { label: 'Shape by',     kind: 'column', colType: 'any' },
-    linetype: { label: 'Line type by', kind: 'column', colType: 'any' },
-    group:    { label: 'Group by',     kind: 'column', colType: 'any' },
-    alpha:    { label: 'Alpha by',     kind: 'column', colType: 'any' },
-    position: {
-      label: 'Position', kind: 'select',
-      // Per-type option lists — context() is the chart type.
-      optionsBy: {
-        bar: ['stack', 'dodge', 'fill'],
-        histogram: ['stack', 'identity', 'dodge']
-      }
-    },
-    // Bounds match the old numericInput(min = 1, max = 100).
-    bins:          { label: 'Bins',    kind: 'slider', min: 1, max: 100, step: 1, unit: '' },
-    density_alpha: { label: 'Opacity', kind: 'slider', min: 0, max: 1, step: 0.05, unit: '' },
-    donut: {
-      label: 'Donut', kind: 'segmented',
-      options: [
-        { value: 'on', label: 'Donut chart style' },
-        { value: 'off', label: 'Off' }
-      ]
-    },
-    // Trend line. The values are ggplot2's `method` argument verbatim, so
-    // the emitted geom_smooth() call reads the way it would if it had been
-    // typed. The band toggle stays visible with the smoother off (this
-    // engine has no conditional rows), where it simply does nothing.
-    // The option LABEL is a description, not a restatement: this select
-    // widget shows the value and its label side by side (like a column
-    // picker showing name + variable label), so "loess / Loess" would say
-    // one thing twice.
-    smoother: {
-      label: 'Trend line', kind: 'select',
-      options: [
-        { value: 'none', label: 'No trend line' },
-        { value: 'lm', label: 'Straight line fit' },
-        { value: 'loess', label: 'Local regression' }
-      ]
-    },
-    smoother_se: {
-      label: 'Band', kind: 'segmented',
-      options: [
-        { value: 'on', label: 'Confidence band' },
-        { value: 'off', label: 'Off' }
-      ]
-    },
-    // Axis transform. "Linear" is the identity scale, i.e. no scale_y_* call
-    // at all — named rather than left blank because an axis always has a
-    // scale, and "none" would read as "no axis".
-    y_trans: {
-      label: 'Y scale', kind: 'select',
-      options: [
-        { value: 'identity', label: 'Untransformed' },
-        { value: 'log10', label: 'Logarithm, base 10' },
-        { value: 'sqrt', label: 'Square root' }
-      ]
-    },
-    y_zero: {
-      label: 'Y zero', kind: 'segmented',
-      options: [
-        { value: 'on', label: 'Include zero' },
-        { value: 'off', label: 'Off' }
-      ]
-    },
-    // Text. The placeholders say what an empty field yields, which for the
-    // axis names is ggplot2's default (the column name) and above the panel
-    // is nothing at all.
-    title:    { label: 'Title',    kind: 'text', ph: 'None' },
-    subtitle: { label: 'Subtitle', kind: 'text', ph: 'None' },
-    caption:  { label: 'Caption',  kind: 'text', ph: 'None' },
-    xlab:     { label: 'X label',  kind: 'text', ph: 'Column name' },
-    ylab:     { label: 'Y label',  kind: 'text', ph: 'Column name' }
+  /** @type {Record<string, string>} */
+  const COLUMN_ROLES = {
+    x: 'X-axis',
+    y: 'Y-axis',
+    color: 'Color by',
+    fill: 'Fill by',
+    size: 'Size by',
+    shape: 'Shape by',
+    linetype: 'Line type by',
+    group: 'Group by',
+    alpha: 'Alpha by'
   };
 
-  // Presentation groups shared by the chart types, spread into the per-type
-  // lists below. TREND is point/line only (the other types carry their own
-  // stat, or have no cloud to fit); AXIS and the axis names skip pie, which
-  // has no cartesian axes.
-  const TREND = ['smoother', 'smoother_se'];
-  const AXIS = ['y_trans', 'y_zero'];
-  const LABS = ['title', 'subtitle', 'caption', 'xlab', 'ylab'];
-
-  // Per-chart-type sections — a direct translation of `chart_aesthetics`
-  // (R/ggplot-block.R), with the old show/hide special cases baked in:
-  // density has no variable alpha/group (fixed-opacity slider; group is
-  // derived from fill), bar/histogram expose position, histogram bins,
-  // pie the donut toggle.
-  /** @type {Record<string, { requiredMap: string[], optionalMap: string[], mapping: any[], presentation: any[] }>} */
-  const GG_TYPE_ROLES = {
-    point:     { requiredMap: ['x', 'y'], optionalMap: ['color', 'shape', 'size', 'alpha', 'fill'], mapping: [], presentation: [...TREND, ...AXIS, ...LABS] },
-    bar:       { requiredMap: ['x'],      optionalMap: ['y', 'fill', 'color', 'alpha'],             mapping: [], presentation: ['position', ...AXIS, ...LABS] },
-    line:      { requiredMap: ['x', 'y'], optionalMap: ['color', 'linetype', 'alpha', 'group'],     mapping: [], presentation: [...TREND, ...AXIS, ...LABS] },
-    boxplot:   { requiredMap: ['x', 'y'], optionalMap: ['fill', 'color', 'alpha'],                  mapping: [], presentation: [...AXIS, ...LABS] },
-    violin:    { requiredMap: ['x', 'y'], optionalMap: ['fill', 'color', 'alpha'],                  mapping: [], presentation: [...AXIS, ...LABS] },
-    density:   { requiredMap: ['x'],      optionalMap: ['fill'],                                    mapping: [], presentation: ['density_alpha', ...AXIS, ...LABS] },
-    area:      { requiredMap: ['x', 'y'], optionalMap: ['fill', 'alpha'],                           mapping: [], presentation: [...AXIS, ...LABS] },
-    histogram: { requiredMap: ['x'],      optionalMap: ['fill', 'color', 'alpha'],                  mapping: [], presentation: ['bins', 'position', ...AXIS, ...LABS] },
-    pie:       { requiredMap: ['x'],      optionalMap: ['y', 'fill', 'alpha'],                      mapping: [], presentation: ['donut', 'title', 'subtitle', 'caption'] }
+  /** @type {Record<string, { label: string, required: string[], optional: string[] }>} */
+  const GG_TYPES = {
+    point:     { label: 'Point',     required: ['x', 'y'], optional: ['color', 'shape', 'size', 'alpha', 'fill'] },
+    bar:       { label: 'Bar',       required: ['x'],      optional: ['y', 'fill', 'color', 'alpha'] },
+    line:      { label: 'Line',      required: ['x', 'y'], optional: ['color', 'linetype', 'alpha', 'group'] },
+    boxplot:   { label: 'Boxplot',   required: ['x', 'y'], optional: ['fill', 'color', 'alpha'] },
+    pie:       { label: 'Pie',       required: ['x'],      optional: ['y', 'fill', 'alpha'] },
+    histogram: { label: 'Histogram', required: ['x'],      optional: ['fill', 'color', 'alpha'] },
+    // Density has no variable alpha or group: the opacity is a number in
+    // the gear, and the group follows fill.
+    density:   { label: 'Density',   required: ['x'],      optional: ['fill'] },
+    violin:    { label: 'Violin',    required: ['x', 'y'], optional: ['fill', 'color', 'alpha'] },
+    area:      { label: 'Area',      required: ['x', 'y'], optional: ['fill', 'alpha'] }
   };
+  const GG_TYPE_ORDER = Object.keys(GG_TYPES);
 
-  // Same order as the old icon strip.
-  const GG_TYPE_ORDER = [
-    'point', 'bar', 'line', 'boxplot', 'pie',
-    'histogram', 'density', 'violin', 'area'
-  ];
-
-  /** @param {string} t */
-  const ggSections = (t) => GG_TYPE_ROLES[t] || GG_TYPE_ROLES.point;
-
-  // Main-vs-advanced split: ALL optional aesthetics live in the main area's
-  // "+ Add mapping" dropdown (they only show once added, so they don't
-  // clutter it — no need for a separate advanced tier like the pre-band
-  // UI had). The advanced band holds only the chart-specific presentation
-  // extras (position, bins, donut, density opacity); for types without
-  // any, the gear is hidden entirely.
-  /** @param {string} t */
-  const ggMainFor = (t) => {
-    const s = ggSections(t);
-    return {
-      requiredMap: s.requiredMap,
-      optionalMap: s.optionalMap,
-      mapping: [],
-      presentation: []
-    };
-  };
-
-  /** @param {string} t */
-  const ggAdvFor = (t) => {
-    const s = ggSections(t);
-    return {
-      requiredMap: [],
-      optionalMap: [],
-      mapping: [],
-      presentation: s.presentation
-    };
-  };
-
-  // Subtle inline chart-type icons (successors of the old FontAwesome strip;
-  // hand-drawn so no icon-font dependency). 14px, currentColor, dimmed via
-  // CSS so the text label stays primary.
   /** @type {Record<string, string>} */
   const GG_TYPE_ICONS = {
     point:
-      '<svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">' +
+      '<svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">' +
       '<circle cx="4" cy="11" r="1.6"/><circle cx="8" cy="6" r="1.6"/>' +
       '<circle cx="12" cy="9" r="1.6"/><circle cx="13" cy="3" r="1.6"/></svg>',
     bar:
-      '<svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">' +
+      '<svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">' +
       '<rect x="2" y="8" width="3" height="6"/><rect x="6.5" y="4" width="3" height="10"/>' +
       '<rect x="11" y="10" width="3" height="4"/></svg>',
     line:
-      '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" ' +
-      'stroke="currentColor" stroke-width="1.6" stroke-linecap="round">' +
-      '<path d="M2 12 L6 7 L10 9 L14 3"/></svg>',
+      '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" ' +
+      'stroke-linecap="round" aria-hidden="true"><path d="M2 12 L6 7 L10 9 L14 3"/></svg>',
     boxplot:
-      '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" ' +
-      'stroke="currentColor" stroke-width="1.4">' +
+      '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true">' +
       '<rect x="4" y="5" width="8" height="6"/>' +
       '<path d="M4 8 h8 M8 2 v3 M8 11 v3 M6 2 h4 M6 14 h4"/></svg>',
     pie:
-      '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" ' +
-      'stroke="currentColor" stroke-width="1.4">' +
+      '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true">' +
       '<circle cx="8" cy="8" r="6"/><path d="M8 8 V2 M8 8 L13 11"/></svg>',
     histogram:
-      '<svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">' +
+      '<svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">' +
       '<rect x="2" y="9" width="3" height="5"/><rect x="5" y="5" width="3" height="9"/>' +
       '<rect x="8" y="7" width="3" height="7"/><rect x="11" y="11" width="3" height="3"/></svg>',
     density:
-      '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" ' +
-      'stroke="currentColor" stroke-width="1.6" stroke-linecap="round">' +
-      '<path d="M2 13 C5 13 5 4 8 4 C11 4 11 13 14 13"/></svg>',
+      '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" ' +
+      'stroke-linecap="round" aria-hidden="true"><path d="M2 13 C5 13 5 4 8 4 C11 4 11 13 14 13"/></svg>',
     violin:
-      '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" ' +
-      'stroke="currentColor" stroke-width="1.4">' +
+      '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true">' +
       '<path d="M8 2 C10 5 12 6 12 9 C12 12 10 14 8 14 C6 14 4 12 4 9 C4 6 6 5 8 2 Z"/></svg>',
     area:
-      '<svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">' +
+      '<svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">' +
       '<path d="M2 14 L2 11 L6 6 L10 8 L14 3 L14 14 Z" opacity="0.85"/></svg>'
   };
 
-  // -- theme block spec ---------------------------------------------------
-  // Mirrors the constructor args / expr logic in R/theme-block.R. base_theme
-  // options are runtime-dependent (gated on installed theme packages), so
-  // the R server ships them in the push message (`choices`), not here.
+  /**
+   * One field in the grid.
+   * @typedef {{
+   *   key: string,
+   *   kind: 'column' | 'columns' | 'select' | 'segmented' | 'check' |
+   *         'text' | 'number' | 'colour' | 'preview',
+   *   label?: string,
+   *   size?: 'small' | 'large' | 'full',
+   *   options?: string[][],
+   *   ph?: string,
+   *   required?: boolean,
+   *   removable?: boolean,
+   *   min?: number, max?: number, step?: number,
+   *   empty?: string
+   * }} Field
+   */
+  /** @typedef {{ title?: string, fields: Field[] }} Section */
+  /** @typedef {{ tiles?: boolean, fields?: Field[], add?: string[] }} FacePart */
 
-  /** @type {Record<string, any>} */
-  const THEME_ROLES = {
-    base_theme:      { label: 'Base theme',      kind: 'select', options: [] },
-    legend_position: {
-      label: 'Legend position', kind: 'select',
-      options: [
-        { value: 'auto', label: 'Auto (theme default)' },
-        { value: 'right', label: 'Right' },
-        { value: 'left', label: 'Left' },
-        { value: 'top', label: 'Top' },
-        { value: 'bottom', label: 'Bottom' },
-        { value: 'none', label: 'None' }
-      ]
-    },
-    palette_fill:    { label: 'Fill palette',    kind: 'select', options: [] },
-    palette_colour:  { label: 'Colour palette',  kind: 'select', options: [] },
-    panel_bg:        { label: 'Panel background', kind: 'color' },
-    plot_bg:         { label: 'Plot background',  kind: 'color' },
-    grid_color:      { label: 'Grid color',       kind: 'color' },
-    base_size: {
-      label: 'Base font size', kind: 'select',
-      options: [
-        { value: 'auto', label: 'Auto (theme default)' },
-        '8', '9', '10', '11', '12', '13', '14', '16', '18', '20'
-      ]
-    },
-    base_family: {
-      label: 'Font family', kind: 'select',
-      options: [
-        { value: 'auto', label: 'Auto (theme default)' },
-        { value: 'sans', label: 'Sans serif' },
-        { value: 'serif', label: 'Serif' },
-        { value: 'mono', label: 'Monospace' }
-      ]
-    },
-    show_major_grid: {
-      label: 'Major grid', kind: 'segmented',
-      options: [
-        { value: 'auto', label: 'Auto' },
-        { value: 'show', label: 'Show' },
-        { value: 'hide', label: 'Hide' }
-      ]
-    },
-    show_minor_grid: {
-      label: 'Minor grid', kind: 'segmented',
-      options: [
-        { value: 'auto', label: 'Auto' },
-        { value: 'show', label: 'Show' },
-        { value: 'hide', label: 'Hide' }
-      ]
-    },
-    show_panel_border: {
-      label: 'Panel border', kind: 'segmented',
-      options: [
-        { value: 'auto', label: 'Auto' },
-        { value: 'show', label: 'Show' },
-        { value: 'hide', label: 'Hide' }
-      ]
+  /** @param {any} v */
+  const hasVal = (v) => Array.isArray(v) ? v.length > 0 : (v !== null && v !== undefined && v !== '');
+
+  /**
+   * The ggplot block's gear: presentation for the current chart type. One
+   * section, so no title.
+   * @param {GgBlock} b
+   * @returns {Section[]}
+   */
+  const ggTray = (b) => {
+    const t = b.config.type;
+    /** @type {Field[]} */
+    const f = [];
+    if (t === 'bar') {
+      f.push({ key: 'position', kind: 'segmented', label: 'Position',
+               options: [['stack', 'Stack'], ['dodge', 'Dodge'], ['fill', 'Fill']] });
     }
+    if (t === 'histogram') {
+      f.push({ key: 'bins', kind: 'number', label: 'Bins', size: 'small',
+               min: 1, max: 100, step: 1 });
+      f.push({ key: 'position', kind: 'segmented', label: 'Position',
+               options: [['stack', 'Stack'], ['identity', 'Overlap'], ['dodge', 'Dodge']] });
+    }
+    if (t === 'density') {
+      f.push({ key: 'density_alpha', kind: 'number', label: 'Opacity', size: 'small',
+               min: 0, max: 1, step: 0.05 });
+    }
+    if (t === 'pie') {
+      f.push({ key: 'donut', kind: 'check', label: 'Donut' });
+    }
+    if (t === 'point' || t === 'line') {
+      // The values are ggplot2's `method` argument, so the emitted
+      // geom_smooth() reads as if typed.
+      f.push({ key: 'smoother', kind: 'select', label: 'Trend line',
+               options: [['none', 'None'], ['lm', 'Linear'], ['loess', 'Smooth']] });
+      if (b.config.smoother && b.config.smoother !== 'none') {
+        f.push({ key: 'smoother_se', kind: 'check', label: 'Confidence band' });
+      }
+    }
+    if (t !== 'pie') {
+      f.push({ key: 'y_trans', kind: 'select', label: 'Y scale',
+               options: [['identity', 'Linear'], ['log10', 'Log 10'], ['sqrt', 'Square root']] });
+      f.push({ key: 'y_zero', kind: 'check', label: 'Include zero' });
+    }
+    f.push({ key: 'title', kind: 'text', label: 'Title', ph: 'None' });
+    f.push({ key: 'subtitle', kind: 'text', label: 'Subtitle', ph: 'None' });
+    f.push({ key: 'caption', kind: 'text', label: 'Caption', ph: 'None' });
+    if (t !== 'pie') {
+      f.push({ key: 'xlab', kind: 'text', label: 'X label', ph: 'Column name' });
+      f.push({ key: 'ylab', kind: 'text', label: 'Y label', ph: 'Column name' });
+    }
+    return [{ fields: f }];
   };
 
-  // Both viridis palettes share the same option list.
-  const PALETTE_OPTIONS = [
-    { value: 'auto', label: 'Auto (keep upstream)' },
-    { value: 'viridis_d', label: 'Viridis (categorical)' },
-    { value: 'viridis_c', label: 'Viridis (continuous)' },
-    { value: 'magma_d', label: 'Magma (categorical)' },
-    { value: 'magma_c', label: 'Magma (continuous)' },
-    { value: 'plasma_d', label: 'Plasma (categorical)' },
-    { value: 'plasma_c', label: 'Plasma (continuous)' },
-    { value: 'ggplot2', label: 'ggplot2 default' }
+  /** @param {GgBlock} b */
+  const ggShownOptional = (b) => {
+    const spec = GG_TYPES[b.config.type] || GG_TYPES.point;
+    return spec.optional.filter((k) => hasVal(b.config[k]) || b.added.has(k));
+  };
+
+  /**
+   * The ggplot block's face: chart type tiles, the mapping, "Add mapping".
+   * @param {GgBlock} b
+   * @returns {FacePart[]}
+   */
+  const ggFace = (b) => {
+    const spec = GG_TYPES[b.config.type] || GG_TYPES.point;
+    const shown = ggShownOptional(b);
+    /** @type {Field[]} */
+    const fields = [
+      ...spec.required.map((k) => /** @type {Field} */ (
+        { key: k, kind: 'column', label: COLUMN_ROLES[k], required: true })),
+      ...shown.map((k) => /** @type {Field} */ (
+        { key: k, kind: 'column', label: COLUMN_ROLES[k], removable: true }))
+    ];
+    return [
+      { tiles: true },
+      { fields },
+      { add: spec.optional.filter((k) => !shown.includes(k)) }
+    ];
+  };
+
+  // -- facet block ---------------------------------------------------------
+
+  const AUTO_1_5 = [['', 'Auto'], ['1', '1'], ['2', '2'], ['3', '3'], ['4', '4'], ['5', '5']];
+  const LABELLERS = [
+    ['label_value', 'Value'],
+    ['label_both', 'Name: value'],
+    ['label_parsed', 'Parsed expression']
   ];
-  THEME_ROLES.palette_fill.options = PALETTE_OPTIONS;
-  THEME_ROLES.palette_colour.options = PALETTE_OPTIONS.slice();
 
-  // Main-vs-advanced split, mirroring the pre-band theme UI: base theme,
-  // legend and palettes were always visible; colors & backgrounds,
-  // typography and grid & borders sat behind "Show advanced options".
-  const THEME_MAIN = {
-    requiredMap: [],
-    optionalMap: [],
-    mapping: [],
-    presentation: [
-      'base_theme', 'legend_position', 'palette_fill', 'palette_colour'
+  /** @param {GgBlock} b @returns {FacePart[]} */
+  const facetFace = (b) => {
+    /** @type {Field[]} */
+    const f = [{ key: 'facet_type', kind: 'segmented', label: 'Layout',
+                 options: [['wrap', 'Wrap'], ['grid', 'Grid']] }];
+    if (b.config.facet_type === 'grid') {
+      // Rows and columns are either-or, so neither is required.
+      f.push({ key: 'rows', kind: 'columns', label: 'Rows', size: 'full', ph: 'None' });
+      f.push({ key: 'cols', kind: 'columns', label: 'Columns', size: 'full', ph: 'None' });
+    } else {
+      // facet_wrap() with no variable passes the plot through: required.
+      f.push({ key: 'facets', kind: 'columns', label: 'Facet by', size: 'full',
+               ph: 'Select columns…', required: true });
+    }
+    return [{ fields: f }];
+  };
+
+  /** @param {GgBlock} b @returns {Section[]} */
+  const facetTray = (b) => {
+    /** @type {Field[]} */
+    const f = [];
+    const grid = b.config.facet_type === 'grid';
+    if (!grid) {
+      f.push({ key: 'ncol', kind: 'select', label: 'Columns', options: AUTO_1_5 });
+      f.push({ key: 'nrow', kind: 'select', label: 'Rows', options: AUTO_1_5 });
+    }
+    f.push({ key: 'scales', kind: 'select', label: 'Scales', options: [
+      ['fixed', 'Fixed'], ['free', 'Free'], ['free_x', 'Free x'], ['free_y', 'Free y']] });
+    f.push({ key: 'labeller', kind: 'select', label: 'Labels', options: LABELLERS });
+    if (grid) {
+      f.push({ key: 'space', kind: 'select', label: 'Space', options: [
+        ['fixed', 'Fixed'], ['free_x', 'Free x'], ['free_y', 'Free y']] });
+    } else {
+      f.push({ key: 'dir', kind: 'segmented', label: 'Direction',
+               options: [['h', 'Across'], ['v', 'Down']] });
+    }
+    f.push({ key: 'preview', kind: 'preview', size: 'full' });
+    return [{ fields: f }];
+  };
+
+  // -- grid block ----------------------------------------------------------
+
+  /** @returns {Section[]} */
+  const gridTray = () => [
+    {
+      title: 'Layout',
+      fields: [
+        { key: 'ncol', kind: 'select', label: 'Columns', options: AUTO_1_5 },
+        { key: 'nrow', kind: 'select', label: 'Rows', options: AUTO_1_5 },
+        { key: 'guides', kind: 'select', label: 'Legends', options: [
+          ['auto', 'Auto'], ['collect', 'Collect'], ['keep', 'Keep separate']] },
+        { key: 'tag_levels', kind: 'select', label: 'Auto-tag plots', options: [
+          ['', 'None'], ['A', 'A, B, C'], ['a', 'a, b, c'], ['1', '1, 2, 3'],
+          ['I', 'I, II, III'], ['i', 'i, ii, iii']] },
+        { key: 'preview', kind: 'preview', size: 'full' }
+      ]
+    },
+    {
+      title: 'Titles',
+      fields: [
+        { key: 'title', kind: 'text', label: 'Title', ph: 'None' },
+        { key: 'subtitle', kind: 'text', label: 'Subtitle', ph: 'None' },
+        { key: 'caption', kind: 'text', label: 'Caption', ph: 'None' }
+      ]
+    }
+  ];
+
+  // -- theme block ---------------------------------------------------------
+
+  const PALETTES = [
+    ['auto', 'Auto'],
+    ['viridis_d', 'Viridis, categorical'],
+    ['viridis_c', 'Viridis, continuous'],
+    ['magma_d', 'Magma, categorical'],
+    ['magma_c', 'Magma, continuous'],
+    ['plasma_d', 'Plasma, categorical'],
+    ['plasma_c', 'Plasma, continuous'],
+    ['ggplot2', 'ggplot2 default']
+  ];
+  const AUTO_SHOW_HIDE = [['auto', 'Auto'], ['show', 'Show'], ['hide', 'Hide']];
+
+  /** @param {GgBlock} b @returns {FacePart[]} */
+  const themeFace = (b) => [{
+    fields: [
+      // The base theme list depends on the installed theme packages, so R
+      // sends it with the config.
+      { key: 'base_theme', kind: 'select', label: 'Base theme',
+        options: b.choices.base_theme || [['auto', 'Auto']] },
+      { key: 'legend_position', kind: 'select', label: 'Legend', options: [
+        ['auto', 'Auto'], ['right', 'Right'], ['left', 'Left'], ['top', 'Top'],
+        ['bottom', 'Bottom'], ['none', 'None']] },
+      { key: 'palette_fill', kind: 'select', label: 'Fill palette', options: PALETTES },
+      { key: 'palette_colour', kind: 'select', label: 'Colour palette', options: PALETTES }
     ]
-  };
-  const THEME_ADV = {
-    requiredMap: [],
-    optionalMap: [],
-    mapping: [],
-    presentation: [
-      'panel_bg', 'plot_bg', 'base_size', 'base_family',
-      'show_major_grid', 'show_minor_grid', 'grid_color', 'show_panel_border'
-    ]
-  };
+  }];
 
-  // -- facet block spec -----------------------------------------------------
-  // Mirrors R/facet-block.R: facet_wrap ("wrap") vs facet_grid ("grid"),
-  // toggled by the engine's type picker instead of the old radio buttons +
-  // shinyjs show/hide. The multi-column pickers are `columns` roles
-  // (Blockr.Select.multi; empty selection = no faceting).
-
-  /** @type {Record<string, any>} */
-  const FACET_ROLES = {
-    // No `hint`: the label names the field and the picker lists the columns,
-    // so a help line here would only restate them (design-system ux-principles,
-    // "Help text earns its place").
-    facets: { label: 'Facet by', kind: 'columns', placeholder: 'None' },
-    rows:   { label: 'Rows', kind: 'columns', placeholder: 'None' },
-    cols:   { label: 'Columns', kind: 'columns', placeholder: 'None' },
-    ncol: {
-      label: 'Columns', kind: 'select', ph: 'Auto',
-      options: [{ value: '', label: 'Auto' }, '1', '2', '3', '4', '5']
-    },
-    nrow: {
-      label: 'Rows', kind: 'select', ph: 'Auto',
-      options: [{ value: '', label: 'Auto' }, '1', '2', '3', '4', '5']
-    },
-    scales: {
-      label: 'Scales', kind: 'select',
-      options: [
-        { value: 'fixed', label: 'Fixed' },
-        { value: 'free', label: 'Free' },
-        { value: 'free_x', label: 'Free X' },
-        { value: 'free_y', label: 'Free Y' }
+  /** @returns {Section[]} */
+  const themeTray = () => [
+    {
+      title: 'Colours',
+      fields: [
+        { key: 'plot_bg', kind: 'colour', label: 'Plot background' },
+        { key: 'panel_bg', kind: 'colour', label: 'Panel background' },
+        { key: 'grid_color', kind: 'colour', label: 'Grid lines' }
       ]
     },
-    labeller: {
-      label: 'Labels', kind: 'select',
-      options: [
-        { value: 'label_value', label: 'Value only' },
-        { value: 'label_both', label: 'Variable and value' },
-        { value: 'label_parsed', label: 'Parsed expressions' }
-      ]
-    },
-    dir: {
-      // Two distinct values, not on/off -> stays a cycling pill.
-      label: 'Direction', kind: 'segmented',
-      options: [
-        { value: 'h', label: 'Horizontal' },
-        { value: 'v', label: 'Vertical' }
-      ]
-    },
-    space: {
-      label: 'Space', kind: 'select',
-      options: [
-        { value: 'fixed', label: 'Fixed' },
-        { value: 'free_x', label: 'Free X' },
-        { value: 'free_y', label: 'Free Y' }
+    {
+      title: 'Text and lines',
+      fields: [
+        { key: 'base_size', kind: 'number', label: 'Font size', size: 'small',
+          min: 1, max: 72, step: 1, ph: 'Auto', empty: 'auto' },
+        { key: 'base_family', kind: 'select', label: 'Font', options: [
+          ['auto', 'Auto'], ['sans', 'Sans serif'], ['serif', 'Serif'], ['mono', 'Monospace']] },
+        { key: 'show_major_grid', kind: 'segmented', label: 'Major grid', options: AUTO_SHOW_HIDE },
+        { key: 'show_minor_grid', kind: 'segmented', label: 'Minor grid', options: AUTO_SHOW_HIDE },
+        { key: 'show_panel_border', kind: 'segmented', label: 'Border', options: AUTO_SHOW_HIDE }
       ]
     }
-  };
+  ];
 
-  // Main-vs-advanced split, mirroring the pre-band facet UI: variables,
-  // layout (ncol/nrow) and scales were always visible; labels, direction
-  // and space sat behind "Show advanced options".
-  /** @type {Record<string, { requiredMap: string[], optionalMap: string[], mapping: any[], presentation: any[] }>} */
-  const FACET_TYPE_MAIN = {
-    wrap: {
-      // facets is required-empty: facet_wrap with no variables is a
-      // pass-through, so the field gets the soft amber cue (the R-side
-      // preview keeps a muted one-line hint, no warning banner).
-      requiredMap: ['facets'], optionalMap: [],
-      mapping: [],
-      presentation: ['ncol', 'nrow', 'scales']
-    },
-    grid: {
-      requiredMap: [], optionalMap: [],
-      mapping: ['rows', 'cols'],
-      presentation: ['scales']
-    }
-  };
-  /** @type {Record<string, { requiredMap: string[], optionalMap: string[], mapping: any[], presentation: any[] }>} */
-  const FACET_TYPE_ADV = {
-    wrap: {
-      requiredMap: [], optionalMap: [], mapping: [],
-      presentation: ['labeller', 'dir']
-    },
-    grid: {
-      requiredMap: [], optionalMap: [], mapping: [],
-      presentation: ['labeller', 'space']
-    }
-  };
+  // -- specs ---------------------------------------------------------------
 
-  // -- grid block spec ------------------------------------------------------
-  // Mirrors R/grid-block.R (patchwork panel layout): no columns, no type
-  // picker — layout selects, annotation text inputs, auto-tag style.
-
-  /** @type {Record<string, any>} */
-  const GRID_ROLES = {
-    ncol: {
-      label: 'Columns', kind: 'select', ph: 'Auto',
-      options: [{ value: '', label: 'Auto' }, '1', '2', '3', '4', '5']
-    },
-    nrow: {
-      label: 'Rows', kind: 'select', ph: 'Auto',
-      options: [{ value: '', label: 'Auto' }, '1', '2', '3', '4', '5']
-    },
-    guides: {
-      label: 'Legends', kind: 'select',
-      options: [
-        { value: 'auto', label: 'Auto' },
-        { value: 'collect', label: 'Collect' },
-        { value: 'keep', label: 'Keep separate' }
-      ]
-    },
-    title:    { label: 'Title',    kind: 'text' },
-    subtitle: { label: 'Subtitle', kind: 'text' },
-    caption:  { label: 'Caption',  kind: 'text' },
-    tag_levels: {
-      label: 'Auto-tag plots', kind: 'select', ph: 'None',
-      options: [
-        { value: '', label: 'None' },
-        { value: 'A', label: 'A, B, C…' },
-        { value: 'a', label: 'a, b, c…' },
-        { value: '1', label: '1, 2, 3…' },
-        { value: 'I', label: 'I, II, III…' },
-        { value: 'i', label: 'i, ii, iii…' }
-      ]
-    }
-  };
-
-  const GRID_SECTIONS = {
-    requiredMap: [],
-    optionalMap: [],
-    mapping: [],
-    presentation: [
-      'ncol', 'nrow', 'guides', 'title', 'subtitle', 'caption', 'tag_levels'
-    ]
-  };
-
-  // Each block spec provides TWO section functions: `mainFor` renders into
-  // the always-visible main area (the pre-band "main UI"), `advFor` into the
-  // gear-toggled advanced band (null = block has no advanced settings, so no
-  // gear at all). `fullFor` is the union spec the engine's type-switch carry
-  // logic runs against (so a type change preserves advanced mappings too).
-  /** @type {Record<string, any>} */
+  /**
+   * `face` and `tray` list what to draw; `shape` names what decides the
+   * set of controls, so a push that only changes values updates them in
+   * place (an open menu stays open, a focused field keeps its text).
+   * `configKeys` is the full config echoed to R.
+   * @type {Record<string, {
+   *   face: (b: GgBlock) => FacePart[],
+   *   tray: (b: GgBlock) => Section[],
+   *   shape: (b: GgBlock) => string,
+   *   configKeys: string[]
+   * }>}
+   */
   const SPECS = {
     ggplot: {
-      roles: GG_ROLES,
-      typeKey: 'type',
-      typeGroups: [{ label: 'Chart type', types: GG_TYPE_ORDER }],
-      typeIcons: GG_TYPE_ICONS,
-      // Icon tile grid (design-system type-picker proposal B).
-      typeTiles: true,
-      mainFor: ggMainFor,
-      advFor: ggAdvFor,
-      fullFor: ggSections,
-      title: 'Chart settings',
-      advTitle: 'Advanced options',
-      // Keys echoed back to R on every change (full-config echo, like the
-      // blockr.viz chart). Must match the config list the R server pushes.
+      face: ggFace,
+      tray: ggTray,
+      shape: (b) => [
+        b.config.type, ggShownOptional(b).join(','),
+        b.config.smoother === 'none', b.columnsKey()
+      ].join('|'),
       configKeys: [
         'type', 'x', 'y', 'color', 'fill', 'size', 'shape', 'linetype',
         'group', 'alpha', 'density_alpha', 'position', 'bins', 'donut',
@@ -476,214 +341,179 @@
         'title', 'subtitle', 'caption', 'xlab', 'ylab'
       ]
     },
-    theme: {
-      roles: THEME_ROLES,
-      typeKey: null,
-      typeGroups: null,
-      mainFor: () => THEME_MAIN,
-      advFor: () => THEME_ADV,
-      fullFor: () => THEME_MAIN,
-      title: 'Theme settings',
-      advTitle: 'Advanced options',
-      configKeys: [
-        'base_theme', 'legend_position', 'palette_fill', 'palette_colour',
-        'panel_bg', 'plot_bg', 'base_size', 'base_family',
-        'show_major_grid', 'show_minor_grid', 'grid_color',
-        'show_panel_border'
-      ]
-    },
     facet: {
-      roles: FACET_ROLES,
-      typeKey: 'facet_type',
-      typeGroups: [{ label: 'Layout', types: ['wrap', 'grid'] }],
-      mainFor: (/** @type {string} */ t) =>
-        FACET_TYPE_MAIN[t] || FACET_TYPE_MAIN.wrap,
-      advFor: (/** @type {string} */ t) =>
-        FACET_TYPE_ADV[t] || FACET_TYPE_ADV.wrap,
-      fullFor: (/** @type {string} */ t) =>
-        FACET_TYPE_MAIN[t] || FACET_TYPE_MAIN.wrap,
-      title: 'Facet settings',
-      advTitle: 'Advanced options',
+      face: facetFace,
+      tray: facetTray,
+      shape: (b) => [b.config.facet_type, b.columnsKey()].join('|'),
       configKeys: [
         'facet_type', 'facets', 'rows', 'cols', 'ncol', 'nrow',
         'scales', 'labeller', 'dir', 'space'
       ]
     },
     grid: {
-      roles: GRID_ROLES,
-      typeKey: null,
-      typeGroups: null,
-      // The pre-band grid UI had no advanced toggle — everything visible.
-      mainFor: () => GRID_SECTIONS,
-      advFor: null,
-      fullFor: () => GRID_SECTIONS,
-      title: 'Grid settings',
+      face: () => [],
+      tray: gridTray,
+      shape: () => 'grid',
       configKeys: [
-        'ncol', 'nrow', 'guides', 'title', 'subtitle', 'caption',
-        'tag_levels'
+        'ncol', 'nrow', 'guides', 'title', 'subtitle', 'caption', 'tag_levels'
+      ]
+    },
+    theme: {
+      face: themeFace,
+      tray: themeTray,
+      shape: (b) => JSON.stringify(b.choices.base_theme || []),
+      configKeys: [
+        'base_theme', 'legend_position', 'palette_fill', 'palette_colour',
+        'panel_bg', 'plot_bg', 'base_size', 'base_family',
+        'show_major_grid', 'show_minor_grid', 'grid_color',
+        'show_panel_border'
       ]
     }
   };
 
-  // No paired-tail roles in any ggplot spec (viz pairs metric+agg etc.).
-  const GG_SECONDARY = new Set();
+  // -- DOM helpers ---------------------------------------------------------
 
-  // -- host -------------------------------------------------------------------
+  /**
+   * @param {string} tag
+   * @param {string} [cls]
+   * @param {string} [text]
+   * @returns {HTMLElement}
+   */
+  const make = (tag, cls, text) => {
+    const n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (text !== undefined) n.textContent = text;
+    return n;
+  };
+
+  /** A hex colour as the field shows it, or null when it is not one. @param {string} v */
+  const normHex = (v) => {
+    const m = /^#?([0-9a-f]{3}|[0-9a-f]{6})$/i.exec(v.trim());
+    return m ? '#' + m[1].toUpperCase() : null;
+  };
+
+  /** The 6-digit form the native picker needs. @param {string} hex */
+  const longHex = (hex) => hex.length === 4
+    ? '#' + hex.slice(1).split('').map((c) => c + c).join('') : hex;
+
+  // -- the block -----------------------------------------------------------
 
   class GgBlock {
     /** @param {HTMLElement} el */
     constructor(el) {
       this.el = el;
-      const kind = el.getAttribute('data-gg-block') || 'ggplot';
-      this.spec = SPECS[kind] || SPECS.ggplot;
-      /** @type {any[]} */
+      this.kind = el.getAttribute('data-gg-block') || 'ggplot';
+      this.spec = SPECS[this.kind] || SPECS.ggplot;
+      /** @type {{ name: string, label?: string }[]} */
       this.columns = [];
       /** @type {Record<string, any>} */
       this.config = {};
-      this._open = false;
-      /** @type {HTMLButtonElement | null} */
-      this.gearBtn = null;
-      /** @type {HTMLDivElement | null} */
-      this.gearHeaderEl = null;
-      /** @type {HTMLDivElement} */
-      this.mainEl;
-      /** @type {HTMLDivElement | null} */
-      this.advEl = null;
+      /** @type {Record<string, string[][]>} */
+      this.choices = {};
       /** @type {any} */
-      this._cfgAdv = null;
-      this._buildDOM();
-      // Advanced engine first: the main engine's afterTypeChange re-renders
-      // it, so it must exist before the first main render.
-      if (this.advEl) this._cfgAdv = this._makeEngine('adv');
-      this._cfgMain = this._makeEngine('main');
+      this.preview = null;
+      /** Optional mappings added this session, shown before they hold a value. */
+      this.added = new Set();
+      /** @type {Record<string, string>} column roles cleared by a type switch */
+      this.memory = {};
+      /** @type {Record<string, (v: any) => void>} */
+      this.setters = {};
+      /** @type {{ key: string, el: HTMLElement }[]} */
+      this.required = [];
+      /** @type {{ destroy: () => void }[]} */
+      this.selects = [];
+      /** @type {HTMLElement | null} */
+      this.previewEl = null;
+      /** @type {string | null} */
+      this.shape = null;
+
+      const head = make('div', 'blockr-gear-header');
+      const gear = /** @type {HTMLButtonElement} */ (make('button', 'blockr-gear-btn'));
+      gear.type = 'button';
+      gear.innerHTML = Blockr.icons.gear;
+      head.appendChild(gear);
+      this.trayEl = make('div', 'blockr-settings blockr-settings--beak gg-tray');
+      this.faceEl = make('div', 'gg-face');
+      const first = el.firstChild;
+      el.insertBefore(head, first);
+      el.insertBefore(this.trayEl, first);
+      el.insertBefore(this.faceEl, first);
+      Blockr.gearTray(this.trayEl, gear, { label: 'Settings' });
     }
 
-    // Append-only DOM build: the container may hold R-rendered children (the
-    // grid/facet blocks keep their SVG layout preview inside it), so the
-    // settings areas are inserted BEFORE any existing content, never
-    // replacing it. Two areas: the always-visible main band (the pre-band
-    // "main UI") and, when the spec has advanced settings, a gear-toggled
-    // advanced band below it.
-    _buildDOM() {
-      const first = this.el.firstChild;
-
-      if (this.spec.advFor) {
-        const gearHeader = document.createElement('div');
-        this.gearHeaderEl = gearHeader;
-        gearHeader.className = 'blockr-gear-header';
-        const gear = document.createElement('button');
-        this.gearBtn = gear;
-        gear.type = 'button';
-        gear.className = 'blockr-gear-btn';
-        gear.innerHTML = (typeof Blockr !== 'undefined' && Blockr.icons)
-          ? Blockr.icons.gear : '⚙';
-        gear.title = this.spec.advTitle;
-        gear.setAttribute('aria-label', this.spec.advTitle);
-        gear.setAttribute('aria-haspopup', 'dialog');
-        gear.setAttribute('aria-expanded', 'false');
-        gear.addEventListener('click', (e) => {
-          e.stopPropagation();
-          this._toggleBand();
-        });
-        gearHeader.appendChild(gear);
-        this.el.insertBefore(gearHeader, first);
-      }
-
-      if (this.spec.advFor) {
-        // In-flow advanced band, opening directly under the gear header
-        // (placement P1 + connector T1 of the type-picker proposals: a beak
-        // on the band points at the gear, which stays active while open).
-        // No <body> portal, no fixed positioning; opening pushes the main
-        // settings and plot down so everything stays visible.
-        this.advEl = document.createElement('div');
-        this.advEl.className =
-          'blockr-settings blockr-settings--beak dd-popover gg-settings gg-settings-adv';
-        this.el.insertBefore(this.advEl, first);
-      }
-
-      // Always-open main area: same band layout, lighter chrome (no box).
-      this.mainEl = document.createElement('div');
-      this.mainEl.className =
-        'blockr-settings blockr-settings--open dd-popover gg-settings gg-settings-main';
-      this.el.insertBefore(this.mainEl, first);
+    columnsKey() {
+      return this.columns.map((c) => c.name + ':' + (c.label || '')).join(',');
     }
 
-    /** @param {'main' | 'adv'} which */
-    _makeEngine(which) {
-      const DCfg = /** @type {typeof VizDrilldownConfig} */ (
-        (typeof Blockr !== 'undefined' && Blockr.DrilldownConfig) ||
-        window.DrilldownConfig);
-      const main = which === 'main';
-      const cur = () => this.spec.typeKey
-        ? this.config[this.spec.typeKey] : null;
-      return new DCfg({
-        popoverEl: () => (main ? this.mainEl : /** @type {HTMLDivElement} */ (this.advEl)),
-        roles: this.spec.roles,
-        config: () => this.config,
-        columns: () => this.columns,
-        // context keys per-type extras (position optionsBy). Blocks without
-        // a type picker use their block kind as a constant context.
-        context: () => this.spec.typeKey
-          ? this.config[this.spec.typeKey]
-          : (this.el.getAttribute('data-gg-block') || 'ggplot'),
-        currentType: () => cur() || null,
-        sections: () => (main ? this.spec.mainFor : this.spec.advFor)(cur()),
-        // The type-switch carry runs against the FULL per-type spec so
-        // advanced mappings survive a switch too.
-        sectionsForFamily: (/** @type {string} */ fam) => this.spec.fullFor(fam),
-        secondary: GG_SECONDARY,
-        // Type picker (and its carry logic) lives on the main band only.
-        typeKey: main ? this.spec.typeKey : null,
-        typeGroups: main ? this.spec.typeGroups : null,
-        typeIcon: (/** @type {string} */ t) =>
-          (this.spec.typeIcons && this.spec.typeIcons[t]) || '',
-        typeTiles: main ? !!this.spec.typeTiles : false,
-        // Each chart type is its own "family": a type switch runs the
-        // engine's carry logic (keep fitting mappings, stash the rest in
-        // sticky role memory).
-        familyFor: (/** @type {string} */ t) => t,
-        title: main ? this.spec.title : this.spec.advTitle,
-        // The main band re-renders on type switches; keep the advanced band
-        // in sync (it shows the type-specific extras) and hide the gear
-        // entirely when the current type has no advanced settings.
-        afterTypeChange: main
-          ? () => {
-            if (this._cfgAdv) this._cfgAdv.render();
-            this._syncAdvVisibility();
-          }
-          : undefined,
-        // The plot renders server-side: any change just echoes the config to
-        // R; the state reactives re-run the plot expression.
-        onChange: () => this._sendConfig(),
-        onMults: () => this._sendConfig(),
-        onClearFilter: () => {},
-        // No default-column auto-picking: the block starts with a blank plot
-        // until the user maps x (behavior parity with the old Shiny UI).
-        ensureDefaults: () => {},
-        isOpen: () => (main ? true : this._open),
-        reopen: () => { if (!main) this._openBand(); }
-      });
-    }
-
-    /**
-     * @param {{ columns?: any[], config?: Record<string, any>,
-     *           choices?: Record<string, any[]> }} msg
-     */
+    /** @param {{ columns?: any[], config?: Record<string, any>, choices?: Record<string, any[]>, preview?: any }} msg */
     setData(msg) {
       this.columns = msg.columns || [];
       this.config = Object.assign({}, msg.config);
-      // Runtime-dependent select options (e.g. the theme block's base_theme
-      // list, gated on installed packages) travel with the push message.
       if (msg.choices) {
-        for (const key of Object.keys(msg.choices)) {
-          if (this.spec.roles[key]) this.spec.roles[key].options = msg.choices[key];
+        for (const k of Object.keys(msg.choices)) {
+          this.choices[k] = msg.choices[k].map((o) => [o.value, o.label]);
         }
       }
-      // Main render re-renders the advanced band via afterTypeChange.
-      this._cfgMain.render();
+      // R sends NULL as an empty object.
+      this.preview = (msg.preview && msg.preview.cols) ? msg.preview : null;
+      this.render();
     }
 
-    _sendConfig() {
+    // Draw the controls again when the set of controls changes; otherwise
+    // only move their values.
+    render() {
+      const shape = this.spec.shape(this);
+      if (shape !== this.shape) {
+        this.shape = shape;
+        this.build();
+      } else {
+        for (const k of Object.keys(this.setters)) this.setters[k](this.config[k]);
+      }
+      for (const r of this.required) {
+        Blockr.setRequiredEmpty(r.el, !hasVal(this.config[r.key]));
+      }
+      this.drawPreview();
+    }
+
+    build() {
+      for (const s of this.selects) s.destroy();
+      this.selects = [];
+      this.setters = {};
+      this.required = [];
+      this.previewEl = null;
+      this.trayEl.textContent = '';
+      this.faceEl.textContent = '';
+
+      const sections = this.spec.tray(this);
+      for (const sec of sections) {
+        // A tray with one section has no title.
+        if (sec.title && sections.length > 1) {
+          this.trayEl.appendChild(make('div', 'blockr-settings__title', sec.title));
+        }
+        const grid = make('div', 'blockr-settings__grid');
+        for (const f of sec.fields) this.field(grid, f);
+        this.trayEl.appendChild(grid);
+      }
+
+      for (const part of this.spec.face(this)) {
+        if (part.tiles) this.tiles();
+        if (part.fields) {
+          const grid = make('div', 'blockr-settings__grid gg-face__grid');
+          for (const f of part.fields) this.field(grid, f);
+          this.faceEl.appendChild(grid);
+        }
+        if (part.add && part.add.length) this.addButton(part.add);
+      }
+    }
+
+    /** @param {string} key @param {any} value */
+    set(key, value) {
+      this.config[key] = value;
+      this.send();
+      this.render();
+    }
+
+    send() {
       if (!this.el.id) return;
       /** @type {Record<string, any>} */
       const out = { action: 'config' };
@@ -694,44 +524,389 @@
       Shiny.setInputValue(this.el.id + '_action', out, { priority: 'event' });
     }
 
-    // Hide the gear (and close the band) when the current type has no
-    // advanced settings — e.g. point/line/boxplot have no chart-specific
-    // extras, so there is nothing behind the gear.
-    _syncAdvVisibility() {
-      if (!this.advEl || !this.gearHeaderEl) return;
-      const cur = this.spec.typeKey ? this.config[this.spec.typeKey] : null;
-      const s = this.spec.advFor(cur);
-      const empty = !s || (
-        !s.requiredMap.length && !s.optionalMap.length &&
-        !s.mapping.length && !s.presentation.length
-      );
-      if (empty && this._open) this._closeBand();
-      this.gearHeaderEl.style.display = empty ? 'none' : '';
+    // -- ggplot: type tiles, adding and removing mappings --------------------
+
+    tiles() {
+      const wrap = make('div', 'gg-types');
+      const lab = make('div', 'blockr-label', 'Chart type');
+      lab.id = Blockr.uid('gg-types');
+      const row = make('div', 'gg-tiles');
+      row.setAttribute('role', 'group');
+      row.setAttribute('aria-labelledby', lab.id);
+      for (const t of GG_TYPE_ORDER) {
+        const b = /** @type {HTMLButtonElement} */ (make('button', 'gg-tile'));
+        b.type = 'button';
+        b.setAttribute('aria-pressed', String(this.config.type === t));
+        b.innerHTML = GG_TYPE_ICONS[t];
+        b.appendChild(make('span', 'gg-tile__name', GG_TYPES[t].label));
+        b.addEventListener('click', () => {
+          if (this.config.type !== t) this.setType(t);
+        });
+        row.appendChild(b);
+      }
+      wrap.appendChild(lab);
+      wrap.appendChild(row);
+      this.faceEl.appendChild(wrap);
     }
 
-    // -- advanced-band toggle (class flips only; the band is in flow) ---------
-    _toggleBand() {
-      this._open ? this._closeBand() : this._openBand();
+    // A column role the new type does not take is cleared and remembered; a
+    // required role left empty takes back what it held before.
+    /** @param {string} t */
+    setType(t) {
+      const spec = GG_TYPES[t];
+      const keep = new Set([...spec.required, ...spec.optional]);
+      for (const k of Object.keys(COLUMN_ROLES)) {
+        if (!keep.has(k) && hasVal(this.config[k])) {
+          this.memory[k] = this.config[k];
+          this.config[k] = '';
+        }
+      }
+      for (const k of spec.required) {
+        const mem = this.memory[k];
+        if (!hasVal(this.config[k]) && mem && this.columns.some((c) => c.name === mem)) {
+          this.config[k] = mem;
+        }
+      }
+      this.set('type', t);
     }
-    _openBand() {
-      if (!this.advEl || !this.gearBtn) return;
-      this.advEl.classList.add('blockr-settings--open');
-      this.el.classList.add('gg-settings-open');
-      this._open = true;
-      this.gearBtn.classList.add('blockr-gear-active');
-      this.gearBtn.setAttribute('aria-expanded', 'true');
+
+    /** @param {string[]} remaining */
+    addButton(remaining) {
+      const btn = /** @type {HTMLButtonElement} */ (
+        make('button', 'blockr-btn blockr-btn--quiet blockr-btn--s gg-add'));
+      btn.type = 'button';
+      btn.innerHTML = Blockr.icons.plus;
+      btn.appendChild(document.createTextNode('Add mapping'));
+      Blockr.menu.bind(btn, () => ({
+        items: remaining.map((k) => ({
+          label: COLUMN_ROLES[k],
+          onSelect: () => this.addRole(k)
+        }))
+      }));
+      this.faceEl.appendChild(btn);
     }
-    _closeBand() {
-      if (!this.advEl || !this.gearBtn) return;
-      this.advEl.classList.remove('blockr-settings--open');
-      this.el.classList.remove('gg-settings-open');
-      this._open = false;
-      this.gearBtn.classList.remove('blockr-gear-active');
-      this.gearBtn.setAttribute('aria-expanded', 'false');
+
+    /** @param {string} key */
+    addRole(key) {
+      this.added.add(key);
+      const mem = this.memory[key];
+      if (!hasVal(this.config[key]) && mem && this.columns.some((c) => c.name === mem)) {
+        this.set(key, mem);
+      } else {
+        this.render();
+      }
+      const input = /** @type {HTMLElement | null} */ (
+        this.faceEl.querySelector(`[data-key="${key}"] input`));
+      if (input) input.focus();
+    }
+
+    /** @param {string} key */
+    removeRole(key) {
+      this.added.delete(key);
+      delete this.memory[key];
+      this.set(key, '');
+    }
+
+    // -- fields --------------------------------------------------------------
+
+    /** @param {HTMLElement} grid @param {Field} f */
+    field(grid, f) {
+      // A checkbox takes two columns here: in one, the field after it starts
+      // mid-row and the columns stop lining up.
+      const size = f.size || 'large';
+      const wrap = make('div', 'blockr-settings__field gg-field' +
+        (size === 'small' ? ' blockr-settings__field--small' : '') +
+        (size === 'full' ? ' blockr-settings__field--full' : ''));
+      wrap.dataset.key = f.key;
+      grid.appendChild(wrap);
+      // A checkbox is its own label; the preview has none.
+      if (f.label && f.kind !== 'check') {
+        wrap.appendChild(make('label', 'blockr-label', f.label));
+      }
+      if (f.removable) this.removeButton(wrap, f);
+      if (f.required) this.required.push({ key: f.key, el: wrap });
+
+      const v = this.config[f.key];
+      switch (f.kind) {
+        case 'column': return this.columnField(wrap, f, v);
+        case 'columns': return this.columnsField(wrap, f, v);
+        case 'select': return this.selectField(wrap, f, v);
+        case 'segmented': return this.segmentedField(wrap, f, v);
+        case 'check': return this.checkField(wrap, f, v);
+        case 'text': return this.textField(wrap, f, v);
+        case 'number': return this.numberField(wrap, f, v);
+        case 'colour': return this.colourField(wrap, f, v);
+        case 'preview':
+          this.previewEl = make('div', 'gg-preview');
+          wrap.appendChild(this.previewEl);
+          return undefined;
+      }
+      return undefined;
+    }
+
+    /** @param {HTMLElement} wrap @param {Field} f */
+    removeButton(wrap, f) {
+      const b = /** @type {HTMLButtonElement} */ (make('button', 'gg-remove'));
+      b.type = 'button';
+      b.innerHTML = Blockr.icons.x;
+      b.setAttribute('aria-label', 'Remove ' + f.label);
+      Blockr.tooltip.set(b, 'Remove');
+      b.addEventListener('click', () => this.removeRole(f.key));
+      wrap.appendChild(b);
+    }
+
+    columnOptions() {
+      return this.columns.map((c) => ({
+        value: c.name,
+        label: c.label && c.label !== c.name ? c.label : ''
+      }));
+    }
+
+    /** @param {HTMLElement} wrap @param {Field} f @param {any} v */
+    columnField(wrap, f, v) {
+      const host = make('div');
+      wrap.appendChild(host);
+      const h = /** @type {NonNullable<typeof Blockr.Select>} */ (Blockr.Select).single(host, {
+        bordered: true,
+        allowEmpty: true,
+        placeholder: 'Select column…',
+        options: this.columnOptions(),
+        selected: hasVal(v) ? v : '',
+        onChange: (x) => this.set(f.key, x)
+      });
+      this.selects.push(h);
+      this.setters[f.key] = (x) => {
+        if (h.getValue() !== (x || '')) h.setValue(x || '');
+      };
+    }
+
+    /** @param {HTMLElement} wrap @param {Field} f @param {any} v */
+    columnsField(wrap, f, v) {
+      const host = make('div');
+      wrap.appendChild(host);
+      const h = /** @type {NonNullable<typeof Blockr.Select>} */ (Blockr.Select).multi(host, {
+        bordered: true,
+        placeholder: f.ph || '',
+        options: this.columnOptions(),
+        selected: Array.isArray(v) ? v : [],
+        onChange: (x) => this.set(f.key, x)
+      });
+      this.selects.push(h);
+      this.setters[f.key] = (x) => {
+        const next = Array.isArray(x) ? x : [];
+        if (JSON.stringify(h.getValue()) !== JSON.stringify(next)) h.setValue(next);
+      };
+    }
+
+    // A fixed set shows its labels only: the widget lists the labels, and
+    // the value is looked up on the way out.
+    /** @param {HTMLElement} wrap @param {Field} f @param {any} v */
+    selectField(wrap, f, v) {
+      const opts = f.options || [];
+      /** @param {any} x */
+      const labelOf = (x) => {
+        const o = opts.find((p) => p[0] === (x ?? ''));
+        return o ? o[1] : String(x ?? '');
+      };
+      /** @param {string} l */
+      const valueOf = (l) => {
+        const o = opts.find((p) => p[1] === l);
+        return o ? o[0] : l;
+      };
+      const host = make('div');
+      wrap.appendChild(host);
+      const h = /** @type {NonNullable<typeof Blockr.Select>} */ (Blockr.Select).single(host, {
+        bordered: true,
+        options: opts.map((o) => o[1]),
+        selected: labelOf(v),
+        onChange: (l) => this.set(f.key, valueOf(l))
+      });
+      this.selects.push(h);
+      this.setters[f.key] = (x) => {
+        if (h.getValue() !== labelOf(x)) h.setValue(labelOf(x));
+      };
+    }
+
+    /** @param {HTMLElement} wrap @param {Field} f @param {any} v */
+    segmentedField(wrap, f, v) {
+      const host = make('div', 'blockr-ui-segmented');
+      const h = Blockr.segmented(
+        (f.options || []).map((o) => ({ value: o[0], label: o[1] })),
+        v, (x) => this.set(f.key, x), { label: f.label }
+      );
+      host.appendChild(h.el);
+      wrap.appendChild(host);
+      this.setters[f.key] = (x) => { if (h.get() !== x) h.set(x); };
+    }
+
+    // On/off travels as "on"/"off" (the ggplot block's protocol).
+    /** @param {HTMLElement} wrap @param {Field} f @param {any} v */
+    checkField(wrap, f, v) {
+      const h = Blockr.checkbox(f.label || '', v === 'on',
+        (on) => this.set(f.key, on ? 'on' : 'off'));
+      wrap.appendChild(h.el);
+      this.setters[f.key] = (x) => h.set(x === 'on');
+    }
+
+    /**
+     * A text input that commits on Enter or blur, inside the commit field.
+     * @param {HTMLElement} wrap @param {Field} f @param {string} shown
+     * @param {(value: string, tc: BlockrTextCommitHandle) => void} onCommit
+     * @param {string} [type]
+     */
+    commitInput(wrap, f, shown, onCommit, type) {
+      const box = make('div', 'blockr-commit-field');
+      const input = /** @type {HTMLInputElement} */ (make('input', 'blockr-text-input'));
+      input.type = type || 'text';
+      input.placeholder = f.ph || '';
+      input.value = shown;
+      box.appendChild(input);
+      wrap.appendChild(box);
+      /** @type {BlockrTextCommitHandle} */
+      const tc = Blockr.textCommit(input, { onCommit: (x) => onCommit(x, tc) });
+      return { input, tc };
+    }
+
+    /** @param {HTMLElement} wrap @param {Field} f @param {any} v */
+    textField(wrap, f, v) {
+      const { input, tc } = this.commitInput(wrap, f, v || '',
+        (x) => this.set(f.key, x));
+      this.setters[f.key] = (x) => {
+        if (document.activeElement !== input && input.value !== (x || '')) tc.sync(x || '');
+      };
+    }
+
+    /** @param {HTMLElement} wrap @param {Field} f @param {any} v */
+    numberField(wrap, f, v) {
+      /** @param {any} x */
+      const shown = (x) => (x === null || x === undefined || x === '' || x === f.empty)
+        ? '' : String(x);
+      const { input, tc } = this.commitInput(wrap, f, shown(v), (raw) => {
+        const s = raw.trim();
+        if (s === '' && f.empty !== undefined) { this.set(f.key, f.empty); return; }
+        const n = Number(s);
+        const ok = s !== '' && Number.isFinite(n) &&
+          (f.min === undefined || n >= f.min) && (f.max === undefined || n <= f.max);
+        if (!ok) { tc.sync(shown(this.config[f.key])); return; }
+        this.set(f.key, f.empty !== undefined ? String(n) : n);
+      }, 'number');
+      input.classList.add('blockr-ui-number');
+      if (f.min !== undefined) input.min = String(f.min);
+      if (f.max !== undefined) input.max = String(f.max);
+      if (f.step !== undefined) input.step = String(f.step);
+      this.setters[f.key] = (x) => {
+        if (document.activeElement !== input && input.value !== shown(x)) tc.sync(shown(x));
+      };
+    }
+
+    /**
+     * The colour field (design system, "Colour field"): the text field's
+     * shell with a swatch and the hex value in capitals. The swatch opens the
+     * browser's picker, whose pick commits when it closes; a typed hex value
+     * commits on Enter or blur. Empty means the theme's own colour.
+     *
+     * It lives here until a second package needs it, then moves to blockr.ui.
+     * @param {HTMLElement} wrap @param {Field} f @param {any} v
+     */
+    colourField(wrap, f, v) {
+      const box = make('div', 'blockr-commit-field gg-colour');
+      const swatch = /** @type {HTMLButtonElement} */ (make('button', 'gg-colour__swatch'));
+      swatch.type = 'button';
+      swatch.setAttribute('aria-label', 'Pick ' + (f.label || 'a colour').toLowerCase());
+      Blockr.tooltip.set(swatch, 'Pick a colour');
+      const input = /** @type {HTMLInputElement} */ (make('input', 'gg-colour__input'));
+      input.type = 'text';
+      input.placeholder = 'Theme default';
+      input.spellcheck = false;
+      const picker = /** @type {HTMLInputElement} */ (make('input', 'gg-colour__picker'));
+      picker.type = 'color';
+      picker.tabIndex = -1;
+      picker.setAttribute('aria-hidden', 'true');
+      box.appendChild(swatch);
+      box.appendChild(input);
+      box.appendChild(picker);
+      wrap.appendChild(box);
+
+      /** @param {string} hex */
+      const paint = (hex) => {
+        swatch.style.backgroundColor = hex || '';
+        swatch.classList.toggle('gg-colour__swatch--empty', !hex);
+      };
+      /** @param {any} x */
+      const shown = (x) => (x ? (normHex(String(x)) || String(x)) : '');
+
+      input.value = shown(v);
+      paint(input.value);
+      const tc = Blockr.textCommit(input, {
+        onCommit: (raw) => {
+          if (raw.trim() === '') { paint(''); this.set(f.key, ''); return; }
+          const hex = normHex(raw);
+          if (!hex) { tc.sync(shown(this.config[f.key])); return; }
+          tc.sync(hex);
+          paint(hex);
+          this.set(f.key, hex);
+        }
+      });
+
+      swatch.addEventListener('click', () => {
+        const cur = normHex(input.value);
+        picker.value = cur ? longHex(cur).toLowerCase() : '#ffffff';
+        if (typeof picker.showPicker === 'function') {
+          try { picker.showPicker(); return; } catch (_e) { /* fall through */ }
+        }
+        picker.click();
+      });
+      // The swatch follows the picker live; the value commits on close.
+      picker.addEventListener('input', () => paint(picker.value));
+      picker.addEventListener('change', () => {
+        const hex = /** @type {string} */ (normHex(picker.value));
+        tc.sync(hex);
+        paint(hex);
+        this.set(f.key, hex);
+      });
+
+      this.setters[f.key] = (x) => {
+        if (document.activeElement !== input && input.value !== shown(x)) {
+          tc.sync(shown(x));
+          paint(shown(x));
+        }
+      };
+    }
+
+    // -- layout preview (grid and facet) --------------------------------------
+
+    // R sends the layout: rows, columns, a label per cell (row-major, ''
+    // for an empty slot), a state ('fit', 'gaps' or 'invalid') and the
+    // status line. No layout, no preview.
+    drawPreview() {
+      const host = this.previewEl;
+      if (!host) return;
+      const field = /** @type {HTMLElement} */ (host.parentElement);
+      const p = this.preview;
+      field.style.display = p ? '' : 'none';
+      host.textContent = '';
+      if (!p) return;
+      const invalid = p.state === 'invalid';
+      const grid = make('div', 'gg-preview__grid' + (invalid ? ' gg-preview__grid--invalid' : ''));
+      // Cells shrink as the layout grows, so a tall layout stays short.
+      const cell = Math.max(24, Math.min(64, Math.floor(200 / Math.max(p.rows, p.cols))));
+      grid.style.setProperty('--blockr-ggplot-cell-w', cell + 'px');
+      grid.style.gridTemplateColumns =
+        `repeat(${p.cols}, minmax(0, var(--blockr-ggplot-cell-w)))`;
+      grid.setAttribute('aria-hidden', 'true');
+      for (const c of (p.cells || [])) {
+        grid.appendChild(make('div',
+          'gg-preview__cell ' + (c ? 'gg-preview__cell--filled' : 'gg-preview__cell--empty'),
+          c || ''));
+      }
+      host.appendChild(grid);
+      host.appendChild(make('div',
+        'gg-preview__status' + (invalid ? ' gg-preview__status--invalid' : ''),
+        p.status || ''));
     }
   }
 
-  // -- Shiny binding ----------------------------------------------------------
+  // -- Shiny binding -------------------------------------------------------
 
   const binding = new Shiny.InputBinding();
   Object.assign(binding, {
@@ -746,24 +921,18 @@
         el._block.setData(el._pendingData);
         delete el._pendingData;
       } else if (window.Shiny && Shiny.setInputValue) {
-        // Nothing waiting for us. `_pendingData` only catches a message that
-        // arrived while THIS SCRIPT was already loaded, and the poll below
-        // gives up after five seconds; Shiny drops a custom message with no
-        // registered handler at all. On a board whose opening view carries no
-        // ggplot block -- or carries one while a SECOND one sits on a view
-        // nobody has opened yet -- that block's startup payload is dropped,
-        // and the band renders with no columns and no config: an empty box
-        // where the mapping controls belong. Announce, and let R re-send its
-        // last payload. (Same handshake as blockr.viz's chart block.)
+        // Nothing waiting for us. Shiny drops a custom message with no
+        // registered handler, so a block on a view nobody had opened yet
+        // missed its startup payload. Announce, and let R send its last
+        // payload again (the same handshake as blockr.viz's chart block).
         Shiny.setInputValue(el.id + '_ready', Date.now(), { priority: 'event' });
       }
     }
   });
   Shiny.inputBindings.register(binding, 'blockr.ggplot');
 
-  // Data/config push from R. The element may not exist or not be bound yet
-  // (dock panels, lazily revealed views) — buffer on the element or poll
-  // briefly, exactly like blockr.viz's drilldown-data handler.
+  // Push from R. The element may not exist or not be bound yet (dock
+  // panels, views revealed later): buffer on the element or poll briefly.
   Shiny.addCustomMessageHandler('gg-block-data', (/** @type {any} */ msg) => {
     const el = /** @type {any} */ (document.getElementById(msg.id));
     if (el?._block) {
