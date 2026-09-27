@@ -1,166 +1,70 @@
-#' Create SVG preview of plot grid layout
+#' Layout of a set of plots or panels, for the preview in the gear tray
 #'
-#' @param n_plots Number of plots to arrange
-#' @param ncol_val Number of columns ("" for auto)
-#' @param nrow_val Number of rows ("" for auto)
-#' @return List with svg, status text, and status type
+#' Uses ggplot2::wrap_dims(), which patchwork and facet_wrap() call, so the
+#' preview shows the layout the plot will get.
+#'
+#' @param n Number of plots (or facet panels).
+#' @param ncol_val,nrow_val Columns and rows as chosen ("" for auto).
+#' @param what What the cells are, for the status line ("plots", "panels").
+#' @param dir Fill order: "h" fills across, "v" fills down.
+#' @return A list: `rows`, `cols`, `cells` (one label per slot, row by row,
+#'   "" for an empty slot; empty when there are too many slots to draw),
+#'   `state` ("fit", "gaps" or "invalid") and the `status` line.
 #' @noRd
-create_grid_preview_svg <- function(n_plots, ncol_val, nrow_val) {
-  # Calculate actual grid dimensions using exact patchwork algorithm
-  # (via ggplot2::wrap_dims which patchwork uses internally)
-  # wrap_dims throws an error if nrow * ncol < n_plots, so catch that
-  result <- tryCatch(
-    {
-      if (ncol_val == "" && nrow_val == "") {
-        # Full auto mode - use wrap_dims with both NULL
-        dims <- ggplot2::wrap_dims(n_plots, nrow = NULL, ncol = NULL)
-      } else if (nrow_val != "" && ncol_val != "") {
-        # Both specified - validate with wrap_dims
-        dims <- ggplot2::wrap_dims(
-          n_plots,
-          nrow = as.numeric(nrow_val),
-          ncol = as.numeric(ncol_val)
-        )
-      } else if (ncol_val != "") {
-        # Only ncol specified - let wrap_dims calculate nrow
-        dims <- ggplot2::wrap_dims(
-          n_plots,
-          nrow = NULL,
-          ncol = as.numeric(ncol_val)
-        )
-      } else {
-        # Only nrow specified - let wrap_dims calculate ncol
-        dims <- ggplot2::wrap_dims(
-          n_plots,
-          nrow = as.numeric(nrow_val),
-          ncol = NULL
-        )
-      }
-      list(dims = dims, is_valid = TRUE, error_msg = NULL)
-    },
-    error = function(e) {
-      # If wrap_dims fails, calculate what it would be without validation
-      if (nrow_val != "" && ncol_val != "") {
-        dims <- c(as.numeric(nrow_val), as.numeric(ncol_val))
-      } else {
-        # Fallback dimensions for error display
-        dims <- c(1, 1)
-      }
-      list(dims = dims, is_valid = FALSE, error_msg = conditionMessage(e))
-    }
+layout_preview <- function(n, ncol_val = "", nrow_val = "", what = "plots",
+                           dir = "h") {
+  num <- function(v) {
+    if (length(v) == 1L && nzchar(v)) as.numeric(v) else NULL
+  }
+  nc <- num(ncol_val)
+  nr <- num(nrow_val)
+
+  # wrap_dims() throws when rows * columns cannot hold n.
+  dims <- tryCatch(
+    ggplot2::wrap_dims(n, nrow = nr, ncol = nc),
+    error = function(e) NULL
   )
 
-  nrow_actual <- result$dims[1]
-  ncol_actual <- result$dims[2]
-  is_valid <- result$is_valid
-
-  # Check if configuration is valid
-  total_slots <- nrow_actual * ncol_actual
-
-  # SVG dimensions - scale to fit the actual grid
-  max_width <- 300
-  gap <- 4
-  # Calculate cell size based on actual columns (not a minimum)
-  cell_size <- max_width / ncol_actual
-  # But ensure cells aren't too small or too large
-  cell_size <- max(50, min(cell_size, 100))
-  preview_width <- cell_size * ncol_actual
-  preview_height <- cell_size * nrow_actual
-
-  # Status based on validation
-  if (!is_valid) {
-    fill_color <- "rgba(244, 67, 54, 0.3)"
-    stroke_color <- "#f44336"
-    status_icon <- "\u274c" # Red X
-    status_text <- sprintf(
-      "Need %d slots but only have %d (increase ncol and/or nrow)",
-      n_plots,
-      total_slots
-    )
-  } else if (total_slots == n_plots) {
-    fill_color <- "rgba(76, 175, 80, 0.3)"
-    stroke_color <- "#4CAF50"
-    status_icon <- "\u2713" # Check mark
-    status_text <- sprintf(
-      "Perfect fit: %d plots in %dx%d grid",
-      n_plots,
-      nrow_actual,
-      ncol_actual
+  if (is.null(dims)) {
+    rows <- if (is.null(nr)) 1 else nr
+    cols <- if (is.null(nc)) 1 else nc
+    state <- "invalid"
+    status <- sprintf(
+      "%d %s need %d slots, this layout has %d. Add columns or rows.",
+      n, what, n, rows * cols
     )
   } else {
-    fill_color <- "rgba(33, 150, 243, 0.3)"
-    stroke_color <- "#2196F3"
-    status_icon <- "\u2713" # Check mark
-    empty_slots <- total_slots - n_plots
-    status_text <- sprintf(
-      "%d plots in %dx%d grid (%d empty slot%s)",
-      n_plots,
-      nrow_actual,
-      ncol_actual,
-      empty_slots,
-      if (empty_slots > 1) "s" else ""
-    )
-  }
-
-  # Create cells
-  cells <- list()
-  plot_idx <- 1
-  for (row in 0:(nrow_actual - 1)) {
-    for (col in 0:(ncol_actual - 1)) {
-      x <- col * cell_size + gap
-      y <- row * cell_size + gap
-      w <- cell_size - 2 * gap
-      h <- cell_size - 2 * gap
-
-      is_filled <- plot_idx <= n_plots
-
-      cells[[length(cells) + 1]] <- tags$rect(
-        x = x,
-        y = y,
-        width = w,
-        height = h,
-        fill = if (is_filled) fill_color else "#f5f5f5",
-        stroke = if (is_filled) stroke_color else "#ddd",
-        `stroke-width` = if (is_filled) "2" else "1",
-        rx = "3"
-      )
-
-      if (is_filled) {
-        cells[[length(cells) + 1]] <- tags$text(
-          x = x + w / 2,
-          y = y + h / 2,
-          `text-anchor` = "middle",
-          `dominant-baseline` = "middle",
-          style = sprintf(
-            "font-size: %dpx; fill: %s; font-weight: bold;",
-            max(10, cell_size / 5),
-            stroke_color
-          ),
-          as.character(plot_idx)
-        )
-      }
-
-      plot_idx <- plot_idx + 1
+    rows <- dims[1]
+    cols <- dims[2]
+    empty <- rows * cols - n
+    state <- if (empty == 0) "fit" else "gaps"
+    status <- sprintf("%d %s in a %d \u00d7 %d grid", n, what, rows, cols)
+    if (empty > 0) {
+      status <- paste0(status, sprintf(", %d empty", empty))
     }
   }
 
-  svg <- tags$svg(
-    width = preview_width,
-    height = preview_height,
-    viewBox = sprintf("0 0 %d %d", preview_width, preview_height),
-    style = paste(
-      "border: 1px solid #ddd; background: white;",
-      "border-radius: 4px;"
-    ),
-    do.call(tagList, cells)
-  )
+  layout_cells(n, rows, cols, dir, state, status)
+}
 
+#' @noRd
+layout_cells <- function(n, rows, cols, dir, state, status) {
+  slots <- rows * cols
+  cells <- character()
+  # Past 60 slots the cells say nothing the status line does not.
+  if (slots <= 60) {
+    k <- seq_len(slots)
+    r <- (k - 1) %/% cols
+    c <- (k - 1) %% cols
+    idx <- if (identical(dir, "v")) c * rows + r + 1 else k
+    cells <- ifelse(idx <= n, as.character(idx), "")
+  }
   list(
-    svg = svg,
-    status = status_text,
-    status_icon = status_icon,
-    is_valid = is_valid,
-    stroke_color = stroke_color
+    rows = rows,
+    cols = cols,
+    cells = as.list(cells),
+    state = state,
+    status = status
   )
 }
 
@@ -250,7 +154,7 @@ new_grid_block <- function(
             dot_arg_refs(...args)
           )
 
-          # Reactive values for the settings band. Character() constructor
+          # Reactive values for the JS controls. Character() constructor
           # defaults normalize to "" so the expr reactive's `!= ""` checks
           # are length-safe before the first config echo.
           chr1 <- function(v) if (length(v)) v else ""
@@ -269,17 +173,27 @@ new_grid_block <- function(
           # buffered for it. Shiny DROPS a custom message that has no
           # registered handler, and a dock panel on a view nobody has
           # opened yet has no element to receive one -- so this push
-          # can be lost outright, and the band then renders empty, with
-          # no columns and no config where the controls belong. Keep the
+          # can be lost outright, and the controls then render empty, with
+          # no columns and no config. Keep the
           # last payload and re-send it when the client says it is here.
           last_push <- new.env(parent = emptyenv())
           last_push$msg <- NULL
+
+          # Layout preview for the gear tray, drawn by gg-blocks.js.
+          r_preview <- reactive({
+            n_plots <- length(arg_names())
+            if (n_plots == 0) {
+              return(NULL)
+            }
+            layout_preview(n_plots, r_ncol(), r_nrow(), what = "plots")
+          })
 
           observe({
             last_push$msg <- list(
               id = session$ns("gg_block"),
               block = "grid",
               columns = list(),
+              preview = r_preview(),
               config = list(
                 ncol = r_ncol(),
                 nrow = r_nrow(),
@@ -319,45 +233,6 @@ new_grid_block <- function(
             if (!is.null(msg$tag_levels)) upd(r_tag_levels, msg$tag_levels)
           })
 
-
-          # Layout preview output
-          output$layout_preview <- renderUI({
-            n_plots <- length(arg_names())
-            ncol_val <- r_ncol()
-            nrow_val <- r_nrow()
-
-            # Handle case where no plots are connected yet \u2014 quiet muted
-            # hint, not a warning banner (design-system convention).
-            if (n_plots == 0) {
-              return(tags$div(
-                style = "font-size: 0.875rem; color: #6c757d;",
-                "Connect one or more ggplot blocks to create a grid"
-              ))
-            }
-
-            # Generate preview
-            preview <- create_grid_preview_svg(n_plots, ncol_val, nrow_val)
-
-            # Determine status class based on validity
-            status_class <- if (!preview$is_valid) {
-              "error"
-            } else if (preview$stroke_color == "#4CAF50") {
-              "valid"
-            } else {
-              "warning"
-            }
-
-            tags$div(
-              tags$div(
-                class = "preview-svg-container",
-                preview$svg
-              ),
-              tags$div(
-                class = paste("preview-status", status_class),
-                preview$status
-              )
-            )
-          })
 
           list(
             expr = reactive({
@@ -432,21 +307,14 @@ new_grid_block <- function(
       )
     },
     ui = function(id) {
-      # JS-first UI (settings-band pattern, see ggplot-block.R): the html
-      # dependencies plus a container; inst/js/gg-blocks.js builds the gear
-      # header and settings band (spec "grid") ABOVE the existing children,
-      # so the SVG layout preview below survives band re-renders. The
-      # preview shows only while the band is open (gg-blocks.css).
+      # JS-first UI: the html dependencies and a container; gg-blocks.js
+      # builds the gear and its tray (spec "grid"). The face is the plot.
       tagList(
         ggplot_block_deps(),
         div(
           id = NS(id, "gg_block"),
           class = "gg-block-container",
-          `data-gg-block` = "grid",
-          div(
-            class = "gg-preview",
-            uiOutput(NS(id, "layout_preview"))
-          )
+          `data-gg-block` = "grid"
         )
       )
     },
