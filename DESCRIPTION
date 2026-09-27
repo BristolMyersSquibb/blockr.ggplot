@@ -1,6 +1,6 @@
 Package: blockr.ggplot
 Title: Interactive 'ggplot2' Visualization Blocks
-Version: 0.1.1.9009
+Version: 0.1.1.9010
 Authors@R:
     c(person(given = "Christoph",
              family = "Sax",
@@ -42,7 +42,7 @@ Remotes:
     BristolMyersSquibb/blockr.ui@feat/buttons-and-shiny-inputs
 Imports:
     blockr.core (>= 0.1.1),
-    blockr.ui (>= 0.0.1.9032),
+    blockr.ui (>= 0.0.1.9036),
     ggplot2,
     htmltools,
     patchwork,
