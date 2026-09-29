@@ -2,6 +2,28 @@
 
 ## blockr.ggplot (development version)
 
+### Design system
+
+- The blocks use blockr.ui for their controls and tokens, and no longer
+  import blockr.dplyr. The vendored settings-band and DrilldownConfig
+  copies are gone; their unscoped rules restyled every gear tray on a
+  board.
+- ggplot block: chart-type tiles and the mapping stay on the face, the
+  tiles in the accent tint. “Add mapping” opens the shared menu. The
+  rest is in the gear tray, where “Confidence band” shows only while a
+  trend line is on, bins and opacity are number fields, and fixed-set
+  selects show their label only.
+- facet block: Wrap or Grid and the facet columns on the face, the rest
+  in the gear. Direction is Across or Down.
+- theme block: base theme, legend and palettes on the face. The gear has
+  colour fields (a swatch and the hex value, opening the browser’s
+  picker) and Auto/Show/Hide segmented controls for grid lines and
+  border.
+- grid block: the face is the plot; layout, the layout preview and the
+  titles are in the gear.
+- The layout previews are drawn with the design tokens and follow the
+  dark scheme. The plot image stays light in the dark scheme.
+
 ### Improvements
 
 - The ggplot, facet and theme blocks now build their expressions as
@@ -13,18 +35,12 @@
   `with(list(data = plot), ...)`, and non-syntactic column names are
   handled by [`as.name()`](https://rdrr.io/r/base/name.html) rather than
   manual backticking. This drops the `glue` dependency.
-- Text inputs in the settings band (grid block title, subtitle, caption)
-  now commit on Enter or blur with an “Enter ↵” confirm chip instead of
-  auto-submitting on a 300ms debounce, following the design-system
-  text-commit convention (shared drilldown engine, re-vendored from
-  blockr.viz).
-- Design-token fallback fixes: slider accent and preview-status colors
-  now fall back to the canonical design-system values (`#2563eb`
-  primary, `#16a34a` success, `#b45309` warning text, `#dc2626` danger).
+- Text inputs commit on Enter or blur with an “Enter ↵” confirm chip
+  instead of auto-submitting on a 300ms debounce.
 - The facet and grid blocks no longer show a yellow warning banner when
   unconfigured: the facet “Facet by” field carries the amber
-  required-empty cue instead, and both previews show a quiet muted
-  one-line hint (design-system convention).
+  required-empty cue instead, and the layout preview waits until there
+  is something to lay out.
 
 ## blockr.ggplot 0.1.0
 
