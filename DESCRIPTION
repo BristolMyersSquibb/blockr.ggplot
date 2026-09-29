@@ -1,6 +1,6 @@
 Package: blockr.ggplot
 Title: Interactive 'ggplot2' Visualization Blocks
-Version: 0.1.1.9003
+Version: 0.1.1.9010
 Authors@R:
     c(person(given = "Christoph",
              family = "Sax",
@@ -38,11 +38,11 @@ Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.3
 Remotes:
     BristolMyersSquibb/blockr.core,
-    BristolMyersSquibb/blockr.dplyr,
-    BristolMyersSquibb/blockr.theme
+    BristolMyersSquibb/blockr.theme,
+    BristolMyersSquibb/blockr.ui
 Imports:
     blockr.core (>= 0.1.1),
-    blockr.dplyr,
+    blockr.ui,
     ggplot2,
     htmltools,
     patchwork,

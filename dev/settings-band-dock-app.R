@@ -1,15 +1,14 @@
-# Dev app: all four settings-band blocks in a dock board with the DAG
-# extension. Exercises the JS-first UI (gear -> in-flow band) for the
-# ggplot, facet, theme and grid blocks in the real board environment
-# (dock panels, DAG canvas, save/restore).
+# Dev app: the four blocks in a dock board with the DAG extension.
+# Exercises the JS-first UI (face, gear -> in-flow tray) for the ggplot,
+# facet, theme and grid blocks in the real board environment (dock
+# panels, DAG canvas, save/restore).
 #
 # Run: Rscript dev/settings-band-dock-app.R  -> http://localhost:3838
 
 suppressMessages({
+  pkgload::load_all("../blockr.ui")
   library(blockr.core)
   library(blockr.dock)
-  pkgload::load_all("../blockr.viz")
-  library(blockr.dm)
 })
 
 devtools::load_all(".", quiet = TRUE)

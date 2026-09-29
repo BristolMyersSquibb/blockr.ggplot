@@ -1,40 +1,28 @@
 #' HTML dependencies for the JS-first ggplot block UI
 #'
-#' Mirrors blockr.viz/R/chart-dep.R: the base design-system layer (gear,
-#' popover rows, pills, the Blockr namespace and Blockr.Select component)
-#' comes from blockr.dplyr's exported dependency helpers; the settings band
-#' and the DrilldownConfig engine are local copies of the blockr.viz assets
-#' (see the CANONICAL SOURCE headers in inst/js and inst/css).
+#' blockr.ui brings the tokens and the shared controls (the `Blockr`
+#' namespace: Select, menu, tooltip, checkbox, segmented control, gear tray,
+#' commit-on-Enter fields). gg-blocks.js builds each block's face and gear
+#' tray from them; gg-blocks.css lays out what is ggplot's own (chart-type
+#' tiles, layout preview, colour field), scoped under `.gg-`.
 #'
-#' Load order is enforced by the dependency structure: blockr.dplyr CSS/JS
-#' (Blockr namespace + Select) -> settings-band.js (Blockr.checkbox) ->
-#' drilldown-config.js (Blockr.DrilldownConfig) -> gg-blocks.js (uses both).
-#'
-#' @importFrom blockr.dplyr blockr_blocks_css_dep blockr_select_dep
+#' @importFrom blockr.ui controls_dep
+#' @importFrom htmltools htmlDependency
 #' @noRd
 ggplot_block_deps <- memoise0(function() {
   htmltools::tagList(
-    blockr_blocks_css_dep(),
-    blockr_select_dep(),
-    htmltools::htmlDependency(
-      name = "gg-settings-band",
-      # Bump the suffix on every settings-band.css/js edit (asset cache).
-      version = paste0(utils::packageVersion("blockr.ggplot"), ".1"),
-      src = system.file(package = "blockr.ggplot"),
-      script = "js/settings-band.js",
-      stylesheet = "css/settings-band.css"
-    ),
+    blockr.ui::controls_dep(),
     htmltools::htmlDependency(
       name = "gg-blocks-js",
-      version = paste0(utils::packageVersion("blockr.ggplot"), ".11"),
+      # Bump the suffix on every gg-blocks.js edit (asset cache).
+      version = paste0(utils::packageVersion("blockr.ggplot"), ".1"),
       src = system.file("js", package = "blockr.ggplot"),
-      # drilldown-config.js (the shared gear/settings-band engine) must load
-      # BEFORE gg-blocks.js, which references Blockr.DrilldownConfig.
-      script = c("drilldown-config.js", "gg-blocks.js")
+      script = "gg-blocks.js"
     ),
     htmltools::htmlDependency(
       name = "gg-blocks-css",
-      version = paste0(utils::packageVersion("blockr.ggplot"), ".10"),
+      # Bump the suffix on every gg-blocks.css edit (asset cache).
+      version = paste0(utils::packageVersion("blockr.ggplot"), ".1"),
       src = system.file("css", package = "blockr.ggplot"),
       stylesheet = "gg-blocks.css"
     )

@@ -1,22 +1,16 @@
 # UI Development Guidelines
 
 This guide documents the UI architecture of
-[blockr.ggplot](https://github.com/BristolMyersSquibb/blockr.ggplot) blocks
-after the settings-band rework (2026-07), which aligned the package with the
-blockr design system as piloted by **blockr.viz** (see
-`blockr.docs/design-system/target/design-system.html` and
-`blockr.viz/dev/table-and-chart-architecture.md`).
+[blockr.ggplot](https://github.com/BristolMyersSquibb/blockr.ggplot) blocks.
+They follow the blockr design system, written down in blockr.ui's
+`vignettes/articles/design-system.Rmd`, and draw every control with
+blockr.ui's shared components.
 
-The pre-rework Shiny-first guidelines (responsive `block-form-grid`,
-"Show advanced options" toggle, `block_responsive_css()`) are obsolete —
-those helpers were removed from `R/utils.R`.
-
-## Architecture: JS-first settings band
-
-Every block follows the blockr.viz pattern:
+## Architecture: JS-first face and gear tray
 
 - The constructor's `ui` (the expr-UI slot) renders **only** the html
-  dependencies (`ggplot_block_deps()`, `R/ggplot-dep.R`) plus one empty
+  dependencies (`ggplot_block_deps()`, `R/ggplot-dep.R`: blockr.ui's
+  `controls_dep()` plus `gg-blocks.js` and `gg-blocks.css`) and one empty
   container:
 
   ```r
@@ -25,29 +19,33 @@ Every block follows the blockr.viz pattern:
   ```
 
 - `inst/js/gg-blocks.js` binds the container (`Shiny.InputBinding`) and
-  builds **two settings areas**, keeping the pre-rework main-vs-advanced
-  split: an always-visible main area (`.gg-settings-main` — type picker
-  with subtle inline-SVG icons, main mappings, "+ Add mapping" dropdown)
-  and, when the block has advanced settings, a gear-toggled **in-flow
-  advanced band** (`.gg-settings-adv`, design-system gear-panel proposal B:
-  no body portal, no fixed positioning; opening pushes the plot down).
-  The grid block has no advanced settings, so no gear.
+  builds, top to bottom: the gear (`.blockr-gear-btn`), the gear tray
+  (`.blockr-settings`, driven by `Blockr.gearTray`) and the face
+  (`.gg-face`). Each block's `SPECS` entry lists its face and its tray
+  sections as fields; `shape()` names what decides the set of controls, so
+  a push that only moves values updates them in place and an open menu or
+  a focused field survives it.
 
-- Both areas are rendered by the shared **`Blockr.DrilldownConfig`**
-  engine (`inst/js/drilldown-config.js`, copied from blockr.viz — see the
-  CANONICAL SOURCE header): two engine instances share one config object,
-  driven by per-block `mainFor`/`advFor` section functions in `SPECS`
-  (`fullFor` is the union the type-switch carry logic runs against; the
-  main engine's `afterTypeChange` re-renders the advanced band). Role
-  catalog kinds: `column | select | columns | segmented | slider | text |
-  color`. For the ggplot block, ALL optional aesthetics live in the main
-  "+ Add mapping" dropdown (they only show once added); the advanced band
-  holds just the chart-specific extras, and the gear hides entirely for
-  types without any (`_syncAdvVisibility`).
+- What sits where:
+  - ggplot: chart-type tiles and the mapping on the face (the spec keeps a
+    chart-building block's type and mapping there); presentation in the
+    tray. Optional mappings appear through "Add mapping" (`Blockr.menu`).
+  - facet: Layout and the facet columns on the face; the rest and the
+    layout preview in the tray.
+  - theme: base theme, legend and palettes on the face; colours and text
+    and lines in the tray.
+  - grid: the face is the plot; layout (with the preview) and titles in
+    the tray.
+
+- Controls: column pickers and fixed sets are `Blockr.Select` (a fixed set
+  shows its labels only), two or three values are `Blockr.segmented`,
+  on/off is `Blockr.checkbox`, text and numbers commit on Enter or blur
+  (`Blockr.textCommit`). The colour field is local (`.gg-colour`) until a
+  second package needs it.
 
 - The plot itself stays `block_ui`'s server-rendered `plotOutput`
-  **below** the container — unlike blockr.viz (client-side ECharts), JS
-  owns only the configuration UI.
+  **below** the container, drawn on a white device so it stays light in
+  the dark scheme.
 
 ## R <-> JS protocol
 
@@ -75,34 +73,25 @@ Every block follows the blockr.viz pattern:
 
 ## Keep in sync
 
-- `chart_aesthetics` (R/ggplot-block.R) <-> `GG_TYPE_ROLES`
+- `chart_aesthetics` (R/ggplot-block.R) <-> `GG_TYPES`
   (inst/js/gg-blocks.js): the R list stays authoritative for expression
-  generation; the JS mirror drives which controls the band shows.
+  generation; the JS mirror decides which mapping fields the face shows.
 - The typed `new_block_args()` registry in `R/zzz.R` (read by blockr.ai)
-  must match the constructor signatures — the rework did not change any.
-- Copied shared assets carry `CANONICAL SOURCE` headers
-  (`drilldown-config.js`, `settings-band.js`, `settings-band.css`,
-  the `dd-*` rules in `gg-blocks.css`): keep them in sync with blockr.viz
-  until they graduate to blockr.ui. Local engine extensions (slider
-  min/max/step/unit, `kind: 'color'`, select `ph` placeholder) are
-  upstream candidates.
+  must match the constructor signatures.
 
-## CSS namespaces
+## CSS
 
-- `.blockr-*` — reserved for the shared layer (blockr.dplyr today,
-  blockr.ui later). Never mint new ones here.
-- `.dd-*` — emitted by the copied DrilldownConfig engine; rules copied
-  verbatim from `blockr.viz/inst/css/chart.css`. Do not rename.
-- `.gg-*` — blockr.ggplot's own prefix (container, previews, color swatch).
+- `.blockr-*` classes belong to blockr.ui. Use them, never restyle them.
+- `.gg-*` is blockr.ggplot's own prefix, and `--blockr-ggplot-*` its local
+  settings. Read meaning tokens only (no palette steps, no legacy aliases,
+  no literal colours), and check the dark scheme.
 
 ## Previews (grid / facet)
 
-The SVG layout previews (`create_grid_preview_svg()`,
-`create_facet_preview_svg()`) survive as R-rendered `uiOutput`s placed
-inside the container after the band (`div(class = "gg-preview", ...)`).
-`gg-blocks.js` inserts the gear/band **before** existing children
-(append-only DOM building — never clear the container), and
-`gg-blocks.css` shows the preview only while the band is open.
+`layout_preview()` (R/grid-block.R) and `facet_layout_preview()` compute
+the layout (rows, columns, a label per cell, a state of `fit`, `gaps` or
+`invalid`, the status line) with `ggplot2::wrap_dims()`. It travels in the
+push message as `preview`; `gg-blocks.js` draws it in the tray.
 
 ## Testing
 

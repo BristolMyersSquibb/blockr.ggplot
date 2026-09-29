@@ -41,7 +41,9 @@ block_ui.ggplot_transform_block <- function(id, x, ...) {
 
 #' @export
 block_output.ggplot_transform_block <- function(x, result, session) {
-  renderPlot(print(result), bg = "transparent")
+  # A white device: the plot stays light in the dark scheme, as it is when
+  # exported.
+  renderPlot(print(result), bg = "white")
 }
 
 #' @export
