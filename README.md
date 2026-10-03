@@ -40,23 +40,23 @@ This opens a visual interface in your web browser. Add blocks using the "+" butt
 blockr.ggplot provides visualization blocks using the ggplot block with 9 chart types, plus 3 composition blocks:
 
 ### Chart Types
-- [scatter](https://bristolmyerssquibb.github.io/blockr.ggplot/articles/blockr-ggplot-showcase.html#scatter-plot): relationships between continuous variables
-- [bar](https://bristolmyerssquibb.github.io/blockr.ggplot/articles/blockr-ggplot-showcase.html#bar-chart): compare values across categories
-- [line](https://bristolmyerssquibb.github.io/blockr.ggplot/articles/blockr-ggplot-showcase.html#line-chart): trends over time or sequences
-- [boxplot](https://bristolmyerssquibb.github.io/blockr.ggplot/articles/blockr-ggplot-showcase.html#box-plot): distribution statistics across groups
-- [violin](https://bristolmyerssquibb.github.io/blockr.ggplot/articles/blockr-ggplot-showcase.html#violin-plot): distribution shapes with density
-- [density](https://bristolmyerssquibb.github.io/blockr.ggplot/articles/blockr-ggplot-showcase.html#density-plot): smooth probability distributions
-- [area](https://bristolmyerssquibb.github.io/blockr.ggplot/articles/blockr-ggplot-showcase.html#area-chart): cumulative magnitude over time
-- [histogram](https://bristolmyerssquibb.github.io/blockr.ggplot/articles/blockr-ggplot-showcase.html#histogram): frequency distributions
-- [pie/donut](https://bristolmyerssquibb.github.io/blockr.ggplot/articles/blockr-ggplot-showcase.html#pie-chart): proportions of a whole
+- [scatter](https://blockr.site/docs/blocks/blockr.ggplot#ggplot): relationships between continuous variables
+- [bar](https://blockr.site/docs/blocks/blockr.ggplot#ggplot): compare values across categories
+- [line](https://blockr.site/docs/blocks/blockr.ggplot#ggplot): trends over time or sequences
+- [boxplot](https://blockr.site/docs/blocks/blockr.ggplot#ggplot): distribution statistics across groups
+- [violin](https://blockr.site/docs/blocks/blockr.ggplot#ggplot): distribution shapes with density
+- [density](https://blockr.site/docs/blocks/blockr.ggplot#ggplot): smooth probability distributions
+- [area](https://blockr.site/docs/blocks/blockr.ggplot#ggplot): cumulative magnitude over time
+- [histogram](https://blockr.site/docs/blocks/blockr.ggplot#ggplot): frequency distributions
+- [pie/donut](https://blockr.site/docs/blocks/blockr.ggplot#ggplot): proportions of a whole
 
 ### Composition
-- [facet](https://bristolmyerssquibb.github.io/blockr.ggplot/articles/blockr-ggplot-showcase.html#facet-wrap-layout): split plots into panels by category
-- [grid](https://bristolmyerssquibb.github.io/blockr.ggplot/articles/blockr-ggplot-showcase.html#grid-block): combine multiple plots into dashboards
-- [theme](https://bristolmyerssquibb.github.io/blockr.ggplot/articles/blockr-ggplot-showcase.html#theme-block): apply professional styling
+- [facet](https://blockr.site/docs/blocks/blockr.ggplot#facet): split plots into panels by category
+- [grid](https://blockr.site/docs/blocks/blockr.ggplot#grid): combine multiple plots into dashboards
+- [theme](https://blockr.site/docs/blocks/blockr.ggplot#theme): apply professional styling
 
-See `vignette("blockr-ggplot-showcase")` for a complete showcase with screenshots and detailed explanations of each block.
+The [block reference on blockr.site](https://blockr.site/docs/blocks/blockr.ggplot) lists every block and its arguments.
 
 ## Learn More
 
-The [blockr.ggplot website](https://bristolmyerssquibb.github.io/blockr.ggplot/) includes full documentation and the showcase vignette. For information on the workflow engine, see [blockr.core](https://bristolmyerssquibb.github.io/blockr.core/).
+The [blockr.ggplot website](https://bristolmyerssquibb.github.io/blockr.ggplot/) includes the function reference. For information on the workflow engine, see [blockr.core](https://bristolmyerssquibb.github.io/blockr.core/).
