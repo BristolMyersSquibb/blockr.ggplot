@@ -1,43 +1,20 @@
 on:
   push:
-    branches: [main, master]
+    branches: main
   pull_request:
-    branches: [main, master]
+  merge_group:
 
 name: ci
 
 jobs:
-
-  lint:
-    uses: ./.github/workflows/lint.yaml
-    secrets: inherit
-
-  smoke:
-    needs: lint
-    uses: ./.github/workflows/smoke.yaml
-    secrets: inherit
-
-  check:
-    needs: smoke
-    # Only run full checks on main/master branch (not on PRs)
-    if: github.event_name != 'pull_request'
-    uses: ./.github/workflows/check.yaml
-    secrets: inherit
-
-  coverage:
-    needs: smoke
-    uses: ./.github/workflows/coverage.yaml
-    secrets: inherit
-
-  pkgdown:
-    needs: smoke
-    uses: ./.github/workflows/pkgdown.yaml
-    secrets: inherit
-    permissions:
-      contents: write
+  ci:
+    uses: BristolMyersSquibb/blockr.ci/.github/workflows/ci.yaml@v0.1.1
+    secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+      BLOCKR_PAT: ${{ secrets.BLOCKR_PAT }}
 
   # Type-check the hand-written JS in inst/js (tsconfig.json; opt-in
-  # per file via // @ts-check). No build step — checking only.
+  # per file via // @ts-check). No build step, checking only.
   typecheck-js:
     runs-on: ubuntu-latest
     steps:
