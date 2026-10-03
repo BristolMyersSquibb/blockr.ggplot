@@ -1,7 +1,8 @@
 # Tests for new_grid_block under blockr.core's variadic name-or-position
-# convention (core #251/#261): `...args` arrives as a core `reactives`
-# object and the expr references inputs via `.()` calls (expr_type
-# "bquoted"), mirroring blockr.core's own rbind_block tests.
+# convention (core #251/#261): `...args` arrives as a `reactive_exprs`
+# collection from the reactives package and the expr references inputs via
+# `.()` calls (expr_type "bquoted"), mirroring blockr.core's own rbind_block
+# tests.
 
 p_point <- function() {
   ggplot2::ggplot(mtcars, ggplot2::aes(mpg, hp)) + ggplot2::geom_point()
@@ -23,7 +24,9 @@ test_that("grid block combines unnamed variadic inputs", {
     args = list(
       x = blk,
       data = list(
-        ...args = blockr.core:::reactives(p_point, p_bar)
+        ...args = reactives::reactive_exprs(
+          shiny::reactive(p_point()), shiny::reactive(p_bar())
+        )
       )
     )
   )
@@ -41,7 +44,9 @@ test_that("grid block combines named variadic inputs", {
     args = list(
       x = blk,
       data = list(
-        ...args = blockr.core:::reactives(a = p_point, b = p_bar)
+        ...args = reactives::reactive_exprs(
+          a = shiny::reactive(p_point()), b = shiny::reactive(p_bar())
+        )
       )
     )
   )
@@ -82,7 +87,9 @@ test_that("grid block applies layout and annotation settings", {
     args = list(
       x = blk,
       data = list(
-        ...args = blockr.core:::reactives(p_point, p_bar)
+        ...args = reactives::reactive_exprs(
+          shiny::reactive(p_point()), shiny::reactive(p_bar())
+        )
       )
     )
   )

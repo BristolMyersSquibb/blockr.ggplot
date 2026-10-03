@@ -73,9 +73,8 @@ layout_cells <- function(n, rows, cols, dir, state, status) {
 # environment, named slots by their link name, and slot values are accessed
 # through `.()` calls. Copied from blockr.core (not exported):
 # dot_sym/arg_refs/dot_arg_refs from R/utils-misc.R, as_dot_call from
-# R/utils-expr.R — keep in sync. `names(...args)` dispatches on core's
-# exported names.reactives method, so these work on the `reactives` object
-# a variadic block server receives.
+# R/utils-expr.R — keep in sync. These work on the `reactive_exprs`
+# collection from the reactives package that a variadic block server receives.
 dot_sym <- function(i) {
   paste0(".arg", i)
 }
