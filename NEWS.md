@@ -1,5 +1,13 @@
 # blockr.ggplot (development version)
 
+## Assistant
+
+- blockr.assistant describes a ggplot result by what the plot built:
+  layers, mapped aesthetics, labels, facet and panels, rows per layer
+  and axis ranges. It used to get an empty string, as printing a ggplot
+  draws it and returns no text. The method is registered only when
+  blockr.assistant is installed (#95).
+
 ## Design system
 
 - The blocks use blockr.ui for their controls and tokens, and no longer

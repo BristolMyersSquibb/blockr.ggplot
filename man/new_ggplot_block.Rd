@@ -84,7 +84,7 @@ under a log10 transform, which has no zero.}
 
 \item{ylab}{Y-axis label ("" = the column name, ggplot2's default)}
 
-\item{...}{Forwarded to \code{\link[blockr.core]{new_plot_block}}}
+\item{...}{Forwarded to \code{\link[=new_ggplot_transform_block]{new_ggplot_transform_block()}}}
 }
 \value{
 A plot block object of class \code{ggplot_block}.

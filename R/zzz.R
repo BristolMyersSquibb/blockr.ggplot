@@ -359,5 +359,11 @@ register_ggplot_blocks <- function() {
 .onLoad <- function(libname, pkgname) {
   register_ggplot_blocks()
 
+  vctrs::s3_register(
+    "blockr.assistant::describe_result",
+    "ggplot",
+    describe_ggplot
+  )
+
   invisible(NULL)
 } # nocov end
