@@ -39,7 +39,8 @@ RoxygenNote: 7.3.3
 Remotes:
     BristolMyersSquibb/blockr.core,
     BristolMyersSquibb/blockr.theme,
-    BristolMyersSquibb/blockr.ui
+    BristolMyersSquibb/blockr.ui,
+    nbenn/reactives
 Imports:
     blockr.core (>= 0.1.1),
     blockr.ui,
@@ -54,6 +55,7 @@ Suggests:
     ggthemes,
     knitr,
     pkgdown,
+    reactives,
     rmarkdown,
     rlang,
     shinytest2,
