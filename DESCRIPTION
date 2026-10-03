@@ -53,13 +53,10 @@ Suggests:
     cowplot,
     ggpubr,
     ggthemes,
-    knitr,
     pkgdown,
     reactives,
-    rmarkdown,
     rlang,
     shinytest2,
     testthat (>= 3.0.0)
-VignetteBuilder: knitr
 Config/testthat/edition: 3
 Config/testthat/parallel: true
