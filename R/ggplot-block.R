@@ -32,7 +32,7 @@
 #' @param caption Plot caption ("" = none)
 #' @param xlab X-axis label ("" = the column name, ggplot2's default)
 #' @param ylab Y-axis label ("" = the column name, ggplot2's default)
-#' @param ... Forwarded to \code{\link[blockr.core]{new_plot_block}}
+#' @param ... Forwarded to [new_ggplot_transform_block()]
 #'
 #' @return A plot block object of class `ggplot_block`.
 #'
