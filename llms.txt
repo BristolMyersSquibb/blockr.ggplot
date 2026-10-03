@@ -46,45 +46,43 @@ blockr.ggplot provides visualization blocks using the ggplot block with
 
 ### Chart Types
 
-- [scatter](https://bristolmyerssquibb.github.io/blockr.ggplot/articles/blockr-ggplot-showcase.html#scatter-plot):
+- [scatter](https://blockr.site/docs/blocks/blockr.ggplot#ggplot):
   relationships between continuous variables
-- [bar](https://bristolmyerssquibb.github.io/blockr.ggplot/articles/blockr-ggplot-showcase.html#bar-chart):
-  compare values across categories
-- [line](https://bristolmyerssquibb.github.io/blockr.ggplot/articles/blockr-ggplot-showcase.html#line-chart):
-  trends over time or sequences
-- [boxplot](https://bristolmyerssquibb.github.io/blockr.ggplot/articles/blockr-ggplot-showcase.html#box-plot):
+- [bar](https://blockr.site/docs/blocks/blockr.ggplot#ggplot): compare
+  values across categories
+- [line](https://blockr.site/docs/blocks/blockr.ggplot#ggplot): trends
+  over time or sequences
+- [boxplot](https://blockr.site/docs/blocks/blockr.ggplot#ggplot):
   distribution statistics across groups
-- [violin](https://bristolmyerssquibb.github.io/blockr.ggplot/articles/blockr-ggplot-showcase.html#violin-plot):
+- [violin](https://blockr.site/docs/blocks/blockr.ggplot#ggplot):
   distribution shapes with density
-- [density](https://bristolmyerssquibb.github.io/blockr.ggplot/articles/blockr-ggplot-showcase.html#density-plot):
+- [density](https://blockr.site/docs/blocks/blockr.ggplot#ggplot):
   smooth probability distributions
-- [area](https://bristolmyerssquibb.github.io/blockr.ggplot/articles/blockr-ggplot-showcase.html#area-chart):
+- [area](https://blockr.site/docs/blocks/blockr.ggplot#ggplot):
   cumulative magnitude over time
-- [histogram](https://bristolmyerssquibb.github.io/blockr.ggplot/articles/blockr-ggplot-showcase.html#histogram):
+- [histogram](https://blockr.site/docs/blocks/blockr.ggplot#ggplot):
   frequency distributions
-- [pie/donut](https://bristolmyerssquibb.github.io/blockr.ggplot/articles/blockr-ggplot-showcase.html#pie-chart):
+- [pie/donut](https://blockr.site/docs/blocks/blockr.ggplot#ggplot):
   proportions of a whole
 
 ### Composition
 
-- [facet](https://bristolmyerssquibb.github.io/blockr.ggplot/articles/blockr-ggplot-showcase.html#facet-wrap-layout):
-  split plots into panels by category
-- [grid](https://bristolmyerssquibb.github.io/blockr.ggplot/articles/blockr-ggplot-showcase.html#grid-block):
-  combine multiple plots into dashboards
-- [theme](https://bristolmyerssquibb.github.io/blockr.ggplot/articles/blockr-ggplot-showcase.html#theme-block):
-  apply professional styling
+- [facet](https://blockr.site/docs/blocks/blockr.ggplot#facet): split
+  plots into panels by category
+- [grid](https://blockr.site/docs/blocks/blockr.ggplot#grid): combine
+  multiple plots into dashboards
+- [theme](https://blockr.site/docs/blocks/blockr.ggplot#theme): apply
+  professional styling
 
-See
-[`vignette("blockr-ggplot-showcase")`](https://bristolmyerssquibb.github.io/blockr.ggplot/articles/blockr-ggplot-showcase.md)
-for a complete showcase with screenshots and detailed explanations of
-each block.
+The [block reference on
+blockr.site](https://blockr.site/docs/blocks/blockr.ggplot) lists every
+block and its arguments.
 
 ## Learn More
 
 The [blockr.ggplot
 website](https://bristolmyerssquibb.github.io/blockr.ggplot/) includes
-full documentation and the showcase vignette. For information on the
-workflow engine, see
+the function reference. For information on the workflow engine, see
 [blockr.core](https://bristolmyerssquibb.github.io/blockr.core/).
 
 # Package index
@@ -118,9 +116,3 @@ Internal UI components and helper functions
 - [`palette_scale_call()`](https://bristolmyerssquibb.github.io/blockr.ggplot/reference/palette_scale_call.md)
   : Build a color-palette scale call for the theme block
 
-# Articles
-
-### Getting Started
-
-- [blockr.ggplot Showcase: Visualization
-  Blocks](https://bristolmyerssquibb.github.io/blockr.ggplot/articles/blockr-ggplot-showcase.md):
