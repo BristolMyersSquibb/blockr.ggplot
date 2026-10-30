@@ -35,6 +35,7 @@
   const GG_TYPES = {
     point:     { label: 'Point',     required: ['x', 'y'], optional: ['color', 'shape', 'size', 'alpha', 'fill'] },
     bar:       { label: 'Bar',       required: ['x'],      optional: ['y', 'fill', 'color', 'alpha'] },
+    col:       { label: 'Column',    required: ['x', 'y'], optional: ['fill', 'color', 'alpha'] },
     line:      { label: 'Line',      required: ['x', 'y'], optional: ['color', 'linetype', 'alpha', 'group'] },
     boxplot:   { label: 'Boxplot',   required: ['x', 'y'], optional: ['fill', 'color', 'alpha'] },
     pie:       { label: 'Pie',       required: ['x'],      optional: ['y', 'fill', 'alpha'] },
@@ -57,6 +58,11 @@
       '<svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">' +
       '<rect x="2" y="8" width="3" height="6"/><rect x="6.5" y="4" width="3" height="10"/>' +
       '<rect x="11" y="10" width="3" height="4"/></svg>',
+    col:
+      '<svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">' +
+      '<path d="M1.5 14.5 h13" stroke="currentColor" stroke-width="1" fill="none"/>' +
+      '<rect x="2.5" y="6" width="2.5" height="8"/><rect x="6.75" y="3" width="2.5" height="11"/>' +
+      '<rect x="11" y="8" width="2.5" height="6"/></svg>',
     line:
       '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" ' +
       'stroke-linecap="round" aria-hidden="true"><path d="M2 12 L6 7 L10 9 L14 3"/></svg>',
@@ -114,7 +120,7 @@
     const t = b.config.type;
     /** @type {Field[]} */
     const f = [];
-    if (t === 'bar') {
+    if (t === 'bar' || t === 'col') {
       f.push({ key: 'position', kind: 'segmented', label: 'Position',
                options: [['stack', 'Stack'], ['dodge', 'Dodge'], ['fill', 'Fill']] });
     }

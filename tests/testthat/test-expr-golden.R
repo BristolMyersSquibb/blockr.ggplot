@@ -81,6 +81,10 @@ test_that("ggplot_block emits the expected expression across chart types", {
       "ggplot2::ggplot(.(data), ggplot2::aes(x = cyl, fill = as.factor(gear))) + ggplot2::geom_bar(position = \"dodge\") + ggplot2::theme_minimal()"
     ),
     list(
+      new_ggplot_block("col", x = "cyl", y = "mpg", fill = "gear", position = "dodge"), mtcars,
+      "ggplot2::ggplot(.(data), ggplot2::aes(x = cyl, y = mpg, fill = as.factor(gear))) + ggplot2::geom_col(position = \"dodge\") + ggplot2::theme_minimal()"
+    ),
+    list(
       new_ggplot_block("histogram", x = "mpg", bins = 20, fill = "cyl", position = "identity"), mtcars,
       "ggplot2::ggplot(.(data), ggplot2::aes(x = mpg, fill = as.factor(cyl))) + ggplot2::geom_histogram(bins = 20, position = \"identity\") + ggplot2::theme_minimal()"
     ),
