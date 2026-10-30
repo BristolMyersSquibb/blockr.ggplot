@@ -39,8 +39,8 @@ new_ggplot_block(
 
 - type:
 
-  Initial chart type (default "point"). Options: "point", "bar", "line",
-  "boxplot", "violin", "density", "area", "histogram", "pie"
+  Initial chart type (default "point"). Options: "point", "bar", "col",
+  "line", "boxplot", "violin", "density", "area", "histogram", "pie"
 
 - x:
 
