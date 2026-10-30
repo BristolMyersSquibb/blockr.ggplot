@@ -33,7 +33,7 @@ new_ggplot_block(
 }
 \arguments{
 \item{type}{Initial chart type (default "point"). Options: "point", "bar",
-"line", "boxplot", "violin", "density", "area", "histogram", "pie"}
+"col", "line", "boxplot", "violin", "density", "area", "histogram", "pie"}
 
 \item{x}{Column for x-axis}
 

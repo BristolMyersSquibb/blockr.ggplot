@@ -4,7 +4,7 @@
 #' and dynamically shows relevant aesthetics for the selected visualization.
 #'
 #' @param type Initial chart type (default "point"). Options: "point", "bar",
-#'   "line", "boxplot", "violin", "density", "area", "histogram", "pie"
+#'   "col", "line", "boxplot", "violin", "density", "area", "histogram", "pie"
 #' @param x Column for x-axis
 #' @param y Column for y-axis
 #' @param color Column for color aesthetic
@@ -94,6 +94,12 @@ new_ggplot_block <- function(
     bar = list(
       required = c("x"),
       optional = c("y", "fill", "color", "alpha"),
+      specific = list(position = c("stack", "dodge", "fill"))
+    ),
+    # Column: bar heights taken from y, as in geom_col().
+    col = list(
+      required = c("x", "y"),
+      optional = c("fill", "color", "alpha"),
       specific = list(position = c("stack", "dodge", "fill"))
     ),
     line = list(
@@ -345,7 +351,7 @@ new_ggplot_block <- function(
                 # For histograms, bars, pie, etc., convert to factor
                 # for discrete colors (stat_count needs grouping)
                 stat_types <- c(
-                  "histogram", "bar", "boxplot", "violin", "density", "pie"
+                  "histogram", "bar", "col", "boxplot", "violin", "density", "pie"
                 )
                 aes_args$fill <- if (current_type %in% stat_types) {
                   call("as.factor", as.name(r_fill()))
@@ -400,6 +406,10 @@ new_ggplot_block <- function(
                     ggplot2::geom_col(position = .(r_position()))
                   )
                 }
+              } else if (current_type == "col") {
+                geom_call <- bquote(
+                  ggplot2::geom_col(position = .(r_position()))
+                )
               } else if (current_type == "histogram") {
                 geom_call <- bquote(
                   ggplot2::geom_histogram(
